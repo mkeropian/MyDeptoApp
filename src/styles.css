@@ -1,4 +1,15 @@
-/* You can add global styles to this file, and also import other style files */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  @font-face {
+    font-family: "Montserrat";
+    src: url("/assets/fonts/montserrat-alternates/montserrat-medium.ttf") format("truetype");
+  }
+  @font-face {
+    font-family: "Berkshire";
+    src: url("/assets/fonts/berkshire_swash/berkshireswash-segular.ttf") format("truetype");
+  }
+
+}
