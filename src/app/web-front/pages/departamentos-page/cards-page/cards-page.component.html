@@ -5,12 +5,12 @@
   </h3>
 </section>
 
-<section class="px-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+<section class="px-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
 
   @for (house of houses(); track house.id; let i = $index){
 
     <!-- cards -->
-    <div class="card bg-base-100 shadow-xl rounded-t-md overflow-hidden">
+    <div class="card bg-base-100 shadow-xl rounded-t-md overflow-hidden m-3">
       <!-- <figure>
         <img
         src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
@@ -22,7 +22,7 @@
       <div class="card-body">
         <h2 class="card-title">
           {{ house.name }}
-          @if (i===1 ) {
+          @if (i===2 ) {
             <div class="badge badge-secondary">Nuevo</div>
           }
         </h2>

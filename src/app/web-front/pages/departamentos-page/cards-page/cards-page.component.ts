@@ -1,15 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { MiniMapComponent } from '../../../../shared/components/mini-map/mini-map.component';
 import { v4 as uuid } from 'uuid';
-
-interface HouseProperty {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  lngLat: { lng: number; lat: number };
-  tags: string[];
-}
+import { HouseProperty } from '../../../../departamentos/interfaces/departamento.interface';
 
 @Component({
   selector: 'app-cards-page',
@@ -17,7 +9,7 @@ interface HouseProperty {
   templateUrl: './cards-page.component.html',
 })
 export class CardsPageComponent {
-  
+
   houses = signal<HouseProperty[]>([
     {
       id: uuid(),
