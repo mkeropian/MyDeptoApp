@@ -15,7 +15,6 @@ export const webFrontRoutes: Routes = [
     path: '',
     component: WebFrontComponent,
     children: [
-      // Define child routes here
       {
         path:'',
         component: HomePageComponent,
