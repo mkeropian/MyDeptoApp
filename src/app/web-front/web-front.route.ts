@@ -6,9 +6,10 @@ import { PropietariosPageComponent } from "./pages/propietarios-page/propietario
 import { EmpleadosPageComponent } from "./pages/empleados-page/empleados-page.component";
 import { CostosPageComponent } from "./pages/costos-page/costos-page.component";
 import { IncomesPageComponent } from "./pages/incomes-page/incomes-page.component";
-import { NotFoundPageComponent } from "./pages/not-found-page/not-found-page.component";
 import { FullscreenMapPageComponent } from "./pages/departamentos-page/fullscreen-map-page/fullscreen-map-page.component";
 import { CardsPageComponent } from "./pages/departamentos-page/cards-page/cards-page.component";
+
+import { NotFoundPageComponent } from "../shared/pages/not-found-page/not-found-page.component";
 
 export const webFrontRoutes: Routes = [
   {

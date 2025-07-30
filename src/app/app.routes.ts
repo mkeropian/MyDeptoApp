@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { NotFoundPageComponent } from './web-front/pages/not-found-page/not-found-page.component';
 
+import { NotFoundPageComponent } from './shared/pages/not-found-page/not-found-page.component';
 
 export const routes: Routes = [
   {
@@ -14,6 +14,10 @@ export const routes: Routes = [
   {
     path:'dashboard',
     loadChildren: () => import('./admin-dashboard/dashboard.route'),
+  },
+  {
+    path:'calendar',
+    loadChildren: () => import('./calendario-empleados/calendario-empleados.route'),
   },
   {
     path: '**',
