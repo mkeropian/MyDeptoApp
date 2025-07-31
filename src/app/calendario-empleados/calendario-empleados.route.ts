@@ -10,7 +10,6 @@ export const calendarioEmpleadosRoutes: Routes = [
     path: '',
     component: CalendarioEmpleadosComponent,
     children: [
-      // Define child routes here
       {
         path:'',
         component: CalendarioEmpleadosPageComponent,

@@ -29,6 +29,12 @@ module.exports = {
       'night',
       'luxury',
       'lemonade',
+      'synthwave',
+      'bumblebee',
+      'night',
+      'acid',
+      'fantasy',
+      'forest',
     ]
   },
 }
