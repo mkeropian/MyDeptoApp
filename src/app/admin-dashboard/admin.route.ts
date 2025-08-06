@@ -4,12 +4,17 @@ import { SettingsPageComponent } from "./pages/settings-page/settings-page.compo
 
 import { NotFoundPageComponent } from "../shared/pages/not-found-page/not-found-page.component";
 import { UserPageComponent } from "./pages/user-page/user-page.component";
+import { DepartamentosAdminPageComponent } from "./pages/departamentos-admin-page/departamentos-admin-page.component";
 
 export const adminRoutes: Routes = [
   {
     path: '',
     component: AdminComponent,
     children: [
+      {
+        path:'admin-departamentos',
+        component: DepartamentosAdminPageComponent,
+      },
       {
         path:'settings',
         component: SettingsPageComponent,

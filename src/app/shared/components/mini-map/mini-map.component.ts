@@ -5,7 +5,7 @@ import { environment } from '../../../../environments/environment';
 mapboxgl.accessToken = environment.MAPBOX_KEY;
 
 @Component({
-  selector: 'app-mini-map',
+  selector: 'mini-map',
   imports: [],
   templateUrl: './mini-map.component.html',
   styles: `
@@ -13,9 +13,9 @@ mapboxgl.accessToken = environment.MAPBOX_KEY;
       width: 100%;
       height: 260px;
     }
-  `  
+  `
 })
-export class MiniMapComponent { 
+export class MiniMapComponent {
   divElement = viewChild<ElementRef>('map');
 
   lngLat = input.required<{ lng: number; lat: number }>();
@@ -38,5 +38,5 @@ export class MiniMapComponent {
     });
 
     new mapboxgl.Marker().setLngLat(this.lngLat()).addTo(map);
-  }  
+  }
 }
