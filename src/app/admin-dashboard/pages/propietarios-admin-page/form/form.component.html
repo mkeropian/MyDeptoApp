@@ -1,0 +1,115 @@
+
+<!-- propietario-form.component.html -->
+<div class="container mx-auto p-4">
+  <!-- Encabezado -->
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold mb-2">Registrar Nuevo Propietario</h2>
+    <p class="text-base-content/70">Complete la información del propietario</p>
+  </div>
+
+  <!-- Formulario en 2 columnas -->
+  <div class="bg-base-100 rounded-box p-6 shadow">
+    <form>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Columna Izquierda -->
+        <div class="space-y-2">
+          <!-- Nombre Completo -->
+          <label class="input input-bordered flex items-center gap-2">
+            Nombre Completo
+            <input type="text" class="grow" placeholder="Juan Pérez" />
+          </label>
+
+          <!-- Email -->
+          <label class="input input-bordered flex items-center gap-2">
+            Email
+            <input type="email" class="grow" placeholder="juan.perez@email.com" />
+          </label>
+
+          <!-- Teléfono -->
+          <label class="input input-bordered flex items-center gap-2">
+            Teléfono
+            <input type="tel" class="grow" placeholder="+54 11 1234-5678" />
+          </label>
+
+          <!-- Dirección -->
+          <label class="input input-bordered flex items-center gap-2">
+            Dirección
+            <input type="text" class="grow" placeholder="Av. Corrientes 1234, Piso 5, Depto B" />
+          </label>
+        </div>
+
+        <!-- Columna Derecha -->
+        <div class="space-y-2">
+          <!-- DNI -->
+          <label class="input input-bordered flex items-center gap-2">
+            DNI
+            <input type="text" class="grow" placeholder="12.345.678" />
+          </label>
+
+          <!-- Ciudad -->
+          <label class="input input-bordered flex items-center gap-2">
+            Ciudad
+            <input type="text" class="grow" placeholder="Buenos Aires" />
+          </label>
+
+          <!-- Provincia -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">Provincia</span>
+            </div>
+            <select class="select select-bordered w-full">
+              <option value="">Seleccionar provincia</option>
+              <option value="CABA">Ciudad Autónoma de Buenos Aires</option>
+              <option value="BA">Buenos Aires</option>
+              <option value="CA">Catamarca</option>
+              <option value="CH">Chaco</option>
+              <option value="CT">Chubut</option>
+              <option value="CB">Córdoba</option>
+              <option value="CR">Corrientes</option>
+              <option value="ER">Entre Ríos</option>
+              <option value="FO">Formosa</option>
+              <option value="JY">Jujuy</option>
+              <option value="LP">La Pampa</option>
+              <option value="LR">La Rioja</option>
+              <option value="MZ">Mendoza</option>
+              <option value="MI">Misiones</option>
+              <option value="NQ">Neuquén</option>
+              <option value="RN">Río Negro</option>
+              <option value="SA">Salta</option>
+              <option value="SJ">San Juan</option>
+              <option value="SL">San Luis</option>
+              <option value="SC">Santa Cruz</option>
+              <option value="SF">Santa Fe</option>
+              <option value="SE">Santiago del Estero</option>
+              <option value="TF">Tierra del Fuego</option>
+              <option value="TU">Tucumán</option>
+            </select>
+          </label>
+
+          <!-- Estado Activo -->
+          <label class="input input-bordered flex items-center gap-2">
+            Activo
+            <input type="checkbox" class="toggle toggle-primary" checked />
+            <span class="badge badge-info">Opcional</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="divider col-span-1 lg:col-span-2"></div>
+      <div class="col-span-1 lg:col-span-2 flex gap-2 justify-end">
+        <button type="button" class="btn btn-ghost">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-outline">
+          Limpiar
+        </button>
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i>
+          Crear nuevo propietario
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

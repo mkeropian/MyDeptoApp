@@ -1,7 +1,6 @@
 import { Routes } from "@angular/router";
 import { HomePageComponent } from "./pages/home-page/home-page.component";
 import { WebFrontComponent } from "./layouts/web-front-layout/web-front/web-front.component";
-import { PropietariosPageComponent } from "./pages/propietarios-page/propietarios-page.component";
 import { EmpleadosPageComponent } from "./pages/empleados-page/empleados-page.component";
 import { CostosPageComponent } from "./pages/costos-page/costos-page.component";
 import { IncomesPageComponent } from "./pages/incomes-page/incomes-page.component";
@@ -26,10 +25,6 @@ export const webFrontRoutes: Routes = [
       {
         path:'cards',
         component: CardsPageComponent,
-      },
-      {
-        path: 'propietarios',
-        component: PropietariosPageComponent,
       },
       {
         path: 'empleados',

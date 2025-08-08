@@ -5,6 +5,7 @@ import { SettingsPageComponent } from "./pages/settings-page/settings-page.compo
 import { NotFoundPageComponent } from "../shared/pages/not-found-page/not-found-page.component";
 import { UserPageComponent } from "./pages/user-page/user-page.component";
 import { DepartamentosAdminPageComponent } from "./pages/departamentos-admin-page/departamentos-admin-page.component";
+import { PropietariosAdminPageComponent } from "./pages/propietarios-admin-page/propietarios-admin-page.component";
 
 export const adminRoutes: Routes = [
   {
@@ -14,6 +15,10 @@ export const adminRoutes: Routes = [
       {
         path:'admin-departamentos',
         component: DepartamentosAdminPageComponent,
+      },
+      {
+        path:'admin-propietarios',
+        component: PropietariosAdminPageComponent,
       },
       {
         path:'settings',

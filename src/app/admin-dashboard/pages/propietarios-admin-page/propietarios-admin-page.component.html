@@ -1,0 +1,18 @@
+
+<section class="container mb-0">
+  <h2 class="text-3xl font-bold">Propietarios</h2>
+</section>
+
+<section class="px-2">
+  
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 place-items-center mb-1"></div>
+  
+  <!-- Formulario en su propio contenedor -->   
+  <app-form />
+</section>
+
+<div class="divider"></div>
+
+<section>   
+  <app-grid [rows]="propietariosResource.value() ?? []" /> 
+</section>
