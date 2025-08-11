@@ -1,0 +1,70 @@
+<div class="overflow-x-auto">
+  <table class="table">
+    <!-- head -->
+    <thead>
+      <tr>
+        <th>
+          <label>
+            <input type="checkbox" class="checkbox" title="Seleccionar todos"/>
+          </label>
+        </th>
+        <th>id</th>
+        <th>Nombre</th>
+        <th>Telefono</th>
+        <th>dni</th>
+        <th>Direccion</th>
+        <th>ciudad/provincia</th>
+        <th>activo</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+
+      @for (row of rows(); track $index) {
+        <tr>
+          <th>
+            <label>
+              <input type="checkbox" class="checkbox" title="Seleccionar"/>
+            </label>
+          </th>
+          <td>
+            {{row.id}}
+          </td>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="avatar">
+                <div class="mask mask-squircle h-12 w-12">
+                  <img
+                    src="https://img.daisyui.com/images/profile/demo/2@94.webp"
+                    alt="Avatar Tailwind CSS Component" />
+                </div>
+              </div>
+              <div>
+                <div class="font-bold">{{row.nombreApellido}}</div>
+                <div class="text-sm opacity-50">{{row.email}}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            {{row.telefono}}
+          </td>
+          <td>{{row.dni}}</td>
+          <th>
+            <button class="btn btn-ghost btn-xs">{{row.direccion}}</button>
+            <br />
+            <span class="badge badge-ghost badge-sm">CP: {{row.codigoPostal}}</span>
+          </th>
+          <td>
+            {{row.ciudad}}
+            <br />
+            <span class="badge badge-ghost badge-sm">{{row.provincia}}</span>
+          </td>
+          <td>
+            <span class="badge badge-ghost badge-sm">{{row.activo ? 'Activo' : 'Inactivo'}}</span>
+          </td>
+        </tr>
+      }
+
+    </tbody>
+  </table>
+</div>

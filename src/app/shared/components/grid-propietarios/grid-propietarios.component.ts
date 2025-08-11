@@ -2,10 +2,10 @@ import { Component, input } from '@angular/core';
 import { Propietario } from '../../../propietarios/interfaces/propietario.interface';
 
 @Component({
-  selector: 'app-grid',
+  selector: 'grid-propietarios',
   imports: [],
-  templateUrl: './grid.component.html',
+  templateUrl: './grid-propietarios.component.html',
 })
-export class GridComponent {
-
+export class GridPropietariosComponent {
+  rows = input.required<Propietario[]>();
 }

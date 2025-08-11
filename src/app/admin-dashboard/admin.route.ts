@@ -3,7 +3,7 @@ import { AdminComponent } from "./layouts/admin-layout/admin/admin.component";
 import { SettingsPageComponent } from "./pages/settings-page/settings-page.component";
 
 import { NotFoundPageComponent } from "../shared/pages/not-found-page/not-found-page.component";
-import { UserPageComponent } from "./pages/user-page/user-page.component";
+import { UserAdminPageComponent } from "./pages/user-page/user-page.component";
 import { DepartamentosAdminPageComponent } from "./pages/departamentos-admin-page/departamentos-admin-page.component";
 import { PropietariosAdminPageComponent } from "./pages/propietarios-admin-page/propietarios-admin-page.component";
 
@@ -21,12 +21,12 @@ export const adminRoutes: Routes = [
         component: PropietariosAdminPageComponent,
       },
       {
-        path:'settings',
-        component: SettingsPageComponent,
+        path:'admin-usuarios',
+        component: UserAdminPageComponent,
       },
       {
-        path:'users',
-        component: UserPageComponent,
+        path:'settings',
+        component: SettingsPageComponent,
       },
       {
         path: '**',

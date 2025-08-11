@@ -1,4 +1,4 @@
-export interface HouseProperty {
+export interface Departamento {
   id: string;
   name: string;
   description: string;
