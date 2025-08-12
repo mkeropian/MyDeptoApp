@@ -14,5 +14,13 @@
 <div class="divider"></div>
 
 <section>
-  <grid-propietarios [rows]="propietariosResource.value() ?? []" />
+  <smart-grid
+    [data]="propietarios()"
+    [columns]="columns"
+    [actions]="actions"
+    [selectable]="true"
+    [showFooter]="false"
+    (sort)="onSort($event)"
+    (selectionChange)="onSelectionChange($event)">
+  </smart-grid>
 </section>

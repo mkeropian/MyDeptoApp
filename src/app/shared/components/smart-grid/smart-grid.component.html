@@ -50,14 +50,16 @@
 
             <!-- Celdas dinámicas -->
             <td *ngFor="let column of columns">
+
               <!-- Avatar con información -->
               <div *ngIf="column.type === 'avatar'; else normalCell"
                 class="flex items-center gap-3">
                 <div class="avatar">
                   <div class="mask mask-squircle h-12 w-12">
-                    <img 
-                      [src]="getValue(item, column.key + '.avatar') || '../../../../../public/assets/images/solar--user-id-linear.png'"
-                      [alt]="getValue(item, column.key + '.name') + ' Avatar'" />
+                      <img
+                        [src]="getAvatarSrc(item, column)"
+                        [alt]="getValue(item, column.key + '.name') + ' Avatar'"
+                      />
                   </div>
                 </div>
                 <div>
