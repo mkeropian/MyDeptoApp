@@ -21,14 +21,14 @@
 
       <div class="card-body">
         <h2 class="card-title">
-          {{ house.name }}
+          {{ house.nombre }}
           @if (i===2 ) {
             <div class="badge badge-secondary">Nuevo</div>
           }
         </h2>
-        <p>{{ house.description }}</p>
+        <p>{{ house.descripcion }}</p>
         <div class="card-actions justify-end">
-          @for (tag of house.tags; track $index ){
+          @for (tag of house.descripcion; track $index ){
             <div class="badge badge-outline badge-accent">{{ tag }}</div>
           }
         </div>

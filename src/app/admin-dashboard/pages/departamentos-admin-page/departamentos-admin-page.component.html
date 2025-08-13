@@ -11,7 +11,7 @@
 
   <div class="card bg-base-300 rounded-box grid flex-grow">
     Aca ponemos el mapa
-    <mini-map [lngLat]="houses()[0].lngLat" [mapZoom]="3"></mini-map>
+    <mini-map [lngLat]="firstDepartmentLngLat()" [mapZoom]="3"></mini-map>
   </div>
 
 </section>
@@ -19,5 +19,14 @@
 <div class="divider"></div>
 
 <section>
-  <app-grid/>
+  <!-- <app-grid/> -->
+  <smart-grid
+    [data]="departamentos()"
+    [columns]="columns"
+    [actions]="actions"
+    [selectable]="true"
+    [showFooter]="false"
+    (sort)="onSort($event)"
+    (selectionChange)="onSelectionChange($event)">
+  </smart-grid>
 </section>

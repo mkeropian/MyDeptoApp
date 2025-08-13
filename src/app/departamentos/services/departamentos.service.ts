@@ -11,6 +11,6 @@ export class DepartamentosService {
   private http = inject(HttpClient);
 
   getDepartamentos() {
-    return this.http.get<Departamento[]>(`${baseUrl}/departamento/all`);
+    return this.http.get<Departamento[]>(`${baseUrl}/departamentos/all`);
   }
 }

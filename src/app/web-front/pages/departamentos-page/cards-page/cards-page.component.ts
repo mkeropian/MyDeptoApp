@@ -12,40 +12,64 @@ export class CardsPageComponent {
 
   houses = signal<Departamento[]>([
     {
-      id: uuid(),
-      name: 'Villa Serenidad',
-      description:
+      idProp: uuid(),
+      nombre: 'Villa Serenidad',
+      descripcion:
         'Un refugio tranquilo con vistas panorámicas al mar y jardines exuberantes.',
-      price: 500_000,
       lngLat: { lng: -0.861526, lat: 41.65649 },
-      tags: ['Villa', 'Mar', 'Jardines'],
+      id : 0,
+      calle : '',
+      barrio : '',
+      localidad : '',
+      provincia : '',
+      codigoPostal : '',
+      observaciones : '',
+      activo : 0,
     },
     {
-      id: uuid(),
-      name: 'Casa del Sol',
-      description:
+      idProp: uuid(),
+      nombre: 'Casa del Sol',
+      descripcion:
         'Una casa luminosa y acogedora con amplias terrazas y piscina privada.',
-      price: 750_000,
       lngLat: { lng: -0.862, lat: 41.657 },
-      tags: ['Casa', 'Sol', 'Terrazas'],
+      id : 0,
+      calle : '',
+      barrio : '',
+      localidad : '',
+      provincia : '',
+      codigoPostal : '',
+      observaciones : '',
+      activo : 0,
     },
     {
-      id: uuid(),
-      name: 'Residencia Esmeralda',
-      description:
+      idProp: uuid(),
+      nombre: 'Residencia Esmeralda',
+      descripcion:
         'Elegante propiedad con acabados de lujo y un diseño arquitectónico moderno.',
-      price: 1_200_000,
       lngLat: { lng: -0.863, lat: 41.658 },
-      tags: ['Casa', 'Esmeralda', 'Acabados'],
+      id : 0,
+      calle : '',
+      barrio : '',
+      localidad : '',
+      provincia : '',
+      codigoPostal : '',
+      observaciones : '',
+      activo : 0,
     },
     {
-      id: uuid(),
-      name: 'Hacienda del Lago',
-      description:
+      idProp: uuid(),
+      nombre: 'Hacienda del Lago',
+      descripcion:
         'Encantadora hacienda con acceso directo al lago y un entorno natural impresionante.',
-      price: 950_000,
       lngLat: { lng: -0.864, lat: 41.659 },
-      tags: ['Casa', 'Lago', 'Hacienda'],
+      id : 0,
+      calle : '',
+      barrio : '',
+      localidad : '',
+      provincia : '',
+      codigoPostal : '',
+      observaciones : '',
+      activo : 0,
     },
   ]);
 }
