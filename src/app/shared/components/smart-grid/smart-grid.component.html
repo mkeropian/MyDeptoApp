@@ -57,8 +57,9 @@
                 <div class="avatar">
                   <div class="mask mask-squircle h-12 w-12">
                       <img
-                        [src]="getAvatarSrc(item, column)"
-                        [alt]="getValue(item, column.key + '.name') + ' Avatar'"
+                        [src]="getAvatarSrc(item)"
+                        alt="Imagen de usuario"
+                        (error)="onImageError($event)"
                       />
                   </div>
                 </div>

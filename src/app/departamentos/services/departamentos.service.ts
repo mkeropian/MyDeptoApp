@@ -2,15 +2,21 @@ import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 
 import { environment } from "../../../environments/environment";
-import { Departamento } from "../interfaces/departamento.interface";
+import { Departamento, DepartamentoBackend } from "../interfaces/departamento.interface";
+import { Observable } from "rxjs";
 
 const baseUrl = environment.baseUrl;
 
 @Injectable({providedIn: 'root'})
 export class DepartamentosService {
   private http = inject(HttpClient);
+  baseUrl: any;
 
   getDepartamentos() {
     return this.http.get<Departamento[]>(`${baseUrl}/departamentos/all`);
+  }
+
+  getDepartamentosRaw(): Observable<DepartamentoBackend[]> {
+    return this.http.get<DepartamentoBackend[]>(`${baseUrl}/departamentos/all`);
   }
 }

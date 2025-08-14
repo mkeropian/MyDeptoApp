@@ -52,7 +52,7 @@ export class UserAdminPageComponent {
 
   columns: TableColumn[] = [
     {
-      key: 'info',
+      key: 'avatarUrl',
       label: 'Avatar',
       sortable: false,
       type: 'avatar'

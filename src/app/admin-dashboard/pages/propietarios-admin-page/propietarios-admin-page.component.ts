@@ -3,7 +3,6 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { PropietariosService } from '../../../propietarios/services/propietarios.service';
 import { JsonPipe } from '@angular/common';
 import { FormComponent } from "./form/form.component";
-import { GridPropietariosComponent } from "../../../shared/components/grid-propietarios/grid-propietarios.component";
 import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-grid.component";
 import { Propietario } from '../../../propietarios/interfaces/propietario.interface';
 import { TableAction, TableColumn } from '../../../shared/components/smart-grid/smart-grid.interface';

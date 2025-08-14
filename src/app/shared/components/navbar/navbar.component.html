@@ -1,68 +1,70 @@
 <div class="navbar bg-base-100">
   <div class="flex-1">
-    <a
-      routerLink="/home"
-      class="btn btn-ghost text-xl"
-    >
+    <a routerLink="/home" class="btn btn-ghost text-xl">
       MyDeptoApp
     </a>
   </div>
 
   <div class="flex-none">
     <ul class="menu menu-horizontal px-1">
-      <li><a routerLink="/dashboard">Dashboard</a></li>
-      <li><a routerLink="/calendar">Calendario</a></li>
-      <li>
-        <details>
-          <summary>Administración</summary>
-          <ul class="bg-base-100 rounded-t-none p-2">
-            <li><a routerLink="/admin/admin-departamentos">Departamentos</a></li>
-            <li><a routerLink="/admin/admin-propietarios">Propietarios</a></li>
-            <li><a>Opción 2</a></li>
-          </ul>
-        </details>
+      <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
+      <li><a routerLink="/calendar" routerLinkActive="active">Calendario</a></li>
+
+      <!-- Dropdown Operación -->
+      <li class="dropdown dropdown-hover" [class.dropdown-open]="isOperacionOpen">
+        <div tabindex="0" role="button" (click)="toggleOperacion()">Operación</div>
+        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+          <li><a (click)="onMenuItemClick()">Carga de Gastos</a></li>
+          <li><a (click)="onMenuItemClick()">Carga de Ingresos</a></li>
+        </ul>
       </li>
-      <li>
-        <details>
-          <summary>Parent2</summary>
-          <ul class="bg-base-100 rounded-t-none p-2">
-            <li><a>Opción 1</a></li>
-            <li><a>Opción 2</a></li>
-          </ul>
-        </details>
+
+      <!-- Dropdown Administración -->
+      <li class="dropdown dropdown-hover" [class.dropdown-open]="isAdminOpen">
+        <div tabindex="0" role="button" (click)="toggleAdmin()">Administración</div>
+        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+          <li><a routerLink="/admin/admin-departamentos" (click)="onMenuItemClick()" routerLinkActive="active">Departamentos</a></li>
+          <li><a routerLink="/admin/admin-propietarios" (click)="onMenuItemClick()" routerLinkActive="active">Propietarios</a></li>
+          <li><a (click)="onMenuItemClick()">Opción 2</a></li>
+        </ul>
       </li>
-      <li>
-        <details>
-          <summary>Configuración</summary>
-          <ul class="bg-base-100 rounded-t-none p-2">
-            <li><a routerLink="/admin/settings">... del Sistema</a></li>
-            <li><a routerLink="/admin/users">Usuarios</a></li>
-          </ul>
-        </details>
+
+      <!-- Dropdown Parent2 -->
+      <li class="dropdown dropdown-hover" [class.dropdown-open]="isParent2Open">
+        <div tabindex="0" role="button" (click)="toggleParent2()">Parent2</div>
+        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+          <li><a (click)="onMenuItemClick()">Opción 1</a></li>
+          <li><a (click)="onMenuItemClick()">Opción 2</a></li>
+        </ul>
+      </li>
+
+      <!-- Dropdown Configuración -->
+      <li class="dropdown dropdown-hover" [class.dropdown-open]="isConfigOpen">
+        <div tabindex="0" role="button" (click)="toggleConfig()">Configuración</div>
+        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+          <li><a routerLink="/admin/settings" (click)="onMenuItemClick()" routerLinkActive="active">... del Sistema</a></li>
+          <li><a routerLink="/admin/users" (click)="onMenuItemClick()" routerLinkActive="active">Usuarios</a></li>
+        </ul>
       </li>
     </ul>
   </div>
 
+  <!-- Avatar dropdown -->
   <div class="flex-none gap-2">
-
-    <div class="dropdown dropdown-end">
-      <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+    <div class="dropdown dropdown-end" [class.dropdown-open]="isProfileOpen">
+      <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar" (click)="toggleProfile()">
         <div class="w-10 rounded-full">
-          <img
-            alt="Tailwind CSS Navbar component"
-            src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+          <img alt="Avatar del usuario" src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
         </div>
       </div>
-      <ul
-        tabindex="0"
-        class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+      <ul class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
         <li>
-          <a class="justify-between">
+          <a class="justify-between" (click)="onMenuItemClick()">
             Profile
             <span class="badge">New</span>
           </a>
         </li>
-        <li><a>Logout</a></li>
+        <li><a (click)="onMenuItemClick()">Logout</a></li>
       </ul>
     </div>
   </div>

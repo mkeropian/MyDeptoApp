@@ -74,9 +74,14 @@ export class SmartGridComponent {
       (this.actions.length > 0 ? 1 : 0);
   }
 
-  getAvatarSrc(item: any, column: TableColumn): string {
-    const avatarUrl = this.getValue(item, column.key + '.avatar');
+  getAvatarSrc(item: any): string {
+    // console.log(item)
+    const avatarUrl = this.getValue(item, 'avatarUrl') || this.getValue(item, 'avatar');
     return avatarUrl || 'assets/images/default-avatar.png'; // Ruta más corta
   }
+
+  onImageError(event: any) {
+    event.target.src = 'assets/images/no-image.jpg';
+    event.target.alt = 'Imagen no disponible';}
 
 }
