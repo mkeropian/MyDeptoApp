@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Departamento } from '../../../departamentos/interfaces/departamento.interface';
 import { v4 as uuid } from 'uuid';
 import { MiniMapComponent } from "../../../shared/components/mini-map/mini-map.component";
-import { GridComponent } from "../../../shared/components/grid/grid.component";
 import { FormComponent } from "./form/form.component";
 import { DepartamentosService } from '../../../departamentos/services/departamentos.service';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -49,7 +48,7 @@ export class DepartamentosAdminPageComponent {
     });
   });
 
-columns: TableColumn[] = [
+  columns: TableColumn[] = [
     {
       key: 'idProp',
       label: 'idProp',

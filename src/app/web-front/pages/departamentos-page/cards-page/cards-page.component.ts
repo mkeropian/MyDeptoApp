@@ -34,7 +34,7 @@ export class CardsPageComponent {
         }
 
         return {
-          id: item.idProp,
+          id: item.id,
           idProp: item.idProp.toString(),
           nombre: item.nombre,
           descripcion: item.descripcion,
@@ -53,7 +53,7 @@ export class CardsPageComponent {
 
         // Coordenadas por defecto (Buenos Aires) si hay error
         return {
-          id: item.idProp,
+          id: item.id,
           idProp: item.idProp.toString(),
           nombre: item.nombre,
           descripcion: item.descripcion,

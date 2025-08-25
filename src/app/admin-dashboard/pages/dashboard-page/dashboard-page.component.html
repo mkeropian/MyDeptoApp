@@ -3,81 +3,41 @@
   <h2 class="text-3xl font-bold mb-2">Dashboard</h2>
 </section>
 
-<section class="p-6 grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-6">
+<section class="p-6 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
 
-  <div class="card bg-base-100 shadow-xl rounded-t-md overflow-hidden m-1">
-      <figure>
-        <img
-        src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-        alt="Shoes" />
-      </figure>
-      <div class="card-body">
-        <span class="card-title">Grafico 1</span>
-        <p class="text-sm">Descripción Grafico 1</p>
-        <div class="card-actions justify-end">
-          <button class="btn btn-primary">Ingresar</button>
-        </div>
-      </div>
-  </div>
+  @for (departamento of departamentos(); track departamento.id || i; let i = $index) {
+    <div class="card relative bg-base-100 shadow-xl rounded-t-md overflow-hidden m-1 flex flex-col">
 
-  <div class="card bg-base-100 shadow-xl rounded-t-md overflow-hidden m-1">
-      <figure>
-        <img
-        src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-        alt="Shoes" />
-      </figure>
-      <div class="card-body">
-        <span class="card-title">Grafico 2</span>
-        <p class="text-sm">Descripción Grafico 2</p>
-        <div class="card-actions justify-end">
-          <button class="btn btn-primary">Ingresar</button>
-        </div>
-      </div>
-  </div>
+        <!-- Verificar que las coordenadas existan antes de mostrar el mapa -->
+        @if (departamento.lngLat && departamento.lngLat.lng && departamento.lngLat.lat) {
+          <mini-map [lngLat]="departamento.lngLat" [mapZoom]="14" />
+        } @else {
+          <div class="h-[260px] bg-gray-200 flex items-center justify-center">
+            <div class="text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span class="text-gray-500 text-sm">Ubicación no disponible</span>
+            </div>
+          </div>
+        }
 
-  <div class="card bg-base-100 shadow-xl rounded-t-md overflow-hidden m-1">
-      <figure>
-        <img
-        src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-        alt="Shoes" />
-      </figure>
-      <div class="card-body">
-        <span class="card-title">Grafico 3</span>
-        <p class="text-sm">Descripción Grafico 3</p>
-        <div class="card-actions justify-end">
-          <button class="btn btn-primary">Ingresar</button>
-        </div>
-      </div>
-  </div>
+        <div class="card-body flex-grow flex flex-col justify-between">
+          <div>
+            <span class="card-title">{{ departamento.nombre }}</span>
+            <p class="text-sm line-clamp-4">{{ departamento.descripcion}}</p>
+          </div>
 
-  <div class="card bg-base-100 shadow-xl rounded-t-md overflow-hidden m-1">
-      <figure>
-        <img
-        src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-        alt="Shoes" />
-      </figure>
-      <div class="card-body">
-        <span class="card-title">Grafico 4</span>
-        <p class="text-sm">Descripción Grafico 4</p>
-        <div class="card-actions justify-end">
-          <button class="btn btn-primary">Ingresar</button>
+          <div class="h-12 flex justify-end items-end">
+            <button class="btn btn-primary btn-circle absolute bottom-3 right-3">
+              <strong class="text-2xl">+</strong>
+            </button>
+          </div>
         </div>
-      </div>
-  </div>
 
-  <div class="card bg-base-100 shadow-xl rounded-t-md overflow-hidden m-1">
-      <figure>
-        <img
-        src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-        alt="Shoes" />
-      </figure>
-      <div class="card-body">
-        <span class="card-title">Grafico 5</span>
-        <p class="text-sm">Descripción Grafico 5</p>
-        <div class="card-actions justify-end">
-          <button class="btn btn-primary">Ingresar</button>
-        </div>
-      </div>
-  </div>
+    </div>
+
+  }
 
 </section>

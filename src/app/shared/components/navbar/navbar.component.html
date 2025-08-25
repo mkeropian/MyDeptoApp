@@ -31,10 +31,10 @@
 
       <!-- Dropdown Parent2 -->
       <li class="dropdown dropdown-hover" [class.dropdown-open]="isParent2Open">
-        <div tabindex="0" role="button" (click)="toggleParent2()">Parent2</div>
+        <div tabindex="0" role="button" (click)="toggleParent2()">Departamentos</div>
         <ul class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-          <li><a (click)="onMenuItemClick()">Opción 1</a></li>
-          <li><a (click)="onMenuItemClick()">Opción 2</a></li>
+          <li><a routerLink="/home/fullscreen_map" (click)="onMenuItemClick()" routerLinkActive="active">FullMap</a></li>
+          <li><a routerLink="/home/cards" (click)="onMenuItemClick()" routerLinkActive="active">Cards</a></li>
         </ul>
       </li>
 

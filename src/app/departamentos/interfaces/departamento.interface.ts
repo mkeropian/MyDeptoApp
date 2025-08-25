@@ -14,6 +14,7 @@ export interface Departamento {
 }
 
 export interface DepartamentoBackend {
+  id: number;
   idProp: number;
   nombre: string;
   descripcion: string;
