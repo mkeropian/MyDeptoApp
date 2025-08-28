@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
-import mapboxgl, { LngLatLike } from 'mapbox-gl'; // or "const mapboxgl = require('mapbox-gl');"
+import mapboxgl, { LngLatLike } from 'mapbox-gl';
 import { environment } from '../../../../../environments/environment';
 import { DecimalPipe, JsonPipe } from '@angular/common';
 import { DepartamentosService } from '../../../../departamentos/services/departamentos.service';
@@ -19,21 +19,75 @@ interface Marker {
   imports: [ DecimalPipe, JsonPipe ],
   templateUrl: './fullscreen-map-page.component.html',
   styles: `
+
+    :host {
+      display: block;
+      position: relative;
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
+      width: 100vw;
+      height: calc(100vh - 64px - 80px);
+      margin-bottom: 0;
+    }
+
+    .map-container {
+      height: calc(100vh - 64px - 80px);
+      width: 100vw;
+      position: relative;
+      z-index: 1;
+    }
+
+    .markers-section {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 260px;
+      max-height: calc(100vh - 64px - 80px - 120px);
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      overflow-y: auto;
+      z-index: 10;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
+    }
+
     #controls {
       background-color: white;
       padding: 10px;
       border-radius: 5px;
-      position: fixed;
-      bottom: 75px;
+      position: absolute;
+      bottom: 20px;
       right: 20px;
-      z-index: 9999;
-      box-shadow: 0 0 10 px 0 rgba(0, 0, 0, 0.1);
+      z-index: 10;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       border: 1px solid #e2e8f0;
       width: 250px;
     }
+
+    @media (max-width: 640px) {
+      :host {
+        height: calc(100vh - 56px - 60px);
+      }
+
+      .map-container {
+        height: calc(100vh - 56px - 60px);
+      }
+
+      .markers-section {
+        width: calc(100% - 40px);
+        max-height: calc(100vh - 56px - 60px - 120px);
+      }
+
+      #controls {
+        width: calc(100% - 40px);
+      }
+    }
+
   `
 })
 export class FullscreenMapPageComponent implements AfterViewInit{
+
   departamentosService = inject(DepartamentosService);
   departamentosResource = rxResource({
     request: () => ({}),
@@ -274,4 +328,6 @@ export class FullscreenMapPageComponent implements AfterViewInit{
     );
     return color;
   }
+
+
 }

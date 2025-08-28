@@ -1,32 +1,60 @@
-
-<section class="container mx-auto">
-  <h2 class="text-3xl font-bold mb-2">Departarmentos</h2>
+<section class="w-full mb-6">
+  <h2 class="text-3xl font-bold mb-2">Departamentos</h2>
+  <p class="text-base-content/70 mt-1">Gestión y administración de propiedades</p>
 </section>
 
-<section class="px-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 h-100 place-items-center">
-
-  <app-form />
-
-  <div class="divider divider-horizontal"></div>
-
-  <div class="card bg-base-300 rounded-box grid flex-grow">
-    Aca ponemos el mapa
-    <mini-map [lngLat]="firstDepartmentLngLat()" [mapZoom]="3"></mini-map>
+<section class="w-full flex gap-2 items-start mb-8">
+  <!-- Formulario (más ancho con padding derecho) -->
+  <div class="flex-[2] pr-4">
+    <app-form />
   </div>
 
+  <!-- Separador vertical pegado -->
+  <div class="w-px bg-base-300 min-h-[500px]"></div>
+
+  <!-- Mapa (más estrecho con padding izquierdo) -->
+  <div class="flex-1 pl-4">
+    <div class="card bg-base-100 shadow-lg h-full">
+      <div class="card-body p-0">
+        <div class="bg-primary/10 p-4 border-b">
+          <h3 class="font-semibold flex items-center gap-2 text-sm">
+            <i class="fas fa-map-marked-alt text-primary"></i>
+            Ubicación
+          </h3>
+        </div>
+        <div class="flex-1 min-h-[500px]">
+          <mini-map
+            [lngLat]="firstDepartmentLngLat()"
+            [mapZoom]="4"
+            height="500px"
+	          width="100%"
+	          class="map-container"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
-<div class="divider"></div>
-
-<section>
-  <!-- <app-grid/> -->
-  <smart-grid
-    [data]="departamentos()"
-    [columns]="columns"
-    [actions]="actions"
-    [selectable]="true"
-    [showFooter]="false"
-    (sort)="onSort($event)"
-    (selectionChange)="onSelectionChange($event)">
-  </smart-grid>
+<!-- Grilla sin container limitante -->
+<section class="w-full">
+  <div class="card bg-base-100 shadow-lg">
+    <div class="card-body p-0">
+      <div class="bg-base-200/50 p-4 border-b">
+        <h3 class="font-semibold flex items-center gap-2">
+          <i class="fas fa-table text-primary"></i>
+          Lista de Departamentos
+        </h3>
+      </div>
+      <smart-grid
+        [data]="departamentos()"
+        [columns]="columns"
+        [actions]="actions"
+        [selectable]="true"
+        [showFooter]="false"
+        (sort)="onSort($event)"
+        (selectionChange)="onSelectionChange($event)">
+      </smart-grid>
+    </div>
+  </div>
 </section>

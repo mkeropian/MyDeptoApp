@@ -9,6 +9,11 @@ import { rxResource } from '@angular/core/rxjs-interop';
   selector: 'app-cards-page',
   imports: [MiniMapComponent],
   templateUrl: './cards-page.component.html',
+  styles: `
+	.map-container {
+		z-index: 1;
+	}
+  `
 })
 export class CardsPageComponent {
 

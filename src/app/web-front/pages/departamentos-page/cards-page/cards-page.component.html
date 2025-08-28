@@ -16,12 +16,20 @@
     <span>Error cargando las propiedades. Por favor, intenta nuevamente.</span>
   </div>
 } @else {
-  <section class="px-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+  <section class="px-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
     @for (departamento of departamentos(); track departamento.id; let i = $index) {
       <div class="card bg-base-100 shadow-xl rounded-t-md overflow-hidden m-3">
         <!-- Verificar que las coordenadas existan antes de mostrar el mapa -->
         @if (departamento.lngLat && departamento.lngLat.lng && departamento.lngLat.lat) {
-          <mini-map [lngLat]="departamento.lngLat" [mapZoom]="15" />
+
+          <mini-map
+            [lngLat]="departamento.lngLat"
+            [mapZoom]="15"
+            height="300px"
+            width="100%"
+            class="map-container"
+          />
+
         } @else {
           <div class="h-[260px] bg-gray-200 flex items-center justify-center">
             <div class="text-center">
@@ -41,14 +49,14 @@
               <div class="badge badge-secondary">Nuevo</div>
             }
           </h2>
-          <p class="text-gray-600">{{ departamento.descripcion }}</p>
+          <p class="text-sm line-clamp-4 text-gray-600">{{ departamento.descripcion }}</p>
           <div class="text-sm text-gray-500 space-y-1">
-            <p><strong>Dirección:</strong> {{ departamento.calle }}</p>
+            <p class="text-sm text-black"><strong>Dirección:</strong> {{ departamento.calle }}</p>
             @if (departamento.barrio) {
-              <p><strong>Barrio:</strong> {{ departamento.barrio }}</p>
+              <p class="text-sm text-black"><strong>Barrio:</strong> {{ departamento.barrio }}</p>
             }
-            <p><strong>Localidad:</strong> {{ departamento.localidad }}, {{ departamento.provincia }}</p>
-            <p><strong>Código Postal:</strong> {{ departamento.codigoPostal }}</p>
+            <p class="text-sm text-black"><strong>Localidad:</strong> {{ departamento.localidad }}, {{ departamento.provincia }}</p>
+            <p class="text-sm text-black"><strong>Código Postal:</strong> {{ departamento.codigoPostal }}</p>
           </div>
         </div>
       </div>

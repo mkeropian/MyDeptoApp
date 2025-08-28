@@ -12,6 +12,12 @@ import { FooterComponent } from "../../../../shared/components/footer/footer.com
       position: fixed;
       bottom: 0px;
       width: 100%;
+      z-index: 50; /* Agregado z-index */
+    }
+
+    /* Agregar padding bottom al container principal */
+    section.container {
+      padding-bottom: 80px;
     }
   `
 })

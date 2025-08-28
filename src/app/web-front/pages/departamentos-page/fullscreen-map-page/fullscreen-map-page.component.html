@@ -1,36 +1,38 @@
 
-<div #map></div>
-<!-- <div #map class="h-[60vh] sm:h-[calc(100vh-64px)]"></div> -->
+<div #map class="map-container"></div>
 
-<section class="h-[40vh] sm:fixed sm:w-[260px] bg-white sm:rounded sm:top-20 sm:left-5 p-5 overflow-y-scroll">
-  <h2 class="text-xl font-bold text-black mb-2">Marcadores</h2>
-  <div class="flex flex-col gap-2">
+<!-- Versión 7: Slate ultra compacto (para muchos elementos) -->
+<section class="markers-section">
+  <h2 class="text-xl font-bold text-gray-800 mb-3">Marcadores</h2>
+  <div class="flex flex-col gap-0.5">
 
     @for (marker of markers(); track marker.id){
-
-      <div class="form-control"
+      <div class="bg-slate-50 rounded border border-slate-200 px-3 py-2 cursor-pointer hover:bg-slate-100 transition-colors duration-150"
         (click)="flyToMarker(marker.mapboxMarker.getLngLat())"
       >
-        <label class="label cursor-pointer">
-          <span class="label-text text-black text-xs">
-            {{ marker.nombre}}
-            <!-- {{ marker.mapboxMarker.getLngLat() | json }} -->
-
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5 flex-1">
+            <div
+              class="w-3.5 h-3.5 rounded-full border border-white shadow-sm"
+              [style.backgroundColor]="marker.mapboxMarker._color"
+            ></div>
+            <span class="text-slate-800 text-xs font-medium">
+              {{ marker.nombre }}
+            </span>
+          </div>
           <input
             type="radio"
             name="radio-10"
-            checked="checked"
-            title="_"
-            class="radio"
-            [style]="{ backgroundColor: marker.mapboxMarker._color }"
+            class="radio radio-xs"
+            [style.backgroundColor]="marker.mapboxMarker._color"
+            title="Centrar en {{ marker.nombre }}"
           />
-          </span>
-        </label>
+        </div>
       </div>
 
     } @empty {
-      <div class="flex justify-center items-center bg-blue-100 rounded">
-        <p class="text-xs text-secondary py-1">
+      <div class="flex justify-center items-center bg-slate-100 rounded py-3">
+        <p class="text-xs text-slate-600">
           No hay marcadores
         </p>
       </div>

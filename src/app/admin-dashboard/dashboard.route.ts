@@ -3,6 +3,7 @@ import { DashboardComponent } from "./layouts/dashboard-layout/dashboard/dashboa
 import { DashboardPageComponent } from "./pages/dashboard-page/dashboard-page.component";
 
 import { NotFoundPageComponent } from "../shared/pages/not-found-page/not-found-page.component";
+import { PropietariosDashboardPageComponent } from "./pages/propietarios-dashboard-page/propietarios-dashboard-page.component";
 
 export const DashboardRoutes: Routes = [
   {
@@ -13,6 +14,10 @@ export const DashboardRoutes: Routes = [
       {
         path:'',
         component: DashboardPageComponent,
+      },
+      {
+        path:'propietarios',
+        component: PropietariosDashboardPageComponent,
       },
       {
         path: '**',

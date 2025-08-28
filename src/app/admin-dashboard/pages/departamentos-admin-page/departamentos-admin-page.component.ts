@@ -12,6 +12,11 @@ import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-
   selector: 'departamentos-admin-page',
   imports: [MiniMapComponent, FormComponent, SmartGridComponent],
   templateUrl: './departamentos-admin-page.component.html',
+  styles: `
+	.map-container {
+		z-index: 1;
+	}
+  `
 })
 export class DepartamentosAdminPageComponent {
   departamentosService = inject(DepartamentosService);

@@ -9,9 +9,13 @@ mapboxgl.accessToken = environment.MAPBOX_KEY;
   imports: [],
   templateUrl: './mini-map.component.html',
   styles: `
-    div {
+    :host {
+      display: block;
+    }
+
+    .map-div {
       width: 100%;
-      height: 260px;
+      height: 100%;
     }
   `
 })
@@ -20,6 +24,9 @@ export class MiniMapComponent {
 
   lngLat = input.required<{ lng: number; lat: number }>();
   mapZoom = input<number>(14);
+
+  height = input<string>('400px');
+  width = input<string>('100%');
 
   async ngAfterViewInit(){
 

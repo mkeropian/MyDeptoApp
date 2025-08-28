@@ -9,4 +9,5 @@ export interface Propietario {
   ciudad: string;
   provincia: string;
   codigoPostal: string;
+  cuentaNro: string;
 }
