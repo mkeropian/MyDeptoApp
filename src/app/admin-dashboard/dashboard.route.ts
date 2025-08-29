@@ -1,23 +1,28 @@
 import { Routes } from "@angular/router";
 import { DashboardComponent } from "./layouts/dashboard-layout/dashboard/dashboard.component";
-import { DashboardPageComponent } from "./pages/dashboard-page/dashboard-page.component";
 
 import { NotFoundPageComponent } from "../shared/pages/not-found-page/not-found-page.component";
-import { PropietariosDashboardPageComponent } from "./pages/propietarios-dashboard-page/propietarios-dashboard-page.component";
+import { DashboardPropietariosPageComponent } from "./pages/dashboard-propietarios-page/dashboard-propietarios-page.component";
+import { DashboardDepartamentosPageComponent } from "./pages/dashboard-departamentos-page/dashboard-departamentos-page.component";
+import { DashboardEstadisticasPageComponent } from "./pages/dashboard-estadisticas-page/dashboard-estadisticas-page.component";
 
 export const DashboardRoutes: Routes = [
   {
     path: '',
     component: DashboardComponent,
     children: [
-      // Define child routes here
+      // Defino rutas hijas
       {
-        path:'',
-        component: DashboardPageComponent,
+        path:'departamentos',
+        component: DashboardDepartamentosPageComponent,
       },
       {
         path:'propietarios',
-        component: PropietariosDashboardPageComponent,
+        component: DashboardPropietariosPageComponent,
+      },
+      {
+        path:'estadisticas',
+        component: DashboardEstadisticasPageComponent,
       },
       {
         path: '**',

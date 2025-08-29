@@ -10,6 +10,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   templateUrl: './navbar.component.html',
 })
 export class NavbarComponent {
+  isDashboard = false;
   isAdminOpen = false;
   isParent2Open = false;
   isConfigOpen = false;
@@ -20,6 +21,11 @@ export class NavbarComponent {
   toggleAdmin() {
     this.isAdminOpen = !this.isAdminOpen;
     this.closeOtherDropdowns('admin');
+  }
+
+  toggleDashboard() {
+    this.isDashboard = !this.isDashboard;
+    this.closeOtherDropdowns('dashboard');
   }
 
   toggleOperacion() {
@@ -47,6 +53,7 @@ export class NavbarComponent {
     if (except !== 'parent2') this.isParent2Open = false;
     if (except !== 'config') this.isConfigOpen = false;
     if (except !== 'operacion') this.isOperacionOpen = false;
+    if (except !== 'dashboard') this.isDashboard = false;
   }
 
   // Cerrar dropdown al hacer clic en una opción
@@ -56,6 +63,7 @@ export class NavbarComponent {
     this.isConfigOpen = false;
     this.isProfileOpen = false;
     this.isOperacionOpen = false;
+    this.isDashboard = false;
   }
 
 }

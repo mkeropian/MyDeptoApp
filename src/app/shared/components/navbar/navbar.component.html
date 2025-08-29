@@ -7,7 +7,17 @@
 
   <div class="flex-none">
     <ul class="menu menu-horizontal px-1">
-      <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
+
+      <!-- Dropdown Dashboard -->
+      <li class="dropdown dropdown-hover" [class.dropdown-open]="isDashboard">
+        <div tabindex="0" role="button" (click)="toggleDashboard()">Dashboard</div>
+        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
+          <li><a routerLink="/dashboard/estadisticas" (click)="onMenuItemClick()">Estadisticas</a></li>
+          <li><a routerLink="/dashboard/departamentos" (click)="onMenuItemClick()">Departamentos</a></li>
+          <li><a routerLink="/dashboard/propietarios" (click)="onMenuItemClick()">Propietarios</a></li>
+        </ul>
+      </li>
+
       <li><a routerLink="/calendar" routerLinkActive="active">Calendario</a></li>
 
       <!-- Dropdown Operación -->

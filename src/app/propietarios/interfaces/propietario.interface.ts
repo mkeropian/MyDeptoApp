@@ -10,4 +10,5 @@ export interface Propietario {
   provincia: string;
   codigoPostal: string;
   cuentaNro: string;
+  avatarUrl: string;
 }

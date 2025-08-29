@@ -5,11 +5,11 @@ import { MiniMapComponent } from "../../../shared/components/mini-map/mini-map.c
 import { Departamento, DepartamentoBackend } from '../../../departamentos/interfaces/departamento.interface';
 
 @Component({
-  selector: 'app-dashboard-page',
+  selector: 'app-dashboard-departamentos-page',
   imports: [MiniMapComponent],
-  templateUrl: './dashboard-page.component.html'
+  templateUrl: './dashboard-departamentos-page.component.html'
 })
-export class DashboardPageComponent {
+export class DashboardDepartamentosPageComponent {
   departamentosService = inject(DepartamentosService);
   departamentosResource = rxResource({
     request: () => ({}),

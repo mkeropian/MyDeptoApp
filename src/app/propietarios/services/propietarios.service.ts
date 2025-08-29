@@ -2,6 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { Propietario } from "../interfaces/propietario.interface";
 import { environment } from "../../../environments/environment";
+import { Observable } from "rxjs";
 
 const baseUrl = environment.baseUrl;
 
@@ -11,5 +12,9 @@ export class PropietariosService {
 
   getPropietarios() {
     return this.http.get<Propietario[]>(`${baseUrl}/propietarios/all`);
+  }
+
+  createPropietario(propietarioLike: Partial<Propietario>): Observable<Propietario> {
+    return this.http.put<Propietario>(`${baseUrl}/propietarios`, propietarioLike);
   }
 }

@@ -9,59 +9,102 @@
 
   <!-- Formulario en 2 columnas -->
   <div class="bg-base-100 rounded-box p-3 shadow">
-    <form>
+    <form [formGroup]="propietarioForm" (ngSubmit)="onSubmit()">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
         <!-- Columna Izquierda -->
         <div class="space-y-2">
+
           <!-- Nombre Completo -->
           <label class="input input-bordered flex items-center gap-2">
             Nombre Completo
-            <input type="text" class="grow" placeholder="Juan Pérez" />
+            <input
+              type="text"
+              class="grow"
+              placeholder="Juan Pérez"
+              formControlName="nombreApellido"
+            />
           </label>
 
           <!-- Email -->
           <label class="input input-bordered flex items-center gap-2">
             Email
-            <input type="email" class="grow" placeholder="juan.perez@email.com" />
+            <input
+              type="email"
+              class="grow"
+              placeholder="juan.perez@email.com"
+              formControlName="email"
+            />
           </label>
 
           <!-- Teléfono -->
           <label class="input input-bordered flex items-center gap-2">
             Teléfono
-            <input type="tel" class="grow" placeholder="+54 11 1234-5678" />
+            <input
+              type="tel"
+              class="grow"
+              placeholder="+54 11 1234-5678"
+              formControlName="telefono"
+            />
           </label>
 
           <!-- Dirección -->
           <label class="input input-bordered flex items-center gap-2">
             Dirección
-            <input type="text" class="grow" placeholder="Av. Corrientes 1234, Piso 5, Depto B" />
+            <input
+              type="text"
+              class="grow"
+              placeholder="Av. Corrientes 1234, Piso 5, Depto B"
+              formControlName="direccion"
+            />
           </label>
 
-          <!-- Estado Activo -->
-          <label class="input flex items-center gap-2">
-            Activo
-            <input type="checkbox" class="toggle toggle-primary" checked />
-            <span class="badge badge-info">Opcional</span>
+          <!-- Codigo Postal -->
+          <label class="input input-bordered flex items-center gap-2">
+            Codigo Postal
+            <input
+              type="text"
+              class="grow"
+              placeholder="1234"
+              formControlName="codigoPostal"
+            />
           </label>
+
+
         </div>
 
         <!-- Columna Derecha -->
         <div class="space-y-2">
+
           <!-- DNI -->
           <label class="input input-bordered flex items-center gap-2">
             DNI
-            <input type="text" class="grow" placeholder="12.345.678" />
+            <input
+              type="text"
+              class="grow"
+              placeholder="12.345.678"
+              formControlName="dni"
+            />
           </label>
 
           <!-- Ciudad -->
           <label class="input input-bordered flex items-center gap-2">
             Ciudad
-            <input type="text" class="grow" placeholder="Buenos Aires" />
+            <input
+              type="text"
+              class="grow"
+              placeholder="Buenos Aires"
+              formControlName="ciudad"
+            />
           </label>
 
           <!-- Provincia -->
           <label class="form-control w-full">
-            <select class="select select-bordered w-full" title="Provincia">
+            <select
+              class="select select-bordered w-full"
+              title="Provincia"
+              formControlName="provincia"
+            >
               <option value="">Seleccionar provincia</option>
               <option value="CABA">Ciudad Autónoma de Buenos Aires</option>
               <option value="BA">Buenos Aires</option>
@@ -93,18 +136,32 @@
           <!-- Cuenta Número -->
           <label class="input input-bordered flex items-center gap-2">
             Cuenta Número
-            <input type="text" class="grow" placeholder="123456789" />
+            <input
+              type="text"
+              class="grow"
+              placeholder="123456789"
+              formControlName="cuentaNro"
+            />
+          </label>
+
+          <!-- Estado Activo -->
+          <label class="input flex items-center gap-2">
+            Activo
+            <input
+              type="checkbox"
+              class="toggle toggle-primary"
+              formControlName="activo"
+            />
+            <span class="badge badge-info">Opcional</span>
           </label>
         </div>
+
       </div>
 
       <!-- Botones de acción -->
       <div class="divider col-span-1 lg:col-span-2"></div>
       <div class="col-span-1 lg:col-span-2 flex gap-2 justify-end">
-        <button type="button" class="btn btn-ghost">
-          Cancelar
-        </button>
-        <button type="button" class="btn btn-outline">
+        <button type="button" class="btn btn-outline" (click)="limpiarForm()">
           Limpiar
         </button>
         <button type="submit" class="btn btn-primary">
