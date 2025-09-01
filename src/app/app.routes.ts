@@ -4,6 +4,10 @@ import { NotFoundPageComponent } from './shared/pages/not-found-page/not-found-p
 
 export const routes: Routes = [
   {
+    path:'auth',
+    loadChildren: () => import('./auth/auth.route'),
+  },
+  {
     path:'home',
     loadChildren: () => import('./web-front/web-front.route'),
   },

@@ -1,139 +1,178 @@
 <div class="container pt-6 mx-auto">
-  <form
+  <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+    <!-- Layout principal: 70% - 30% usando flexbox -->
+    <div style="display: flex; gap: 2rem; width: 100%;">
 
-    class="grid grid-cols-1 sm:grid-cols-2 gap-2"
+      <!-- COLUMNA IZQUIERDA: 70% -->
+      <div style="width: 70%; flex: 0 0 70%;">
+        <div class="flex flex-col gap-4">
+          <h2 class="text-2xl font-bold mb-4">Datos del Usuario</h2>
 
-  >
-    <!-- Datos generales -->
-    <div class="flex flex-col gap-2">
-      <input
-        type="text"
-        placeholder="Usuario"
-        class="input input-bordered w-full"
-        formControlName="usuario"
+          <!-- Grid de inputs - 2 columnas en la sección izquierda -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Usuario -->
+            <div class="form-control w-full">
+              <label class="label">
+                <span class="label-text font-medium">Usuario</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Ingrese el nombre de usuario"
+                class="input input-bordered w-full"
+                [class.input-error]="usuario?.invalid && usuario?.touched"
+                formControlName="usuario"
+              />
+              <label class="label" *ngIf="usuario?.invalid && usuario?.touched">
+                <span class="label-text-alt text-error">
+                  <span *ngIf="usuario?.errors?.['required']">El usuario es requerido</span>
+                  <span *ngIf="usuario?.errors?.['minlength']">Mínimo 3 caracteres</span>
+                </span>
+              </label>
+            </div>
 
-      />
-      <!-- <form-error-label [control]="productForm.get('usuario')!" /> -->
+            <!-- Email -->
+            <div class="form-control w-full">
+              <label class="label">
+                <span class="label-text font-medium">Email</span>
+              </label>
+              <input
+                type="email"
+                placeholder="usuario@ejemplo.com"
+                class="input input-bordered w-full"
+                [class.input-error]="email?.invalid && email?.touched"
+                formControlName="email"
+              />
+              <label class="label" *ngIf="email?.invalid && email?.touched">
+                <span class="label-text-alt text-error">
+                  <span *ngIf="email?.errors?.['required']">El email es requerido</span>
+                  <span *ngIf="email?.errors?.['email']">Ingrese un email válido</span>
+                </span>
+              </label>
+            </div>
+          </div>
 
-      <input
-        type="text"
-        placeholder="Nombre Completo"
-        class="input input-bordered w-full"
-        formControlName="nombreCompleto"
+          <!-- Nombre Completo - Ancho completo -->
+          <div class="form-control w-full">
+            <label class="label">
+              <span class="label-text font-medium">Nombre Completo</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Ingrese el nombre completo"
+              class="input input-bordered w-full"
+              [class.input-error]="nombreCompleto?.invalid && nombreCompleto?.touched"
+              formControlName="nombreCompleto"
+            />
+            <label class="label" *ngIf="nombreCompleto?.invalid && nombreCompleto?.touched">
+              <span class="label-text-alt text-error">
+                <span *ngIf="nombreCompleto?.errors?.['required']">El nombre completo es requerido</span>
+                <span *ngIf="nombreCompleto?.errors?.['minlength']">Mínimo 2 caracteres</span>
+              </span>
+            </label>
+          </div>
 
-      />
-      <!-- <form-error-label [control]="productForm.get('nombreCompleto')!" /> -->
+          <!-- Clave - Ancho completo -->
+          <div class="form-control w-full">
+            <label class="label">
+              <span class="label-text font-medium">Contraseña</span>
+            </label>
+            <input
+              type="password"
+              placeholder="Ingrese la contraseña"
+              class="input input-bordered w-full"
+              [class.input-error]="clave?.invalid && clave?.touched"
+              formControlName="clave"
+            />
+            <label class="label" *ngIf="clave?.invalid && clave?.touched">
+              <span class="label-text-alt text-error">
+                <span *ngIf="clave?.errors?.['required']">La contraseña es requerida</span>
+                <span *ngIf="clave?.errors?.['minlength']">Mínimo 6 caracteres</span>
+              </span>
+            </label>
+          </div>
 
-      <input
-        type="text"
-        placeholder="Nombre Completo"
-        class="input input-bordered w-full"
-        formControlName="nombreCompleto"
+          <!-- Grid para Estado y Avatar -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+            <!-- Estado Activo -->
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input
+                  type="checkbox"
+                  class="toggle toggle-primary"
+                  formControlName="activo"
+                />
+                <span class="label-text font-medium">Usuario Activo</span>
+              </label>
+            </div>
 
-      />
-      <!-- <form-error-label [control]="productForm.get('nombreCompleto')!" /> -->
+            <!-- Selector de archivo para avatar -->
+            <div class="form-control w-full">
+              <label class="label">
+                <span class="label-text font-medium">Seleccionar Avatar</span>
+              </label>
+              <input
+                type="file"
+                class="file-input file-input-bordered file-input-sm w-full"
+                accept="image/*"
+                (change)="onFileSelected($event)"
+                title="Seleccione una imagen para el avatar"
+              />
+            </div>
+          </div>
 
-
-
-      <h2 class="text-lg font-bold">Datos de venta</h2>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div>
-          <input
-            type="number"
-            placeholder="Precio"
-            class="input input-bordered w-full"
-            formControlName="price"
-          />
-          <!-- <form-error-label [control]="productForm.get('price')!" /> -->
+          <!-- Botón Guardar -->
+          <div class="flex justify-start mt-4">
+            <button
+              class="btn btn-primary"
+              type="submit"
+              [disabled]="userForm.invalid"
+            >
+              <i class="fas fa-save mr-2"></i>
+              Guardar Usuario
+            </button>
+          </div>
         </div>
+      </div>
 
-        <div>
-          <input
-            type="number"
-            placeholder="Inventario"
-            class="input input-bordered w-full"
-            formControlName="stock"
-          />
-          <!-- <form-error-label [control]="productForm.get('stock')!" /> -->
+      <!-- COLUMNA DERECHA: 30% -->
+      <div style="width: 30%; flex: 0 0 30%; border-left: 2px solid #e5e7eb; padding-left: 2rem;">
+        <div class="flex flex-col gap-4">
+          <h2 class="text-xl font-bold mb-4 text-center">Vista Previa</h2>
+
+          <!-- Preview del avatar -->
+          <div class="w-full">
+            <div class="flex justify-center mb-4">
+              <div class="avatar">
+                <div class="w-40 h-40 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                  <img
+                    [src]="avatarPreview() || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik01MCA3NEM2MS4wNDU3IDc0IDcwIDY1LjA0NTcgNzAgNTRDNzAgNDIuOTU0MyA2MS4wNDU3IDM0IDUwIDM0QzM4Ljk1NDMgMzQgMzAgNDIuOTU0MyAzMCA1NEMzMCA2NS4wNDU3IDM4Ljk1NDMgNzQgNTAgNzRaIiBmaWxsPSIjOUI5REEwIi8+CjxwYXRoIGQ9Ik01MCA0OEM1My4zMTM3IDQ4IDU2IDQ1LjMxMzcgNTYgNDJDNTYgMzguNjg2MyA1My4zMTM3IDM2IDUwIDM2QzQ2LjY4NjMgMzYgNDQgMzguNjg2MyA0NCA0MkM0NCA0NS4zMTM3IDQ2LjY4NjMgNDggNTAgNDhaIiBmaWxsPSIjRjNGNEY2Ii8+Cjwvc3ZnPgo='"
+                    alt="Avatar preview"
+                    class="object-cover"
+                    (error)="onImageError($event)"
+                  />
+                </div>
+              </div>
+            </div>
+            <p class="text-center text-sm text-base-content/70 mb-4 px-2">
+              {{ selectedFile() ? selectedFile()!.name : 'No hay imagen seleccionada' }}
+            </p>
+          </div>
+
+          <!-- Información adicional -->
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <div>
+              <h4 class="font-bold text-sm">Consejos:</h4>
+              <div class="text-xs mt-1 leading-relaxed">
+                • Imágenes cuadradas<br>
+                • 200x200 píxeles<br>
+                • Máximo 2MB<br>
+                • Formatos: JPG, PNG, GIF
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <!-- tags -->
-      <input
-        type="text"
-        placeholder="Tags"
-        class="input input-bordered w-full"
-        formControlName="tags"
-
-      />
-      <!-- <form-error-label [control]="productForm.get('tags')!" /> -->
-
-      <!-- Botones para el género -->
-      <div class="grid grid-cols-4 gap-2">
-        <!-- <button class="btn btn-sm btn-outline">Masculino</button> -->
-        <button
-          type= "button"
-          class="btn btn-sm btn-outline"
-
-        >
-          Masculino
-        </button>
-        <button
-          type= "button"
-          class="btn btn-sm btn-outline"
-
-        >
-          Femenino
-        </button>
-        <button
-          type= "button"
-          class="btn btn-sm btn-outline"
-
-        >
-          Kid
-        </button>
-        <button
-          type= "button"
-          class="btn btn-sm btn-outline"
-        >
-          Unisex
-        </button>
-      </div>
-
-      <!-- <select class="select select-bordered w-full">
-        <option value="male">Masculino</option>
-        <option value="female">Femenino</option>
-        <option value="unisex">Unisex</option>
-      </select> -->
-
-      <!-- Sizes -->
-      <!-- <div class="grid grid-cols-6 gap-2">
-        @for (size of sizes; track size) {
-        <button
-          class="btn btn-sm"
-          type="button"
-          (click)="onSizeClicked(size)"
-          [class.btn-secondary]="productForm.value.sizes?.includes(size)"
-        >
-          {{ size }}</button>
-        }
-      </div> -->
-    </div>
-
-    <!-- Imágenes -->
-    <div class="flex flex-col gap-2">
-      <div class="flex justify-end h-12">
-        <button class="btn btn-secondary" type="submit">
-          <!-- <span class="loading loading-spinner loading-sm"></span> -->
-
-          Guardar
-        </button>
-      </div>
-
-      <!-- <product-carousel [images]="product().images" /> -->
-
-      <input type="file" class="file-input file-input-bordered w-full mt-4" title="archivo"/>
     </div>
   </form>
 </div>

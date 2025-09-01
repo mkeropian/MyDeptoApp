@@ -6,4 +6,10 @@ export interface User {
   clave: string;
   activo: number;
   avatarUrl?: string;
+  tema?: string;
+}
+
+export interface UserTema {
+  id: number;
+  tema: string;
 }

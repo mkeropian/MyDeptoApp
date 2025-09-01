@@ -1,75 +1,146 @@
+<!-- Header -->
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-base-content mb-2">
+    <i class="fas fa-cog mr-2 text-primary"></i>
+    Configuraciones del Sistema
+  </h1>
+  <div class="divider"></div>
+</div>
 
-<p class= "text-2xl">Configuraciones del Sistema</p>
+<!-- Sección de Temas -->
+<div class="card bg-base-200 shadow-lg w-fit">
+  <div class="card-body p-4">
+    <h2 class="card-title text-lg mb-4">
+      <i class="fas fa-palette mr-2 text-secondary"></i>
+      Seleccionar Tema
+    </h2>
 
-<label class="label cursor-pointer gap-4 mt-6">
-  <span class="label-text text-xl">Temas</span>
-</label>
+    <!-- Lista de temas en una columna -->
+    <div class="flex flex-col gap-1 w-64">
+      <!-- Tema Cyberpunk -->
+      <div class="form-control">
+        <label class="label cursor-pointer py-2">
+          <div class="flex items-center space-x-3 w-full">
+            <div class="flex-shrink-0">
+              <div class="w-3 h-3 rounded-full bg-gradient-to-r from-cyan-400 to-purple-600"></div>
+            </div>
+            <span class="label-text text-sm font-medium flex-grow text-left">Cyberpunk</span>
+            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="cyberpunk" (change)="onThemeChange($event)" />
+          </div>
+        </label>
+      </div>
 
-<div class="container mx-auto mt-6 grid grid-cols-6">
+      <!-- Tema Night -->
+      <div class="form-control">
+        <label class="label cursor-pointer py-2">
+          <div class="flex items-center space-x-3 w-full">
+            <div class="flex-shrink-0">
+              <div class="w-3 h-3 rounded-full bg-gradient-to-r from-slate-800 to-slate-900"></div>
+            </div>
+            <span class="label-text text-sm font-medium flex-grow text-left">Night</span>
+            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="night" (change)="onThemeChange($event)" />
+          </div>
+        </label>
+      </div>
 
-  <ul>
+      <!-- Tema Luxury -->
+      <div class="form-control">
+        <label class="label cursor-pointer py-2">
+          <div class="flex items-center space-x-3 w-full">
+            <div class="flex-shrink-0">
+              <div class="w-3 h-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-600"></div>
+            </div>
+            <span class="label-text text-sm font-medium flex-grow text-left">Luxury</span>
+            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="luxury" (change)="onThemeChange($event)" />
+          </div>
+        </label>
+      </div>
 
+      <!-- Tema Lemonade -->
+      <div class="form-control">
+        <label class="label cursor-pointer py-2">
+          <div class="flex items-center space-x-3 w-full">
+            <div class="flex-shrink-0">
+              <div class="w-3 h-3 rounded-full bg-gradient-to-r from-yellow-300 to-yellow-500"></div>
+            </div>
+            <span class="label-text text-sm font-medium flex-grow text-left">Lemonade</span>
+            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="lemonade" (change)="onThemeChange($event)" />
+          </div>
+        </label>
+      </div>
 
-    <li class="form-control">
-      <label class="label cursor-pointer gap-4">
-        <span class="label-text">Cyberpunk</span>
-        <input type="radio" name="theme-radios" class="radio theme-controller" value="cyberpunk" />
-      </label>
-    </li>
-    <li class="form-control">
-      <label class="label cursor-pointer gap-4">
-        <span class="label-text">Night</span>
-        <input type="radio" name="theme-radios" class="radio theme-controller" value="night" />
-      </label>
-    </li>
-    <li class="form-control">
-      <label class="label cursor-pointer gap-4">
-        <span class="label-text">Luxury</span>
-        <input type="radio" name="theme-radios" class="radio theme-controller" value="luxury" />
-      </label>
-    </li>
-    <li class="form-control">
-      <label class="label cursor-pointer gap-4">
-        <span class="label-text">Lemonade</span>
-        <input type="radio" name="theme-radios" class="radio theme-controller" value="lemonade" />
-      </label>
-    </li>
-    <li class="form-control">
-      <label class="label cursor-pointer gap-4">
-        <span class="label-text">Forest</span>
-        <input type="radio" name="theme-radios" class="radio theme-controller" value="forest" />
-      </label>
-    </li>
-    <li class="form-control">
-      <label class="label cursor-pointer gap-4">
-        <span class="label-text">Fantasy</span>
-        <input type="radio" name="theme-radios" class="radio theme-controller" value="fantasy" />
-      </label>
-    </li>
-    <li class="form-control">
-      <label class="label cursor-pointer gap-4">
-        <span class="label-text">Acid</span>
-        <input type="radio" name="theme-radios" class="radio theme-controller" value="acid" />
-      </label>
-    </li>
-    <li class="form-control">
-      <label class="label cursor-pointer gap-4">
-        <span class="label-text">Night</span>
-        <input type="radio" name="theme-radios" class="radio theme-controller" value="night" />
-      </label>
-    </li>
-    <li class="form-control">
-      <label class="label cursor-pointer gap-4">
-        <span class="label-text">Bumblebee</span>
-        <input type="radio" name="theme-radios" class="radio theme-controller" value="bumblebee" />
-      </label>
-    </li>
-    <li class="form-control">
-      <label class="label cursor-pointer gap-4">
-        <span class="label-text">Synthwave</span>
-        <input type="radio" name="theme-radios" class="radio theme-controller" value="synthwave" />
-      </label>
-    </li>
-  </ul>
+      <!-- Tema Forest -->
+      <div class="form-control">
+        <label class="label cursor-pointer py-2">
+          <div class="flex items-center space-x-3 w-full">
+            <div class="flex-shrink-0">
+              <div class="w-3 h-3 rounded-full bg-gradient-to-r from-green-600 to-green-800"></div>
+            </div>
+            <span class="label-text text-sm font-medium flex-grow text-left">Forest</span>
+            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="forest" (change)="onThemeChange($event)" />
+          </div>
+        </label>
+      </div>
 
+      <!-- Tema Fantasy -->
+      <div class="form-control">
+        <label class="label cursor-pointer py-2">
+          <div class="flex items-center space-x-3 w-full">
+            <div class="flex-shrink-0">
+              <div class="w-3 h-3 rounded-full bg-gradient-to-r from-pink-400 to-purple-500"></div>
+            </div>
+            <span class="label-text text-sm font-medium flex-grow text-left">Fantasy</span>
+            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="fantasy" (change)="onThemeChange($event)" />
+          </div>
+        </label>
+      </div>
+
+      <!-- Tema Acid -->
+      <div class="form-control">
+        <label class="label cursor-pointer py-2">
+          <div class="flex items-center space-x-3 w-full">
+            <div class="flex-shrink-0">
+              <div class="w-3 h-3 rounded-full bg-gradient-to-r from-lime-400 to-green-400"></div>
+            </div>
+            <span class="label-text text-sm font-medium flex-grow text-left">Acid</span>
+            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="acid" (change)="onThemeChange($event)" />
+          </div>
+        </label>
+      </div>
+
+      <!-- Tema Bumblebee -->
+      <div class="form-control">
+        <label class="label cursor-pointer py-2">
+          <div class="flex items-center space-x-3 w-full">
+            <div class="flex-shrink-0">
+              <div class="w-3 h-3 rounded-full bg-gradient-to-r from-yellow-400 to-black"></div>
+            </div>
+            <span class="label-text text-sm font-medium flex-grow text-left">Bumblebee</span>
+            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="bumblebee" (change)="onThemeChange($event)" />
+          </div>
+        </label>
+      </div>
+
+      <!-- Tema Synthwave -->
+      <div class="form-control">
+        <label class="label cursor-pointer py-2">
+          <div class="flex items-center space-x-3 w-full">
+            <div class="flex-shrink-0">
+              <div class="w-3 h-3 rounded-full bg-gradient-to-r from-pink-500 to-cyan-400"></div>
+            </div>
+            <span class="label-text text-sm font-medium flex-grow text-left">Synthwave</span>
+            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="synthwave" (change)="onThemeChange($event)" />
+          </div>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Botón de guardar posicionado para quedar arriba del footer -->
+<div class="fixed bottom-20 right-6 z-[60]">
+  <button type="submit" class="btn btn-primary shadow-lg" (click)="onSaveSettings()">
+    <i class="fas fa-save mr-2"></i>
+    Guardar cambios
+  </button>
 </div>
