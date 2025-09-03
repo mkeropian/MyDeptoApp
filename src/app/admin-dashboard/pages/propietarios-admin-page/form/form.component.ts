@@ -4,12 +4,14 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Propietario } from '../../../../propietarios/interfaces/propietario.interface';
 import { Router } from '@angular/router';
 import { PropietariosService } from '../../../../propietarios/services/propietarios.service';
+import { FormErrorLabelComponent } from "../../../../shared/components/form-error-label/form-error-label.component";
 
 @Component({
   selector: 'app-form',
   imports: [
     ReactiveFormsModule,
-  ],
+    FormErrorLabelComponent
+],
   templateUrl: './form.component.html',
 })
 export class FormComponent implements OnInit{
@@ -24,7 +26,7 @@ export class FormComponent implements OnInit{
     ciudad: '',
     provincia: '',
     codigoPostal: '',
-    cuentaNro: '',
+    cuenta_nro: '',
     avatarUrl: ''
   };
 
@@ -42,7 +44,7 @@ export class FormComponent implements OnInit{
     ciudad: [''],
     provincia: [''],
     codigoPostal: [''],
-    cuentaNro: [''],
+    cuenta_nro: [''],
     avatarUrl: [''],
   });
 

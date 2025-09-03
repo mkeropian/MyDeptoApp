@@ -1,75 +1,59 @@
 import { Component, computed, inject } from '@angular/core';
-import { DepartamentosService } from '../../../departamentos/services/departamentos.service';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { Departamento, DepartamentoBackend } from '../../../departamentos/interfaces/departamento.interface';
-import { MiniMapComponent } from "../../../shared/components/mini-map/mini-map.component";
+import { PropietariosService } from '../../../propietarios/services/propietarios.service';
+import { Propietario } from '../../../propietarios/interfaces/propietario.interface';
 
 @Component({
   selector: 'app-propietarios-dashboard-page',
-  imports: [MiniMapComponent],
+  imports: [],
   templateUrl: './dashboard-propietarios-page.component.html',
 })
 export class DashboardPropietariosPageComponent {
-  departamentosService = inject(DepartamentosService);
-  departamentosResource = rxResource({
+  propietariosService = inject(PropietariosService);
+  propietariosResource = rxResource({
     request: () => ({}),
-    loader: () => this.departamentosService.getDepartamentosRaw()
+    loader: () => this.propietariosService.getPropietarios()
   });
 
-  departamentos = computed(() => {
-    const backendData: DepartamentoBackend[] = this.departamentosResource.value() || [];
-
-    // Transformar los datos del backend a la interfaz Departamento
-    const transformedData: Departamento[] = backendData.map(item => {
-      try {
-        // Parsear las coordenadas "lng,lat" a objeto
-        const [lng, lat] = item.lnglat.split(',').map(coord => parseFloat(coord.trim()));
-
-        // Validar que las coordenadas sean números válidos
-        if (isNaN(lng) || isNaN(lat)) {
-          throw new Error('Coordenadas inválidas');
-        }
-
-        return {
-          id: item.id,
-          idProp: item.idProp.toString(),
-          nombre: item.nombre,
-          descripcion: item.descripcion,
-          calle: item.calle,
-          barrio: item.barrio,
-          localidad: item.localidad,
-          provincia: item.provincia,
-          codigoPostal: item.codigoPostal,
-          lngLat: { lng, lat }, // Crear el objeto esperado
-          observaciones: item.observaciones,
-          activo: item.activo
-        };
-      } catch (error) {
-        console.error(`Error parseando coordenadas para ${item.nombre}:`, error);
-        console.error('Coordenadas recibidas:', item.lnglat);
-
-        // Coordenadas por defecto (Buenos Aires) si hay error
-        return {
-          id: item.id,
-          idProp: item.idProp.toString(),
-          nombre: item.nombre,
-          descripcion: item.descripcion,
-          calle: item.calle,
-          barrio: item.barrio,
-          localidad: item.localidad,
-          provincia: item.provincia,
-          codigoPostal: item.codigoPostal,
-          lngLat: { lng: -58.3816, lat: -34.6037 }, // Buenos Aires por defecto
-          observaciones: item.observaciones,
-          activo: item.activo
-        };
-      }
-    });
-
-    console.log('Datos del backend:', backendData);
-    console.log('Departamentos transformados:', transformedData);
-    return transformedData;
+  propietarios = computed(() => {
+    const data: Propietario[] = this.propietariosResource.value() || [];
+    return data.map(propietario => ({
+      ...propietario,
+      avatarUrl: this.getValidAvatarUrl(propietario.avatarUrl)
+    }));
   });
 
 
+  getValidAvatarUrl(url: string | null | undefined): string {
+    const defaultAvatar = 'assets/images/default-avatar.png';
+
+    // Si no hay URL, devolver imagen por defecto
+    if (!url || url.trim() === '') {
+      return defaultAvatar;
+    }
+
+    const cleanUrl = url.trim();
+
+    // Si es una URL HTTP/HTTPS válida, devolverla
+    if (this.isValidHttpUrl(cleanUrl)) {
+      return cleanUrl;
+    }
+
+    // Si es una ruta de assets válida, devolverla
+    if (cleanUrl.startsWith('assets/') || cleanUrl.startsWith('/assets/')) {
+      return cleanUrl;
+    }
+
+    // Para cualquier otra URL (incluyendo rutas locales), usar imagen por defecto
+    return defaultAvatar;
+  }
+
+  private isValidHttpUrl(urlString: string): boolean {
+    try {
+      const url = new URL(urlString);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }
 }

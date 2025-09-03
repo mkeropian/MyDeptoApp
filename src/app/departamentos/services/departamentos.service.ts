@@ -19,4 +19,8 @@ export class DepartamentosService {
   getDepartamentosRaw(): Observable<DepartamentoBackend[]> {
     return this.http.get<DepartamentoBackend[]>(`${baseUrl}/departamentos/all`);
   }
+
+  createDepartamento(departamento: Partial<DepartamentoBackend>) {
+    return this.http.post<DepartamentoBackend>(`${baseUrl}/departamentos`, departamento);
+  }
 }

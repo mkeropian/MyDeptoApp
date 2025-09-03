@@ -1,6 +1,6 @@
 export interface Departamento {
   id: number;
-  idProp: string;
+  idProp: number;
   nombre: string;
   descripcion: string;
   calle: string;
@@ -23,7 +23,7 @@ export interface DepartamentoBackend {
   localidad: string;
   provincia: string;
   codigoPostal: string;
-  lnglat: string; // Como viene del backend (minúscula)
+  lngLat: string; // Como viene del backend (minúscula)
   observaciones: string;
   activo: number;
 }

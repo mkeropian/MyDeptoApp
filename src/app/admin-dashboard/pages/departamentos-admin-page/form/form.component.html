@@ -1,6 +1,7 @@
 <div class="max-w-7xl mx-auto">
     <div class="card bg-base-100 shadow-sm border border-base-100">
         <div class="card-body p-4">
+
             <!-- Header más compacto -->
             <div class="flex items-center gap-2 mb-3">
                 <i class="fas fa-building text-primary text-base"></i>
@@ -15,17 +16,19 @@
                         <!-- Código -->
                         <div class="form-control">
                             <label class="label py-1">
-                                <span class="label-text text-sm">Código Propiedad *</span>
+                                <span class="label-text text-sm">Código Propiedad</span>
                             </label>
-                            <input type="text" placeholder="PROP-001" class="input input-bordered input-sm" required />
+                            <input type="text" placeholder="PROP-001" class="input input-bordered input-sm"/>
+                            <form-error-label [control]="departamentoForm.get('idProp')!" />
                         </div>
 
                         <!-- Nombre -->
                         <div class="form-control">
                             <label class="label py-1">
-                                <span class="label-text text-sm">Nombre *</span>
+                                <span class="label-text text-sm">Nombre</span>
                             </label>
-                            <input type="text" placeholder="Departamento Céntrico" class="input input-bordered input-sm" required />
+                            <input type="text" placeholder="Departamento Céntrico" class="input input-bordered input-sm"/>
+                            <form-error-label [control]="departamentoForm.get('nombre')!" />
                         </div>
 
                         <!-- Descripción -->
@@ -39,7 +42,7 @@
                         <!-- Calle -->
                         <div class="form-control">
                             <label class="label py-1">
-                                <span class="label-text text-sm">Calle *</span>
+                                <span class="label-text text-sm">Calle</span>
                             </label>
                             <input type="text" placeholder="Av. Corrientes 1234" class="input input-bordered input-sm" required />
                         </div>
@@ -69,7 +72,7 @@
                         <!-- Localidad -->
                         <div class="form-control">
                             <label class="label py-1">
-                                <span class="label-text text-sm">Localidad *</span>
+                                <span class="label-text text-sm">Localidad</span>
                             </label>
                             <input type="text" placeholder="Buenos Aires" class="input input-bordered input-sm" required />
                         </div>
@@ -77,7 +80,7 @@
                         <!-- Provincia -->
                         <div class="form-control">
                             <label class="label py-1">
-                                <span class="label-text text-sm">Provincia (Seleccionable) *</span>
+                                <span class="label-text text-sm">Provincia (Seleccionable)</span>
                             </label>
                             <select class="select select-bordered select-sm" title="selector" required>
                                 <option disabled selected>Seleccionar</option>
@@ -119,7 +122,7 @@
                         <div class="form-control">
                             <label class="label py-1">
                                 <span class="label-text text-sm">Coordenadas</span>
-                                <span class="label-text-alt text-xs">lat,lng</span>
+                                <span class="label-text-alt text-xs"><strong>(lat,lng)</strong></span>
                             </label>
                             <input type="text" placeholder="-34.6037,-58.3816" class="input input-bordered input-sm" />
                         </div>

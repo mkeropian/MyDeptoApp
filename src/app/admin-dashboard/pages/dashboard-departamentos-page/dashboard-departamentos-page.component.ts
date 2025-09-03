@@ -18,12 +18,12 @@ export class DashboardDepartamentosPageComponent {
 
   departamentos = computed(() => {
     const backendData: DepartamentoBackend[] = this.departamentosResource.value() || [];
-
+    // console.log(backendData);
     // Transformar los datos del backend a la interfaz Departamento
     const transformedData: Departamento[] = backendData.map(item => {
       try {
         // Parsear las coordenadas "lng,lat" a objeto
-        const [lng, lat] = item.lnglat.split(',').map(coord => parseFloat(coord.trim()));
+        const [lng, lat] = item.lngLat.split(',').map(coord => parseFloat(coord.trim()));
 
         // Validar que las coordenadas sean números válidos
         if (isNaN(lng) || isNaN(lat)) {
@@ -32,7 +32,7 @@ export class DashboardDepartamentosPageComponent {
 
         return {
           id: item.id,
-          idProp: item.idProp.toString(),
+          idProp: item.idProp,
           nombre: item.nombre,
           descripcion: item.descripcion,
           calle: item.calle,
@@ -45,13 +45,13 @@ export class DashboardDepartamentosPageComponent {
           activo: item.activo
         };
       } catch (error) {
-        console.error(`Error parseando coordenadas para ${item.nombre}:`, error);
-        console.error('Coordenadas recibidas:', item.lnglat);
+        // console.error(`Error parseando coordenadas para ${item.nombre}:`, error);
+        // console.error('Coordenadas recibidas:', item.lngLat);
 
         // Coordenadas por defecto (Buenos Aires) si hay error
         return {
           id: item.id,
-          idProp: item.idProp.toString(),
+          idProp: item.idProp,
           nombre: item.nombre,
           descripcion: item.descripcion,
           calle: item.calle,
@@ -66,8 +66,8 @@ export class DashboardDepartamentosPageComponent {
       }
     });
 
-    console.log('Datos del backend:', backendData);
-    console.log('Departamentos transformados:', transformedData);
+    // console.log('Datos del backend:', backendData);
+    // console.log('Departamentos transformados:', transformedData);
     return transformedData;
   });
 

@@ -1,14 +1,14 @@
 export interface Propietario {
   id: number;
+  dni: string;
   nombreApellido: string;
   direccion: string;
-  telefono: string;
-  email: string;
-  activo: number;
-  dni: string;
   ciudad: string;
   provincia: string;
   codigoPostal: string;
-  cuentaNro: string;
+  telefono: string;
+  email: string;
+  cuenta_nro: string;
   avatarUrl: string;
+  activo: number;
 }

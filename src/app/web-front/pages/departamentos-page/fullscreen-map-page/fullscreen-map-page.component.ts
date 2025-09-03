@@ -101,7 +101,7 @@ export class FullscreenMapPageComponent implements AfterViewInit{
     const transformedData: Departamento[] = backendData.map(item => {
       try {
         // Parsear las coordenadas "lng,lat" a objeto
-        const [lng, lat] = item.lnglat.split(',').map(coord => parseFloat(coord.trim()));
+        const [lng, lat] = item.lngLat.split(',').map(coord => parseFloat(coord.trim()));
 
         // Validar que las coordenadas sean números válidos
         if (isNaN(lng) || isNaN(lat)) {
@@ -110,7 +110,7 @@ export class FullscreenMapPageComponent implements AfterViewInit{
 
         return {
           id: item.id,
-          idProp: item.idProp.toString(),
+          idProp: item.idProp,
           nombre: item.nombre,
           descripcion: item.descripcion,
           calle: item.calle,
@@ -123,13 +123,13 @@ export class FullscreenMapPageComponent implements AfterViewInit{
           activo: item.activo
         };
       } catch (error) {
-        console.error(`Error parseando coordenadas para ${item.nombre}:`, error);
-        console.error('Coordenadas recibidas:', item.lnglat);
+        // console.error(`Error parseando coordenadas para ${item.nombre}:`, error);
+        // console.error('Coordenadas recibidas:', item.lngLat);
 
         // Coordenadas por defecto (Buenos Aires) si hay error
         return {
           id: item.id,
-          idProp: item.idProp.toString(),
+          idProp: item.idProp,
           nombre: item.nombre,
           descripcion: item.descripcion,
           calle: item.calle,
@@ -144,8 +144,8 @@ export class FullscreenMapPageComponent implements AfterViewInit{
       }
     });
 
-    console.log('Datos del backend:', backendData);
-    console.log('Departamentos transformados:', transformedData);
+    // console.log('Datos del backend:', backendData);
+    // console.log('Departamentos transformados:', transformedData);
     return transformedData;
   });
 
@@ -171,7 +171,7 @@ export class FullscreenMapPageComponent implements AfterViewInit{
     await new Promise((resolve) => setTimeout(resolve, 80));
 
     const element = this.divElement()!.nativeElement;
-    console.log(element);
+    // console.log(element);
 
     const { lat, lng } = this.coordinates();
 
@@ -198,7 +198,7 @@ export class FullscreenMapPageComponent implements AfterViewInit{
     });
 
     map.on('load', ()=> {
-      console.log('Map loaded');
+      // console.log('Map loaded');
 
     });
 
@@ -243,7 +243,7 @@ export class FullscreenMapPageComponent implements AfterViewInit{
 
     const departamentos = this.departamentos();
     if (!departamentos || departamentos.length === 0) {
-      console.warn('No hay departamentos para mostrar');
+      // console.warn('No hay departamentos para mostrar');
       // Retry después de un tiempo si los datos aún no están listos
       setTimeout(() => {
         if (this.departamentos().length > 0) {
@@ -307,14 +307,14 @@ export class FullscreenMapPageComponent implements AfterViewInit{
         newMarkers.push(marker);
 
       } catch (error) {
-        console.error(`Error creando marker para departamento ${departamento.nombre}:`, error);
+        // console.error(`Error creando marker para departamento ${departamento.nombre}:`, error);
       }
     });
 
     // Actualizar el signal solo al final
     this.markers.set(newMarkers);
 
-    console.log(`Se crearon ${newMarkers.length} markers en el mapa`);
+    // console.log(`Se crearon ${newMarkers.length} markers en el mapa`);
   }
 
   // Método para refrescar markers manualmente si es necesario

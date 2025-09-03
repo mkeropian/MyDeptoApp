@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Departamento } from '../../../departamentos/interfaces/departamento.interface';
+import { Departamento, DepartamentoBackend } from '../../../departamentos/interfaces/departamento.interface';
 import { v4 as uuid } from 'uuid';
 import { MiniMapComponent } from "../../../shared/components/mini-map/mini-map.component";
 import { FormComponent } from "./form/form.component";
@@ -22,7 +22,7 @@ export class DepartamentosAdminPageComponent {
   departamentosService = inject(DepartamentosService);
   departamentosResource = rxResource({
     request: () => ({}),
-    loader: () => this.departamentosService.getDepartamentos()
+    loader: () => this.departamentosService.getDepartamentosRaw()
   });
 
   sortColumn = signal<string>('');
@@ -30,27 +30,80 @@ export class DepartamentosAdminPageComponent {
   refreshTrigger = signal(0);
   selectedDepartamentos = signal<Departamento[]>([]);
 
+  // Coordenadas fijas de Buenos Aires (centro de la ciudad)
+  buenosAiresCoords = () => ({ lng: -58.3816, lat: -34.6037 });
+
   departamentos = computed(() => {
     const data = this.departamentosResource.value() || [];
-    const column = this.sortColumn();
-    const direction = this.sortDirection();
+    // console.log('Raw data from service:', data);
+    // console.log('Type of first lngLat:', typeof data[0]?.lngLat);
 
-    if (!column) return data;
+    // Verificar si los datos ya vienen transformados (como Departamento[])
+    // o si vienen del backend (como DepartamentoBackend[])
+    if (data.length > 0) {
+      const firstItem = data[0];
 
-    return [...data].sort((a, b) => {
-      const valueA = this.getValue(a, column);
-      const valueB = this.getValue(b, column);
-
-      if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return direction === 'asc'
-          ? valueA.localeCompare(valueB)
-          : valueB.localeCompare(valueA);
+      // Si lngLat ya es un objeto, los datos están transformados
+      if (typeof firstItem.lngLat === 'object' && firstItem.lngLat !== null) {
+        // console.log('Datos ya transformados, usando directamente');
+        return data as unknown as Departamento[];
       }
 
-      if (valueA < valueB) return direction === 'asc' ? -1 : 1;
-      if (valueA > valueB) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
+      // Si lngLat es string, necesitamos transformar
+      if (typeof firstItem.lngLat === 'string') {
+    // console.log('Transformando datos del backend');
+        const backendData = data as DepartamentoBackend[];
+
+        return backendData.map(item => {
+          try {
+            // Parsear las coordenadas "lng,lat" a objeto
+            const [lng, lat] = item.lngLat.split(',').map(coord => parseFloat(coord.trim()));
+
+            // Validar que las coordenadas sean números válidos
+            if (isNaN(lng) || isNaN(lat)) {
+              throw new Error('Coordenadas inválidas');
+            }
+
+            return {
+              id: item.id,
+              idProp: item.idProp,
+              nombre: item.nombre,
+              descripcion: item.descripcion,
+              calle: item.calle,
+              barrio: item.barrio,
+              localidad: item.localidad,
+              provincia: item.provincia,
+              codigoPostal: item.codigoPostal,
+              lngLat: { lng, lat }, // Crear el objeto esperado
+              observaciones: item.observaciones,
+              activo: item.activo
+            } as Departamento;
+          } catch (error) {
+            // console.error(`Error parseando coordenadas para ${item.nombre}:`, error);
+            // console.error('Coordenadas recibidas:', item.lngLat);
+
+            // Coordenadas por defecto (Buenos Aires) si hay error
+            return {
+              id: item.id,
+              idProp: item.idProp,
+              nombre: item.nombre,
+              descripcion: item.descripcion,
+              calle: item.calle,
+              barrio: item.barrio,
+              localidad: item.localidad,
+              provincia: item.provincia,
+              codigoPostal: item.codigoPostal,
+              lngLat: { lng: -58.3816, lat: -34.6037 }, // Buenos Aires por defecto
+              observaciones: item.observaciones,
+              activo: item.activo
+            } as Departamento;
+          }
+        });
+      }
+    }
+
+    // console.log('No hay datos o formato desconocido');
+    return [] as Departamento[];
   });
 
   columns: TableColumn[] = [
@@ -153,15 +206,5 @@ export class DepartamentosAdminPageComponent {
   onSelectionChange(selectedItems: any[]) {
     console.log('Departamentos seleccionados:', selectedItems.length);
   }
-
-firstDepartmentLngLat = computed(() => {
-  const dept = this.departamentos()[0];
-
-  if (!dept?.lngLat) {
-    return { lng: -58.3816, lat: -34.6037 };
-  }
-
-  return dept.lngLat;
-});
 
 }

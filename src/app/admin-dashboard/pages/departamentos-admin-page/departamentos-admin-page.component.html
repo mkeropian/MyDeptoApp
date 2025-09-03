@@ -22,14 +22,18 @@
             Ubicación
           </h3>
         </div>
+
         <div class="flex-1 min-h-[500px]">
+
           <mini-map
-            [lngLat]="firstDepartmentLngLat()"
-            [mapZoom]="4"
+            [lngLat]="buenosAiresCoords()"
+            [mapZoom]="5"
+            [showMarker]="false"
             height="500px"
-	          width="100%"
-	          class="map-container"
+            width="100%"
+            class="map-container"
           />
+
         </div>
       </div>
     </div>

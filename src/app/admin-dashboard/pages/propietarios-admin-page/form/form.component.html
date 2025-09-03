@@ -24,6 +24,7 @@
               placeholder="Juan Pérez"
               formControlName="nombreApellido"
             />
+            <form-error-label [control]="propietarioForm.get('nombreApellido')!" />
           </label>
 
           <!-- Email -->
@@ -35,6 +36,7 @@
               placeholder="juan.perez@email.com"
               formControlName="email"
             />
+            <form-error-label [control]="propietarioForm.get('email')!" />
           </label>
 
           <!-- Teléfono -->
@@ -46,6 +48,7 @@
               placeholder="+54 11 1234-5678"
               formControlName="telefono"
             />
+            <form-error-label [control]="propietarioForm.get('telefono')!" />
           </label>
 
           <!-- Dirección -->
@@ -57,6 +60,7 @@
               placeholder="Av. Corrientes 1234, Piso 5, Depto B"
               formControlName="direccion"
             />
+            <form-error-label [control]="propietarioForm.get('direccion')!" />
           </label>
 
           <!-- Codigo Postal -->
@@ -68,6 +72,7 @@
               placeholder="1234"
               formControlName="codigoPostal"
             />
+            <form-error-label [control]="propietarioForm.get('codigoPostal')!" />
           </label>
 
 
@@ -85,6 +90,7 @@
               placeholder="12.345.678"
               formControlName="dni"
             />
+            <form-error-label [control]="propietarioForm.get('dni')!" />
           </label>
 
           <!-- Ciudad -->
@@ -96,6 +102,7 @@
               placeholder="Buenos Aires"
               formControlName="ciudad"
             />
+            <form-error-label [control]="propietarioForm.get('ciudad')!" />
           </label>
 
           <!-- Provincia -->
@@ -140,8 +147,9 @@
               type="text"
               class="grow"
               placeholder="123456789"
-              formControlName="cuentaNro"
+              formControlName="cuenta_nro"
             />
+            <form-error-label [control]="propietarioForm.get('cuenta_nro')!" />
           </label>
 
           <!-- Estado Activo -->
