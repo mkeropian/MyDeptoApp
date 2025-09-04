@@ -6,7 +6,10 @@
 <section class="w-full flex gap-2 items-start mb-8">
   <!-- Formulario (más ancho con padding derecho) -->
   <div class="flex-[2] pr-4">
-    <app-form />
+    <!-- 🔥 AGREGADA REFERENCIA Y EVENTO DE COORDENADAS -->
+    <app-form 
+      #formComponent
+      (coordinatesChange)="onCoordinatesChange($event)" />
   </div>
 
   <!-- Separador vertical pegado -->

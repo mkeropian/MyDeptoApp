@@ -18,7 +18,7 @@ interface Marker {
 
 @Component({
   selector: 'departamentos-admin-page',
-  imports: [MiniMapComponent, FormComponent, SmartGridComponent],
+  imports: [FormComponent, SmartGridComponent],
   templateUrl: './departamentos-admin-page.component.html',
   styles: `
 	.map-container {
@@ -42,8 +42,12 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
   buenosAiresCoords = () => ({ lng: -58.433160, lat: -34.612762 });
 
   divElement = viewChild<ElementRef>('map');
+  formComponent = viewChild<FormComponent>('formComponent');
   map = signal<mapboxgl.Map | null>(null);
   markers = signal<Marker[]>([]);
+
+  // 🔥 NUEVA FUNCIONALIDAD: Marcador para el nuevo departamento (temporal)
+  newDepartmentMarker = signal<mapboxgl.Marker | null>(null);
 
   departamentos = computed(() => {
     const data = this.departamentosResource.value() || [];
@@ -195,6 +199,125 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
 
   private getValue(obj: any, path: string): any {
     return path.split('.').reduce((o, p) => o && o[p], obj);
+  }
+
+  // 🔥 NUEVA FUNCIONALIDAD: Método para validar coordenadas
+  private isValidCoordinate(coords: { lng: number; lat: number }): boolean {
+    return !isNaN(coords.lng) &&
+           !isNaN(coords.lat) &&
+           coords.lng >= -180 &&
+           coords.lng <= 180 &&
+           coords.lat >= -90 &&
+           coords.lat <= 90;
+  }
+
+  // 🔥 NUEVA FUNCIONALIDAD: Método para actualizar el mapa con nuevas coordenadas
+  private updateMapWithNewCoordinates(coordinates: { lng: number; lat: number }): void {
+    const map = this.map();
+    if (!map) return;
+
+    // Remover marcador anterior si existe
+    const existingMarker = this.newDepartmentMarker();
+    if (existingMarker) {
+      existingMarker.remove();
+    }
+
+    // Crear nuevo marcador
+    const newMarker = new mapboxgl.Marker({
+      color: '#ff6b6b', // Color distintivo para el nuevo departamento
+      draggable: false
+    })
+    .setLngLat([coordinates.lng, coordinates.lat])
+    .addTo(map);
+
+    // Guardar referencia al marcador
+    this.newDepartmentMarker.set(newMarker);
+
+    // Centrar el mapa en las nuevas coordenadas
+    map.flyTo({
+      center: [coordinates.lng, coordinates.lat],
+      zoom: 15, // Zoom más cercano para ver el detalle
+      duration: 1000 // Animación de 1 segundo
+    });
+  }
+
+  // 🔥 NUEVA FUNCIONALIDAD: Método público para ser llamado desde el FormComponent
+  public onCoordinatesChange(coordinatesString: string): void {
+    if (!coordinatesString || coordinatesString.trim() === '') {
+      // Si no hay coordenadas, remover marcador y volver a Buenos Aires
+      const existingMarker = this.newDepartmentMarker();
+      if (existingMarker) {
+        existingMarker.remove();
+        this.newDepartmentMarker.set(null);
+      }
+
+      // Volver a centrar en Buenos Aires
+      const map = this.map();
+      if (map) {
+        map.flyTo({
+          center: [this.buenosAiresCoords().lng, this.buenosAiresCoords().lat],
+          zoom: 10.3,
+          duration: 1000
+        });
+      }
+      return;
+    }
+
+    try {
+      // Usar el parser inteligente
+      const coordinates = this.parseCoordinatesIntelligent(coordinatesString);
+
+      if (coordinates && this.isValidCoordinate(coordinates)) {
+        this.updateMapWithNewCoordinates(coordinates);
+      }
+    } catch (error) {
+      console.error('Error parseando coordenadas:', error);
+    }
+  }
+
+  // 🔥 NUEVA FUNCIONALIDAD: Parser inteligente para el componente padre
+  private parseCoordinatesIntelligent(coordinatesString: string): { lng: number; lat: number } | null {
+    if (!coordinatesString || coordinatesString.trim() === '') {
+      return null;
+    }
+
+    try {
+      const coords = coordinatesString.split(',').map((coord: string) => parseFloat(coord.trim()));
+
+      if (coords.length !== 2 || coords.some(coord => isNaN(coord))) {
+        return null;
+      }
+
+      const [first, second] = coords;
+
+      // Determinar el formato basado en los rangos típicos
+      // Si el primer número es mayor que 90 o menor que -90, probablemente es longitud
+      const isFirstLng = Math.abs(first) > 90;
+      const isSecondLat = Math.abs(second) <= 90;
+
+      // Si parece lng,lat
+      if (isFirstLng && isSecondLat && first >= -180 && first <= 180 && second >= -90 && second <= 90) {
+        return { lng: first, lat: second };
+      }
+
+      // Si parece lat,lng (caso más común de confusión)
+      const isFirstLat = Math.abs(first) <= 90;
+      const isSecondLng = Math.abs(second) > 90;
+
+      if (isFirstLat && isSecondLng && first >= -90 && first <= 90 && second >= -180 && second <= 180) {
+        console.log(`🔄 Coordenadas convertidas automáticamente de lat,lng a lng,lat: ${first},${second} -> ${second},${first}`);
+        return { lng: second, lat: first };
+      }
+
+      // Fallback: asumir lng,lat si ambos están en rangos válidos
+      if ((first >= -180 && first <= 180) && (second >= -90 && second <= 90)) {
+        return { lng: first, lat: second };
+      }
+
+      return null;
+    } catch (error) {
+      return null;
+    }
   }
 
   editar(departamentos: any) {

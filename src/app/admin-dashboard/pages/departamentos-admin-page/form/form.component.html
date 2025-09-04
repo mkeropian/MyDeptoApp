@@ -12,13 +12,13 @@
         <!-- Layout con separador pegado 50%-50% -->
         <div class="flex gap-2 items-start">
           <!-- Columna 1 (50%) -->
-
           <div class="flex-1 space-y-2 pr-4">
 
             <!-- Código Propietario -->
             <label class="form-control w-full">
               <select
                 class="select select-bordered w-full"
+                [class.select-error]="departamentoForm.get('idProp')?.invalid && (departamentoForm.get('idProp')?.dirty || departamentoForm.get('idProp')?.touched)"
                 title="Código Propietario"
                 formControlName="idProp"
               >
@@ -39,10 +39,12 @@
                     }
                   }
               </select>
+              <form-error-label [control]="departamentoForm.get('idProp')!" />
             </label>
 
             <!-- Nombre -->
-            <label class="input input-bordered flex items-center gap-2">
+            <label class="input input-bordered flex items-center gap-2"
+                   [class.input-error]="departamentoForm.get('nombre')?.invalid && (departamentoForm.get('nombre')?.dirty || departamentoForm.get('nombre')?.touched)">
               Nombre
               <input
                 type="text"
@@ -50,13 +52,14 @@
                 placeholder="Amazing Studio Department"
                 formControlName="nombre"
               />
-              <form-error-label [control]="departamentoForm.get('nombre')!" />
             </label>
+            <form-error-label [control]="departamentoForm.get('nombre')!" />
 
             <label class="form-control">
               Descripción
               <textarea
                 class="textarea textarea-bordered resize-none"
+                [class.textarea-error]="departamentoForm.get('descripcion')?.invalid && (departamentoForm.get('descripcion')?.dirty || departamentoForm.get('descripcion')?.touched)"
                 placeholder="Descripción del departamento..."
                 formControlName="descripcion"
                 rows="1"
@@ -67,7 +70,8 @@
             </label>
 
             <!-- Calle -->
-            <label class="input input-bordered flex items-center gap-2">
+            <label class="input input-bordered flex items-center gap-2"
+                   [class.input-error]="departamentoForm.get('calle')?.invalid && (departamentoForm.get('calle')?.dirty || departamentoForm.get('calle')?.touched)">
               Calle
               <input
                 type="text"
@@ -75,14 +79,19 @@
                 placeholder="Tucumán 1234"
                 formControlName="calle"
               />
-              <form-error-label [control]="departamentoForm.get('calle')!" />
             </label>
+            <form-error-label [control]="departamentoForm.get('calle')!" />
 
             <!-- Activo -->
             <div class="form-control">
               <label class="label cursor-pointer py-1">
                 <span class="label-text text-sm">Activo (Opcional)</span>
-                <input type="checkbox" class="toggle toggle-primary toggle-sm" checked />
+                <input
+                  type="checkbox"
+                  class="toggle toggle-primary toggle-sm"
+                  formControlName="activo"
+                  [checked]="departamentoForm.get('activo')?.value === 1"
+                  (change)="departamentoForm.get('activo')?.setValue($any($event.target).checked ? 1 : 0)" />
               </label>
             </div>
           </div>
@@ -102,8 +111,8 @@
                 placeholder="San Telmo"
                 formControlName="barrio"
               />
-              <form-error-label [control]="departamentoForm.get('barrio')!" />
             </label>
+            <form-error-label [control]="departamentoForm.get('barrio')!" />
 
             <!-- Localidad -->
             <label class="input input-bordered flex items-center gap-2">
@@ -114,8 +123,8 @@
                 placeholder="Lomas del Mirador"
                 formControlName="localidad"
               />
-              <form-error-label [control]="departamentoForm.get('localidad')!" />
             </label>
+            <form-error-label [control]="departamentoForm.get('localidad')!" />
 
             <!-- Provincia -->
             <label class="form-control w-full">
@@ -161,20 +170,37 @@
                 formControlName="codigoPostal"
                 pattern="[0-9]{4}"
               />
-              <form-error-label [control]="departamentoForm.get('codigoPostal')!" />
             </label>
+            <form-error-label [control]="departamentoForm.get('codigoPostal')!" />
 
-            <!-- Coordenadas -->
-            <label class="input input-bordered flex items-center gap-2">
-              Coordenadas
-              <input
-                type="text"
-                class="grow"
-                placeholder="-34.6037,-58.3816"
-                formControlName="lngLat"
-              />
-              <form-error-label [control]="departamentoForm.get('lngLat')!" />
-            </label>
+            <!-- 🔥 COORDENADAS CON FUNCIONALIDAD MEJORADA -->
+            <div class="form-control">
+              <label class="input input-bordered flex items-center gap-2"
+                     [class.input-error]="departamentoForm.get('lngLat')?.invalid && (departamentoForm.get('lngLat')?.dirty || departamentoForm.get('lngLat')?.touched)">
+                Coordenadas
+                <input
+                  type="text"
+                  class="grow"
+                  placeholder="-58.433160,-34.612762"
+                  formControlName="lngLat"
+                  (input)="onCoordinatesInput($event)"
+                />
+              </label>
+
+              <!-- Mensaje de error personalizado para coordenadas -->
+              <div *ngIf="departamentoForm.get('lngLat')?.invalid && (departamentoForm.get('lngLat')?.dirty || departamentoForm.get('lngLat')?.touched)"
+                   class="label">
+                <span class="label-text-alt text-error text-xs">
+                  {{ getCoordinatesErrorMessage() }}
+                </span>
+              </div>
+
+              <!-- Ayuda cuando no hay error -->
+              <div *ngIf="!departamentoForm.get('lngLat')?.invalid || (!departamentoForm.get('lngLat')?.dirty && !departamentoForm.get('lngLat')?.touched)"
+                   class="label">
+                <span class="label-text-alt text-xs opacity-70">Formato: longitud,latitud</span>
+              </div>
+            </div>
 
             <!-- Observaciones -->
             <div class="form-control w-full">
@@ -196,7 +222,7 @@
           <button type="button" class="btn btn-ghost btn-sm">
             Cancelar
           </button>
-          <button type="submit" class="btn btn-primary btn-sm">
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="departamentoForm.invalid">
             <i class="fas fa-plus"></i>
             Crear Propiedad
           </button>
