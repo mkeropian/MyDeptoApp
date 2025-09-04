@@ -1,153 +1,207 @@
 <div class="max-w-7xl mx-auto">
-    <div class="card bg-base-100 shadow-sm border border-base-100">
-        <div class="card-body p-4">
+  <div class="card bg-base-100 shadow-sm border border-base-100">
+    <div class="card-body p-4">
 
-            <!-- Header más compacto -->
-            <div class="flex items-center gap-2 mb-3">
-                <i class="fas fa-building text-primary text-base"></i>
-                <h2 class="card-title text-lg">Nueva Propiedad</h2>
+      <!-- Header más compacto -->
+      <div class="flex items-center gap-2 mb-3">
+        <i class="fas fa-building text-primary text-base"></i>
+        <h2 class="card-title text-lg">Nueva Propiedad</h2>
+      </div>
+
+      <form [formGroup]="departamentoForm" (ngSubmit)="onSubmit()" class="space-y-3">
+        <!-- Layout con separador pegado 50%-50% -->
+        <div class="flex gap-2 items-start">
+          <!-- Columna 1 (50%) -->
+
+          <div class="flex-1 space-y-2 pr-4">
+
+            <!-- Código Propietario -->
+            <label class="form-control w-full">
+              <select
+                class="select select-bordered w-full"
+                title="Código Propietario"
+                formControlName="idProp"
+              >
+                <option value=0>Código Propietario</option>
+                  @if (propietariosResource.isLoading()) {
+                    <option disabled>Cargando propietarios...</option>
+                  } @else {
+                    @for (propietario of propietarios(); track propietario.id) {
+                      <option [value]="propietario.id">
+                        {{ propietario.nombreApellido }}
+                        @if (propietario.email) {
+                          - {{ propietario.email }}
+                        }
+                        @if (propietario.telefono) {
+                          - {{ propietario.telefono }}
+                        }
+                      </option>
+                    }
+                  }
+              </select>
+            </label>
+
+            <!-- Nombre -->
+            <label class="input input-bordered flex items-center gap-2">
+              Nombre
+              <input
+                type="text"
+                class="grow"
+                placeholder="Amazing Studio Department"
+                formControlName="nombre"
+              />
+              <form-error-label [control]="departamentoForm.get('nombre')!" />
+            </label>
+
+            <label class="form-control">
+              Descripción
+              <textarea
+                class="textarea textarea-bordered resize-none"
+                placeholder="Descripción del departamento..."
+                formControlName="descripcion"
+                rows="1"
+                (input)="autoResize($event)"
+              >
+              </textarea>
+              <form-error-label [control]="departamentoForm.get('descripcion')!" />
+            </label>
+
+            <!-- Calle -->
+            <label class="input input-bordered flex items-center gap-2">
+              Calle
+              <input
+                type="text"
+                class="grow"
+                placeholder="Tucumán 1234"
+                formControlName="calle"
+              />
+              <form-error-label [control]="departamentoForm.get('calle')!" />
+            </label>
+
+            <!-- Activo -->
+            <div class="form-control">
+              <label class="label cursor-pointer py-1">
+                <span class="label-text text-sm">Activo (Opcional)</span>
+                <input type="checkbox" class="toggle toggle-primary toggle-sm" checked />
+              </label>
+            </div>
+          </div>
+
+          <!-- Separador dinámico -->
+          <div class="w-px bg-base-300 self-stretch mx-0"></div>
+
+          <!-- Columna 2 (50%) -->
+          <div class="flex-1 space-y-2 pl-4">
+
+            <!-- Barrio -->
+            <label class="input input-bordered flex items-center gap-2">
+              Barrio
+              <input
+                type="text"
+                class="grow"
+                placeholder="San Telmo"
+                formControlName="barrio"
+              />
+              <form-error-label [control]="departamentoForm.get('barrio')!" />
+            </label>
+
+            <!-- Localidad -->
+            <label class="input input-bordered flex items-center gap-2">
+              Localidad
+              <input
+                type="text"
+                class="grow"
+                placeholder="Lomas del Mirador"
+                formControlName="localidad"
+              />
+              <form-error-label [control]="departamentoForm.get('localidad')!" />
+            </label>
+
+            <!-- Provincia -->
+            <label class="form-control w-full">
+              <select
+                class="select select-bordered w-full"
+                title="Provincia"
+                formControlName="provincia"
+              >
+                <option value="">Seleccionar provincia</option>
+                <option value="CABA">CABA</option>
+                <option value="BA">Buenos Aires</option>
+                <option value="CA">Catamarca</option>
+                <option value="CH">Chaco</option>
+                <option value="CO">Córdoba</option>
+                <option value="CR">Corrientes</option>
+                <option value="ER">Entre Ríos</option>
+                <option value="FO">Formosa</option>
+                <option value="JU">Jujuy</option>
+                <option value="LP">La Pampa</option>
+                <option value="LR">La Rioja</option>
+                <option value="ME">Mendoza</option>
+                <option value="MI">Misiones</option>
+                <option value="NE">Neuquén</option>
+                <option value="RN">Río Negro</option>
+                <option value="SA">Salta</option>
+                <option value="SJ">San Juan</option>
+                <option value="SL">San Luis</option>
+                <option value="SC">Santa Cruz</option>
+                <option value="SF">Santa Fe</option>
+                <option value="SE">Santiago del Estero</option>
+                <option value="TF">Tierra del Fuego</option>
+                <option value="TU">Tucumán</option>
+              </select>
+            </label>
+
+            <!-- CP -->
+            <label class="input input-bordered flex items-center gap-2">
+              Código Postal
+              <input
+                type="text"
+                class="grow"
+                placeholder="1425"
+                formControlName="codigoPostal"
+                pattern="[0-9]{4}"
+              />
+              <form-error-label [control]="departamentoForm.get('codigoPostal')!" />
+            </label>
+
+            <!-- Coordenadas -->
+            <label class="input input-bordered flex items-center gap-2">
+              Coordenadas
+              <input
+                type="text"
+                class="grow"
+                placeholder="-34.6037,-58.3816"
+                formControlName="lngLat"
+              />
+              <form-error-label [control]="departamentoForm.get('lngLat')!" />
+            </label>
+
+            <!-- Observaciones -->
+            <div class="form-control w-full">
+              <label class="label py-1">
+                <span class="label-text text-sm">Observaciones</span>
+              </label>
+              <textarea
+                class="textarea textarea-bordered textarea-sm h-16"
+                placeholder="Notas adicionales..."
+                formControlName="observaciones"
+              ></textarea>
             </div>
 
-            <form class="space-y-3">
-                <!-- Layout con separador pegado 50%-50% -->
-                <div class="flex gap-2 items-start">
-                    <!-- Columna 1 (50%) -->
-                    <div class="flex-1 space-y-2 pr-4">
-                        <!-- Código -->
-                        <div class="form-control">
-                            <label class="label py-1">
-                                <span class="label-text text-sm">Código Propiedad</span>
-                            </label>
-                            <input type="text" placeholder="PROP-001" class="input input-bordered input-sm"/>
-                            <form-error-label [control]="departamentoForm.get('idProp')!" />
-                        </div>
-
-                        <!-- Nombre -->
-                        <div class="form-control">
-                            <label class="label py-1">
-                                <span class="label-text text-sm">Nombre</span>
-                            </label>
-                            <input type="text" placeholder="Departamento Céntrico" class="input input-bordered input-sm"/>
-                            <form-error-label [control]="departamentoForm.get('nombre')!" />
-                        </div>
-
-                        <!-- Descripción -->
-                        <div class="form-control">
-                            <label class="label py-1">
-                                <span class="label-text text-sm">Descripción</span>
-                            </label>
-                            <textarea class="textarea textarea-bordered textarea-sm h-16" placeholder="Características principales..."></textarea>
-                        </div>
-
-                        <!-- Calle -->
-                        <div class="form-control">
-                            <label class="label py-1">
-                                <span class="label-text text-sm">Calle</span>
-                            </label>
-                            <input type="text" placeholder="Av. Corrientes 1234" class="input input-bordered input-sm" required />
-                        </div>
-
-                        <!-- Activo -->
-                        <div class="form-control">
-                            <label class="label cursor-pointer py-1">
-                                <span class="label-text text-sm">Activo (Opcional)</span>
-                                <input type="checkbox" class="toggle toggle-primary toggle-sm" checked />
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Separador dinámico -->
-                    <div class="w-px bg-base-300 self-stretch mx-0"></div>
-
-                    <!-- Columna 2 (50%) -->
-                    <div class="flex-1 space-y-2 pl-4">
-                        <!-- Barrio -->
-                        <div class="form-control">
-                            <label class="label py-1">
-                                <span class="label-text text-sm">Barrio</span>
-                            </label>
-                            <input type="text" placeholder="San Telmo" class="input input-bordered input-sm" />
-                        </div>
-
-                        <!-- Localidad -->
-                        <div class="form-control">
-                            <label class="label py-1">
-                                <span class="label-text text-sm">Localidad</span>
-                            </label>
-                            <input type="text" placeholder="Buenos Aires" class="input input-bordered input-sm" required />
-                        </div>
-
-                        <!-- Provincia -->
-                        <div class="form-control">
-                            <label class="label py-1">
-                                <span class="label-text text-sm">Provincia (Seleccionable)</span>
-                            </label>
-                            <select class="select select-bordered select-sm" title="selector" required>
-                                <option disabled selected>Seleccionar</option>
-                                <option value="CABA">CABA</option>
-                                <option value="BA">Buenos Aires</option>
-                                <option value="CA">Catamarca</option>
-                                <option value="CH">Chaco</option>
-                                <option value="CO">Córdoba</option>
-                                <option value="CR">Corrientes</option>
-                                <option value="ER">Entre Ríos</option>
-                                <option value="FO">Formosa</option>
-                                <option value="JU">Jujuy</option>
-                                <option value="LP">La Pampa</option>
-                                <option value="LR">La Rioja</option>
-                                <option value="ME">Mendoza</option>
-                                <option value="MI">Misiones</option>
-                                <option value="NE">Neuquén</option>
-                                <option value="RN">Río Negro</option>
-                                <option value="SA">Salta</option>
-                                <option value="SJ">San Juan</option>
-                                <option value="SL">San Luis</option>
-                                <option value="SC">Santa Cruz</option>
-                                <option value="SF">Santa Fe</option>
-                                <option value="SE">Santiago del Estero</option>
-                                <option value="TF">Tierra del Fuego</option>
-                                <option value="TU">Tucumán</option>
-                            </select>
-                        </div>
-
-                        <!-- CP -->
-                        <div class="form-control">
-                            <label class="label py-1">
-                                <span class="label-text text-sm">Código Postal</span>
-                            </label>
-                            <input type="text" placeholder="1425" class="input input-bordered input-sm" pattern="[0-9]{4}" />
-                        </div>
-
-                        <!-- Coordenadas -->
-                        <div class="form-control">
-                            <label class="label py-1">
-                                <span class="label-text text-sm">Coordenadas</span>
-                                <span class="label-text-alt text-xs"><strong>(lat,lng)</strong></span>
-                            </label>
-                            <input type="text" placeholder="-34.6037,-58.3816" class="input input-bordered input-sm" />
-                        </div>
-
-                        <!-- Observaciones -->
-                        <div class="form-control">
-                            <label class="label py-1">
-                                <span class="label-text text-sm">Observaciones</span>
-                            </label>
-                            <textarea class="textarea textarea-bordered textarea-sm h-16" placeholder="Notas adicionales..."></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Botones más compactos -->
-                <div class="flex gap-2 justify-end pt-1">
-                    <button type="button" class="btn btn-ghost btn-sm">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i>
-                        Crear Propiedad
-                    </button>
-                </div>
-            </form>
+          </div>
         </div>
+
+        <!-- Botones más compactos -->
+        <div class="flex gap-2 justify-end pt-1">
+          <button type="button" class="btn btn-ghost btn-sm">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i>
+            Crear Propiedad
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>

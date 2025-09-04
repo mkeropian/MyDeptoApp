@@ -1,9 +1,12 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, computed, effect, inject, OnInit } from '@angular/core';
 import { FormErrorLabelComponent } from "../../../../shared/components/form-error-label/form-error-label.component";
 import { Departamento, DepartamentoBackend } from '../../../../departamentos/interfaces/departamento.interface';
 import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DepartamentosService } from '../../../../departamentos/services/departamentos.service';
+import { Propietario } from '../../../../propietarios/interfaces/propietario.interface';
+import { PropietariosService } from '../../../../propietarios/services/propietarios.service';
+import { rxResource } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-form',
@@ -29,12 +32,20 @@ export class FormComponent implements OnInit {
   router = inject(Router);
   fb = inject(FormBuilder);
   departamentosService = inject(DepartamentosService);
+  propietariosService = inject(PropietariosService);
+
+  propietariosResource = rxResource({
+    request: () => ({}),
+    loader: () => this.propietariosService.getPropietarios()
+  });
+
+  propietarios = computed(() => this.propietariosResource.value() || []);
 
   departamentoForm = this.fb.group({
     idProp: [ 0, [Validators.required, Validators.min(1)]],  // Especificar el tipo explícitamente
     nombre: ['', [Validators.required, Validators.minLength(3)]],
     descripcion: ['', [Validators.required, Validators.minLength(3)]],
-    calle: [''],
+    calle: ['', [Validators.required, Validators.minLength(3)]],
     barrio: [''],
     localidad: [''],
     provincia: [''],
@@ -57,9 +68,6 @@ export class FormComponent implements OnInit {
     const isValid = this.departamentoForm.valid;
     this.departamentoForm.markAllAsTouched();
 
-    console.log(isValid);
-    console.log(this.departamentoForm.value);
-
     if (!isValid) return;
 
     const formValue = this.departamentoForm.value;
@@ -76,7 +84,7 @@ export class FormComponent implements OnInit {
       codigoPostal: formValue.codigoPostal || '',
       lngLat: formValue.lngLat || '',
       observaciones: formValue.observaciones || '',
-      activo: formValue.activo || 0
+      activo: formValue.activo || 1
     };
 
     this.departamentosService.createDepartamento(departamentoData).subscribe(
@@ -88,5 +96,16 @@ export class FormComponent implements OnInit {
         this.router.navigate(['/admin/admin-departamentos']);
       }
     );
+  }
+
+  getPropietarioNombre(id: number): string {
+    const propietario = this.propietarios().find(p => p.id === id);
+    return propietario ? `${propietario.nombreApellido}` : 'Sin asignar';
+  }
+
+  autoResize(event: any): void {
+    const textarea = event.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
   }
 }
