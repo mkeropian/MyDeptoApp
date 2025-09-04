@@ -1,12 +1,20 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { Departamento, DepartamentoBackend } from '../../../departamentos/interfaces/departamento.interface';
-import { v4 as uuid } from 'uuid';
+import { v4 as UUIDv4 } from 'uuid';
 import { MiniMapComponent } from "../../../shared/components/mini-map/mini-map.component";
 import { FormComponent } from "./form/form.component";
 import { DepartamentosService } from '../../../departamentos/services/departamentos.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { TableAction, TableColumn } from '../../../shared/components/smart-grid/smart-grid.interface';
 import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-grid.component";
+import mapboxgl from 'mapbox-gl';
+import { last } from 'rxjs';
+
+interface Marker {
+  id: number;
+  nombre: string;
+  mapboxMarker: mapboxgl.Marker;
+}
 
 @Component({
   selector: 'departamentos-admin-page',
@@ -18,7 +26,7 @@ import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-
 	}
   `
 })
-export class DepartamentosAdminPageComponent {
+export class DepartamentosAdminPageComponent implements AfterViewInit {
   departamentosService = inject(DepartamentosService);
   departamentosResource = rxResource({
     request: () => ({}),
@@ -31,7 +39,11 @@ export class DepartamentosAdminPageComponent {
   selectedDepartamentos = signal<Departamento[]>([]);
 
   // Coordenadas fijas de Buenos Aires (centro de la ciudad)
-  buenosAiresCoords = () => ({ lng: -58.3816, lat: -34.6037 });
+  buenosAiresCoords = () => ({ lng: -58.433160, lat: -34.612762 });
+
+  divElement = viewChild<ElementRef>('map');
+  map = signal<mapboxgl.Map | null>(null);
+  markers = signal<Marker[]>([]);
 
   departamentos = computed(() => {
     const data = this.departamentosResource.value() || [];
@@ -205,6 +217,65 @@ export class DepartamentosAdminPageComponent {
 
   onSelectionChange(selectedItems: any[]) {
     console.log('Departamentos seleccionados:', selectedItems.length);
+  }
+
+  async ngAfterViewInit(){
+    if ( !this.divElement()?.nativeElement ) return;
+
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    const element = this.divElement()!.nativeElement;
+    // console.log(element);
+
+    const map = new mapboxgl.Map({
+      container: element, // container ID
+      style: 'mapbox://styles/mapbox/streets-v12', // style URL
+      center: [this.buenosAiresCoords().lng, this.buenosAiresCoords().lat], // starting position [lng, lat]
+      zoom: 10.3, // starting zoom
+      dragPan: false,
+      dragRotate: false,
+      doubleClickZoom: false,
+      keyboard: false,
+      touchZoomRotate: false,
+      touchPitch: false,
+      scrollZoom: false
+    });
+
+    this.mapListeners(map);
+  }
+
+  mapListeners( map: mapboxgl.Map ) {
+
+    map.on('click', (event) => this.mapClick(event));
+
+    this.map.set(map);
+
+  }
+
+  mapClick(event: mapboxgl.MapMouseEvent) {
+    if ( !this.map() ) return;
+
+    const map = this.map()!;
+    const coords = event.lngLat;
+    const color = '#xxxxxx'.replace(/x/g, (y) =>
+      ((Math.random() * 16) | 0).toString(16)
+    );
+
+    const mapboxMarker = new mapboxgl.Marker({
+      color: color,
+      draggable: false
+    })
+    .setLngLat( coords )
+    .addTo(map);
+
+    const newMarker: Marker = {
+      id: 1,
+      nombre: UUIDv4().slice(0,8),
+      mapboxMarker: mapboxMarker
+    }
+
+    this.markers.set([ newMarker, ...this.markers()]);
+    // this.markers.update((markers) => [newMarker, ...markers]);
   }
 
 }
