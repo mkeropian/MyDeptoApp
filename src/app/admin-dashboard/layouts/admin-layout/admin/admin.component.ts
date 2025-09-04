@@ -12,12 +12,15 @@ import { FooterComponent } from "../../../../shared/components/footer/footer.com
       position: fixed;
       bottom: 0px;
       width: 100%;
-      z-index: 50; /* Agregado z-index */
+      height: 70px; /* Define la altura del footer */
+      z-index: 10;
     }
 
     /* Agregar padding bottom al container principal */
     section.container {
-      padding-bottom: 80px;
+      // padding-bottom: 80px;
+      margin-bottom: 200px; /* Espacio para footer + card (ajusta según necesites) */
+      min-height: calc(100vh - 200px); /* Altura mínima considerando los elementos fijos */
     }
   `
 })

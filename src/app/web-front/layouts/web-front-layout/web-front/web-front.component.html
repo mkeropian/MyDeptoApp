@@ -2,11 +2,10 @@
   <app-navbar />
 </section>
 
-<section class="container mx-auto">
+<section [class]="isMapRoute ? 'map-content' : 'container mx-auto main-content'">
   <router-outlet />
 </section>
 
-<section  id="controls">
+<section id="controls">
   <app-footer />
 </section>
-

@@ -19,72 +19,59 @@ interface Marker {
   imports: [ DecimalPipe, JsonPipe ],
   templateUrl: './fullscreen-map-page.component.html',
   styles: `
-
-    :host {
-      display: block;
-      position: relative;
-      margin-left: calc(-50vw + 50%);
-      margin-right: calc(-50vw + 50%);
-      width: 100vw;
-      height: calc(100vh - 64px - 80px);
-      margin-bottom: 0;
-    }
-
-    .map-container {
-      height: calc(100vh - 64px - 80px);
-      width: 100vw;
-      position: relative;
-      z-index: 1;
-    }
-
-    .markers-section {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 260px;
-      max-height: calc(100vh - 64px - 80px - 120px);
-      background: white;
-      border-radius: 8px;
-      padding: 20px;
-      overflow-y: auto;
-      z-index: 10;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      border: 1px solid #e2e8f0;
-    }
-
-    #controls {
-      background-color: white;
-      padding: 10px;
-      border-radius: 5px;
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      z-index: 10;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      border: 1px solid #e2e8f0;
-      width: 250px;
-    }
-
-    @media (max-width: 640px) {
       :host {
-        height: calc(100vh - 56px - 60px);
+        display: block;
+        width: 100%;
+        height: 100%;
+        position: relative;
       }
 
       .map-container {
-        height: calc(100vh - 56px - 60px);
+        width: 100%;
+        height: 100%;
+        position: relative;
+        z-index: 1;
       }
 
       .markers-section {
-        width: calc(100% - 40px);
-        max-height: calc(100vh - 56px - 60px - 120px);
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        width: 260px;
+        max-height: calc(100% - 120px);
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        overflow-y: auto;
+        z-index: 10;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
       }
 
       #controls {
-        width: calc(100% - 40px);
+        background-color: white;
+        padding: 10px;
+        border-radius: 5px;
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        z-index: 10;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+        width: 250px;
       }
-    }
 
-  `
+      @media (max-width: 640px) {
+        .markers-section {
+          width: calc(100% - 40px);
+          max-height: calc(100% - 120px);
+        }
+
+        #controls {
+          width: calc(100% - 40px);
+        }
+      }
+    `
 })
 export class FullscreenMapPageComponent implements AfterViewInit{
 
