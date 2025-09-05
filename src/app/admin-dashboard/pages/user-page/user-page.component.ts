@@ -5,12 +5,13 @@ import { rxResource } from '@angular/core/rxjs-interop';
 
 import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-grid.component";
 import { TableAction, TableColumn } from '../../../shared/components/smart-grid/smart-grid.interface';
+import { ActivoEstadoPipe } from '../../../shared/pipes/activo-estado.pipe';
 
 import { User } from '../../../users/interfaces/user.interface';
 
 @Component({
   selector: 'users-admin-page',
-  imports: [FormComponent, SmartGridComponent],
+  imports: [FormComponent, SmartGridComponent, ActivoEstadoPipe],
   templateUrl: './user-page.component.html',
 })
 export class UserAdminPageComponent {
@@ -32,9 +33,15 @@ export class UserAdminPageComponent {
     const column = this.sortColumn();
     const direction = this.sortDirection();
 
-    if (!column) return data;
+    // Transforma los datos para incluir activoTexto
+    const transformedData = data.map(user => ({
+      ...user,
+      activoTexto: user.activo === 1 ? 'Sí' : 'No'
+    }));
 
-    return [...data].sort((a, b) => {
+    if (!column) return transformedData;
+
+    return [...transformedData].sort((a, b) => {
       const valueA = this.getValue(a, column);
       const valueB = this.getValue(b, column);
 
@@ -77,7 +84,7 @@ export class UserAdminPageComponent {
       type: 'text'
     },
     {
-      key: 'activo',
+      key: 'activoTexto',
       label: 'Estado',
       sortable: true,
       width: '100px',
@@ -87,31 +94,35 @@ export class UserAdminPageComponent {
 
   actions: TableAction[] = [
     {
-      label: 'Llamar',
-      icon: 'fas fa-phone',
-      class: 'btn-success btn-xs',
-      action: (usuario) => this.contactar(usuario)
-    },
-    {
-      label: 'Email',
-      icon: 'fas fa-envelope',
-      class: 'btn-info btn-xs',
-      action: (usuario) => this.enviarEmail(usuario)
-    },
-    {
       label: 'Editar',
       icon: 'fas fa-edit',
       class: 'btn-primary btn-xs',
       action: (usuario) => this.editar(usuario)
+    },
+    {
+      label: 'Activar/Desactivar',
+      icon: 'fas fa-edit',
+      class: 'btn-primary btn-xs',
+      action: (usuario) => this.toggleActivo(usuario)
     }
   ];
 
-  contactar(usuario: any) {
-    window.open(`tel:${usuario.contacto.telefono}`);
-  }
+  toggleActivo(usuario: any) {
+    usuario.activo = !usuario.activo;
+    usuario.activoTexto = usuario.activo ? 'Sí' : 'No';
 
-  enviarEmail(usuario: any) {
-    window.open(`mailto:${usuario.contacto.email}`);
+    this.usersService.updateUsuarioActivo(usuario.id, { activo: usuario.activo }).subscribe(
+      response => {
+        this.showSuccessToast(`Usuario ${usuario.usuario} actualizado correctamente.`);
+      },
+      error => {
+        // Revertir el cambio en caso de error
+        usuario.activo = !usuario.activo;
+        usuario.activoTexto = usuario.activo ? 'Sí' : 'No';
+        console.error('Error al actualizar el usuario:', error);
+        this.showErrorToast(`Error al actualizar el usuario ${usuario.usuario}.`);
+      }
+    );
   }
 
   editar(usuario: any) {
@@ -138,6 +149,53 @@ export class UserAdminPageComponent {
 
   onSelectionChange(selectedItems: any[]) {
     console.log('Usuarios seleccionados:', selectedItems.length);
+  }
+
+  private showSuccessToast(message: string): void {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
+    toast.innerHTML = `
+      <div class="alert alert-success shadow-lg">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">${message}</span>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
+  }
+
+  // Método para mostrar toast de error
+  private showErrorToast(message: string): void {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
+    toast.innerHTML = `
+      <div class="alert alert-error shadow-lg">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">${message}</span>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
   }
 
 }

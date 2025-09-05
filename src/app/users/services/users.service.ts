@@ -19,4 +19,7 @@ export class UsuariosService {
     return this.http.post<User>(`${baseUrl}/usuarios/tema/${id}`, usuarioTemaLike);
   }
 
+  updateUsuarioActivo(id:number, usuarioActivoLike: Partial<User>): Observable<User> {
+    return this.http.post<User>(`${baseUrl}/usuarios/activo/${id}`, usuarioActivoLike);
+  }
 }
