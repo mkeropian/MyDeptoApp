@@ -12,7 +12,7 @@ export class DashboardPropietariosPageComponent {
   propietariosService = inject(PropietariosService);
   propietariosResource = rxResource({
     request: () => ({}),
-    loader: () => this.propietariosService.getPropietarios()
+    loader: () => this.propietariosService.getPropietariosActivos()
   });
 
   propietarios = computed(() => {

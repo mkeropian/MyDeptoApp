@@ -1,12 +1,12 @@
 import { Component, inject } from '@angular/core';
-import { UsuariosService } from '../../../users/services/users.service';
+import { UsuariosService } from '../../../../users/services/users.service';
 
 @Component({
   selector: 'app-settings-page',
   imports: [],
-  templateUrl: './settings-page.component.html',
+  templateUrl: './themes-settings-page.component.html',
 })
-export class SettingsPageComponent {
+export class ThemesSettingsPageComponent {
 
   UsuariosService = inject(UsuariosService);
   selectedTheme: string = '';

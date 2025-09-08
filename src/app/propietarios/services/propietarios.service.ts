@@ -14,6 +14,10 @@ export class PropietariosService {
     return this.http.get<Propietario[]>(`${baseUrl}/propietarios/all`);
   }
 
+  getPropietariosActivos() {
+    return this.http.get<Propietario[]>(`${baseUrl}/propietarios/allActives`);
+  }
+
   createPropietario(propietarioLike: Partial<Propietario>): Observable<Propietario> {
     return this.http.put<Propietario>(`${baseUrl}/propietarios`, propietarioLike);
   }

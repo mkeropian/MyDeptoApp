@@ -54,6 +54,11 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
     // console.log('Raw data from service:', data);
     // console.log('Type of first lngLat:', typeof data[0]?.lngLat);
 
+    const transformedData = data.map(departamentos => ({
+      ...departamentos,
+      activoTexto: departamentos.activo === 1 ? 'Sí' : 'No'
+    }));
+
     // Verificar si los datos ya vienen transformados (como Departamento[])
     // o si vienen del backend (como DepartamentoBackend[])
     if (data.length > 0) {
@@ -92,7 +97,8 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
               codigoPostal: item.codigoPostal,
               lngLat: { lng, lat }, // Crear el objeto esperado
               observaciones: item.observaciones,
-              activo: item.activo
+              activo: item.activo,
+              activoTexto: item.activo === 1 ? 'Sí' : 'No'
             } as Departamento;
           } catch (error) {
             // console.error(`Error parseando coordenadas para ${item.nombre}:`, error);
@@ -111,7 +117,8 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
               codigoPostal: item.codigoPostal,
               lngLat: { lng: -58.3816, lat: -34.6037 }, // Buenos Aires por defecto
               observaciones: item.observaciones,
-              activo: item.activo
+              activo: item.activo,
+              activoTexto: item.activo === 1 ? 'Sí' : 'No'
             } as Departamento;
           }
         });
@@ -180,7 +187,7 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
       type: 'text'
     },
     {
-      key: 'activo',
+      key: 'activoTexto',
       label: 'Estado',
       sortable: true,
       width: '100px',
@@ -204,11 +211,11 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
   // 🔥 NUEVA FUNCIONALIDAD: Método para validar coordenadas
   private isValidCoordinate(coords: { lng: number; lat: number }): boolean {
     return !isNaN(coords.lng) &&
-           !isNaN(coords.lat) &&
-           coords.lng >= -180 &&
-           coords.lng <= 180 &&
-           coords.lat >= -90 &&
-           coords.lat <= 90;
+      !isNaN(coords.lat) &&
+      coords.lng >= -180 &&
+      coords.lng <= 180 &&
+      coords.lat >= -90 &&
+      coords.lat <= 90;
   }
 
   // 🔥 NUEVA FUNCIONALIDAD: Método para actualizar el mapa con nuevas coordenadas

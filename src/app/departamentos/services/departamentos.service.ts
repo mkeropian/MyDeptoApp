@@ -20,6 +20,14 @@ export class DepartamentosService {
     return this.http.get<DepartamentoBackend[]>(`${baseUrl}/departamentos/all`);
   }
 
+  getDepartamentosActivos() {
+    return this.http.get<Departamento[]>(`${baseUrl}/departamentos/allActives`);
+  }
+
+  getDepartamentosRawActivos(): Observable<DepartamentoBackend[]> {
+    return this.http.get<DepartamentoBackend[]>(`${baseUrl}/departamentos/allActives`);
+  }
+
   createDepartamento(departamento: Partial<DepartamentoBackend>) {
     return this.http.put<DepartamentoBackend>(`${baseUrl}/departamentos`, departamento);
   }

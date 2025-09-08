@@ -30,9 +30,15 @@ export class PropietariosAdminPageComponent {
     const column = this.sortColumn();
     const direction = this.sortDirection();
 
-    if (!column) return data;
+    // Transforma los datos para incluir activoTexto
+    const transformedData = data.map(user => ({
+      ...user,
+      activoTexto: user.activo === 1 ? 'Sí' : 'No'
+    }));
 
-    return [...data].sort((a, b) => {
+    if (!column) return transformedData;
+
+    return [...transformedData].sort((a, b) => {
       const valueA = this.getValue(a, column);
       const valueB = this.getValue(b, column);
 
@@ -99,7 +105,7 @@ export class PropietariosAdminPageComponent {
       type: 'text'
     },
     {
-      key: 'activo',
+      key: 'activoTexto',
       label: 'Estado',
       sortable: true,
       width: '100px',
@@ -142,4 +148,25 @@ export class PropietariosAdminPageComponent {
   onSelectionChange(selectedItems: any[]) {
     console.log('Propietarios seleccionados:', selectedItems.length);
   }
+
+  // TODO:
+  // toggleActivo(propietarios: any) {
+  //   propietarios.activo = !propietarios.activo;
+  //   propietarios.activoTexto = propietarios.activo ? 'Sí' : 'No';
+
+  //   this.propietariosService.updatePropietarioActivo(propietarios.id, { activo: propietarios.activo }).subscribe(
+  //     response => {
+  //       this.showSuccessToast(`Usuario ${usuario.usuario} actualizado correctamente.`);
+  //     },
+  //     error => {
+  //       // Revertir el cambio en caso de error
+  //       usuario.activo = !usuario.activo;
+  //       usuario.activoTexto = usuario.activo ? 'Sí' : 'No';
+  //       console.error('Error al actualizar el usuario:', error);
+  //       this.showErrorToast(`Error al actualizar el usuario ${usuario.usuario}.`);
+  //     }
+  //   );
+  // }
+
 }
+

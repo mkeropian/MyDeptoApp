@@ -54,10 +54,26 @@
         <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
           <li>
             <a
-              routerLink="/admin/settings"
+              routerLink="/admin/themes-settings"
               (click)="onMenuItemClick()"
               routerLinkActive="active"
             >... del Sistema
+            </a>
+          </li>
+          <li>
+            <a
+              routerLink="/admin/roles-settings"
+              (click)="onMenuItemClick()"
+              routerLinkActive="active"
+            >... de Roles
+            </a>
+          </li>
+          <li>
+            <a
+              routerLink="/admin/settings-permisos-roles"
+              (click)="onMenuItemClick()"
+              routerLinkActive="active"
+            >... de Permisos
             </a>
           </li>
           <li>

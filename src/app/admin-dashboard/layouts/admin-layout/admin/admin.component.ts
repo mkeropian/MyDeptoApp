@@ -18,7 +18,6 @@ import { FooterComponent } from "../../../../shared/components/footer/footer.com
 
     /* Agregar padding bottom al container principal */
     section.container {
-      // padding-bottom: 80px;
       margin-bottom: 200px; /* Espacio para footer + card (ajusta según necesites) */
       min-height: calc(100vh - 200px); /* Altura mínima considerando los elementos fijos */
     }

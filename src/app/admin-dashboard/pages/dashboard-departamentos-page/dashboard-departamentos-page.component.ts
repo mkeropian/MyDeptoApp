@@ -13,7 +13,7 @@ export class DashboardDepartamentosPageComponent {
   departamentosService = inject(DepartamentosService);
   departamentosResource = rxResource({
     request: () => ({}),
-    loader: () => this.departamentosService.getDepartamentosRaw()
+    loader: () => this.departamentosService.getDepartamentosRawActivos()
   });
 
   departamentos = computed(() => {

@@ -5,13 +5,12 @@ import { rxResource } from '@angular/core/rxjs-interop';
 
 import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-grid.component";
 import { TableAction, TableColumn } from '../../../shared/components/smart-grid/smart-grid.interface';
-import { ActivoEstadoPipe } from '../../../shared/pipes/activo-estado.pipe';
 
 import { User } from '../../../users/interfaces/user.interface';
 
 @Component({
   selector: 'users-admin-page',
-  imports: [FormComponent, SmartGridComponent, ActivoEstadoPipe],
+  imports: [FormComponent, SmartGridComponent],
   templateUrl: './user-page.component.html',
 })
 export class UserAdminPageComponent {
