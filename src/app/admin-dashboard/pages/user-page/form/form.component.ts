@@ -1,6 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { UsuariosService } from '../../../../users/services/users.service';
+import { User } from '../../../../users/interfaces/user.interface';
 
 @Component({
   selector: 'app-form',
@@ -32,6 +35,9 @@ export class FormComponent {
   avatarPreview = signal<string>('');
   selectedFile = signal<File | null>(null);
 
+  router = inject(Router);
+  usersService = inject(UsuariosService);
+
   // FormGroup para manejar el formulario
   userForm: FormGroup;
 
@@ -42,7 +48,7 @@ export class FormComponent {
       email: ['', [Validators.required, Validators.email]],
       clave: ['', [Validators.required, Validators.minLength(6)]],
       activo: [true], // Por defecto activo
-      avatar: [''] // Para almacenar la URL o referencia del avatar
+      // avatar: [''] // Para almacenar la URL o referencia del avatar
     });
   }
 
@@ -59,14 +65,18 @@ export class FormComponent {
       if (!allowedTypes.includes(file.type)) {
         alert('Tipo de archivo no permitido. Use JPG, PNG o GIF.');
         input.value = '';
+        this.selectedFile.set(null);
+        this.avatarPreview.set('');
         return;
       }
 
-      // Validar tamaño (2MB máximo)
-      const maxSize = 2 * 1024 * 1024; // 2MB en bytes
+      // Validar tamaño (4MB máximo)
+      const maxSize = 4 * 1024 * 1024; // 2MB en bytes
       if (file.size > maxSize) {
-        alert('El archivo es demasiado grande. Máximo 2MB permitido.');
+        alert('El archivo es demasiado grande. Máximo 4MB permitido.');
         input.value = '';
+        this.selectedFile.set(null);
+        this.avatarPreview.set('');
         return;
       }
 
@@ -81,11 +91,14 @@ export class FormComponent {
       };
       reader.readAsDataURL(file);
 
-      // Actualizar el form control con el nombre del archivo
-      this.userForm.patchValue({
-        avatar: file.name
-      });
     }
+  }
+
+  /**
+   * Genera la ruta del avatar basada en el nombre del archivo
+   */
+  private generateAvatarUrl(fileName: string): string {
+    return `assets/images/${fileName}`;
   }
 
   /**
@@ -102,20 +115,57 @@ export class FormComponent {
    */
   onSubmit(): void {
     if (this.userForm.valid) {
-      const formData = {
+      const selectedFile = this.selectedFile();
+
+      const userData  = {
         ...this.userForm.value,
-        avatarFile: this.selectedFile()
+        avatarUrl: selectedFile ? this.generateAvatarUrl(selectedFile.name) : '',
+        tema: 'night'
       };
 
-      console.log('Datos del formulario:', formData);
+    console.log('Datos del formulario:', userData);
 
-      // Aquí puedes agregar la lógica para enviar los datos al servidor
-      // Por ejemplo, llamar a un servicio
+    this.usersService.createUsuario(userData as User).subscribe(
+      usuario => {
+        console.log('Propietario creado:', usuario);
+
+        if (selectedFile) {
+          this.uploadAvatarFile(selectedFile, usuario);
+        }
+
+        this.resetForm();
+        // this.userForm.reset();
+        // this.userForm.markAsUntouched();
+        // this.userForm.markAsPristine();
+        this.router.navigate(['/admin/admin-usuarios']);
+      });
 
     } else {
       console.log('Formulario inválido');
       this.markFormGroupTouched();
     }
+  }
+
+  /**
+   * Método para subir el archivo físico al servidor
+   * Este es un ejemplo básico - ajústalo según tu backend
+   */
+  private uploadAvatarFile(file: File, usuario: User): void {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    formData.append('userId', usuario.id?.toString() || '');
+
+    // Ejemplo de llamada para subir el archivo
+    // Necesitarás implementar este método en tu service
+    this.usersService.uploadAvatar(formData).subscribe({
+      next: (response) => {
+        console.log('Avatar subido correctamente:', response);
+      },
+      error: (error) => {
+        console.error('Error al subir avatar:', error);
+        // Opcional: mostrar un mensaje de advertencia al usuario
+      }
+    });
   }
 
   /**
@@ -137,6 +187,11 @@ export class FormComponent {
     });
     this.avatarPreview.set('');
     this.selectedFile.set(null);
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   /**

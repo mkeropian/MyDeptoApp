@@ -9,11 +9,11 @@ import { TableAction, TableColumn } from '../../../shared/components/smart-grid/
 import { User } from '../../../users/interfaces/user.interface';
 
 @Component({
-  selector: 'users-admin-page',
+  selector: 'users-page',
   imports: [FormComponent, SmartGridComponent],
   templateUrl: './user-page.component.html',
 })
-export class UserAdminPageComponent {
+export class UserPageComponent {
 
   usersService = inject(UsuariosService);
 

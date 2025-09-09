@@ -3,11 +3,13 @@ import { AdminComponent } from "./layouts/admin-layout/admin/admin.component";
 import { ThemesSettingsPageComponent } from "./pages/settings/themes-settings-page/themes-settings-page.component";
 
 import { NotFoundPageComponent } from "../shared/pages/not-found-page/not-found-page.component";
-import { UserAdminPageComponent } from "./pages/user-page/user-page.component";
 import { DepartamentosAdminPageComponent } from "./pages/departamentos-admin-page/departamentos-admin-page.component";
 import { PropietariosAdminPageComponent } from "./pages/propietarios-admin-page/propietarios-admin-page.component";
 import { RolesSettingsPageComponent } from "./pages/settings/roles-settings-page/roles-settings-page.component";
 import { PermisosRolesSettingsPageComponent } from "./pages/settings/permisos-roles-settings-page/permisos-roles-settings-page.component";
+import { UserPageComponent } from "./pages/user-page/user-page.component";
+import { GastosAdminPageComponent } from "./pages/gastos-admin-page/gastos-admin-page.component";
+import { IngresosAdminPageComponent } from "./pages/ingresos-admin-page/ingresos-admin-page.component";
 
 export const adminRoutes: Routes = [
   {
@@ -24,7 +26,15 @@ export const adminRoutes: Routes = [
       },
       {
         path:'admin-usuarios',
-        component: UserAdminPageComponent,
+        component: UserPageComponent,
+      },
+      {
+        path:'admin-gastos',
+        component: GastosAdminPageComponent,
+      },
+      {
+        path:'admin-ingresos',
+        component: IngresosAdminPageComponent,
       },
       {
         path:'themes-settings',

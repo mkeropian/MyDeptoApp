@@ -24,8 +24,8 @@
       <li class="dropdown dropdown-hover" [class.dropdown-open]="isOperacionOpen">
         <div tabindex="0" role="button" (click)="toggleOperacion()">Operación</div>
         <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-          <li><a (click)="onMenuItemClick()">Carga de Gastos</a></li>
-          <li><a (click)="onMenuItemClick()">Carga de Ingresos</a></li>
+          <li><a routerLink="/admin/admin-gastos" (click)="onMenuItemClick()">Carga de Gastos</a></li>
+          <li><a routerLink="/admin/admin-ingresos" (click)="onMenuItemClick()">Carga de Ingresos</a></li>
         </ul>
       </li>
 

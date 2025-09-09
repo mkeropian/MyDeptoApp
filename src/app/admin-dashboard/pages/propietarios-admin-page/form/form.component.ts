@@ -76,14 +76,14 @@ export class FormComponent implements OnInit{
     const formValue = this.propietarioForm.value;
     // console.log('Datos del formulario:', formValue);
 
-      this.propietariosService.createPropietario(formValue as Propietario).subscribe(
-        propietario => {
-          console.log('Propietario creado:', propietario);
-          this.propietarioForm.reset();
-          this.propietarioForm.markAsUntouched();
-          this.propietarioForm.markAsPristine();
-          this.router.navigate(['/admin/admin-propietarios']);
-        });
+    this.propietariosService.createPropietario(formValue as Propietario).subscribe(
+      propietario => {
+        console.log('Propietario creado:', propietario);
+        this.propietarioForm.reset();
+        this.propietarioForm.markAsUntouched();
+        this.propietarioForm.markAsPristine();
+        this.router.navigate(['/admin/admin-propietarios']);
+      });
   }
 
 }
