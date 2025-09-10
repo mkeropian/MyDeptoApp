@@ -23,18 +23,15 @@
               formControlName="idTipoGasto"
             >
               <option value=0>Tipo Gasto</option>
-                <!-- @if (departamentosResource.isLoading()) {
-                  <option disabled>Cargando propietarios...</option>
+                @if (tipoGastoResource.isLoading()) {
+                  <option disabled>Cargando Tipo de Gastos...</option>
                 } @else {
-                  @for (departamento of departamentos(); track departamento.id) {
-                    <option [value]="departamento.id">
-                      {{ departamento.nombre }} -
-                      @if (departamento.idProp) {
-                        - {{ departamento.idProp }}
-                      }
+                  @for (tipoGasto of tipoGastos(); track tipoGasto.id) {
+                    <option [value]="tipoGasto.id">
+                      {{ tipoGasto.descripcion }}
                     </option>
                   }
-                } -->
+                }
             </select>
             <!-- <form-error-label [control]="departamentos.get('idProp')!" /> -->
           </label>

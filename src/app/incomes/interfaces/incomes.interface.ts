@@ -1,15 +1,15 @@
-export interface Gasto {
+export interface Pago {
   id: number;
-  idTipoGasto: number;
+  idTipoPago: number;
   idDep: number;
   monto: number;
   fecha: string;
   observaciones: string;
 }
 
-export interface GastoGrid {
+export interface PagoGrid {
   id: number;
-  idTipoGasto: number;
+  idTipoPago: number;
   descripcion: string;
   idDep: number;
   nombre: string;
@@ -18,8 +18,9 @@ export interface GastoGrid {
   observaciones: string;
 }
 
-export interface TipoGasto {
+export interface TipoPago {
   descripcion: string;
   activo: number;
   id: number;
 }
+

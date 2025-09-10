@@ -16,7 +16,8 @@ import { FormErrorLabelComponent } from '../../../../shared/components/form-erro
   templateUrl: './form.component.html',
 })
 export class FormComponent implements OnInit {
-gasto: Gasto = {
+
+  gasto: Gasto = {
     id: 0,
     idDep: 0,
     idTipoGasto: 0,
@@ -36,6 +37,12 @@ gasto: Gasto = {
     loader: () => this.departamentosService.getDepartamentosActivos()
   });
 
+  tipoGastoResource = rxResource({
+    request: () => ({}),
+    loader: () => this.gastosService.getTipoGasto()
+  });
+
+  tipoGastos = computed (() => this.tipoGastoResource.value() || []);
   departamentos = computed(() => this.departamentosResource.value() || []);
 
   gastosForm = this.fb.group({
@@ -76,7 +83,7 @@ gasto: Gasto = {
 
     this.gastosService.createGasto(formValue as Gasto).subscribe(
       gasto => {
-        console.log('Gastos creado:', gasto);
+        console.log('Gasto creado:', gasto);
         this.gastosForm.reset();
         this.gastosForm.markAsUntouched();
         this.gastosForm.markAsPristine();

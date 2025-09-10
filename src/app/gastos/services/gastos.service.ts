@@ -2,7 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { environment } from "../../../environments/environment";
 import { Observable } from "rxjs";
-import { Gasto } from "../interfaces/gasto.interface";
+import { Gasto, GastoGrid, TipoGasto } from "../interfaces/gasto.interface";
 
 const baseUrl = environment.baseUrl;
 
@@ -10,11 +10,12 @@ const baseUrl = environment.baseUrl;
 export class GastosService {
   private http = inject(HttpClient);
 
-  //TODO
-  // getTipoGastos
+  getTipoGasto(){
+    return this.http.get<TipoGasto[]>(`${baseUrl}/gastos/tipos`);
+  }
 
   getGastos() {
-    return this.http.get<Gasto[]>(`${baseUrl}/gastos/all`);
+    return this.http.get<GastoGrid[]>(`${baseUrl}/gastos/all`);
   }
 
   createGasto(gastoLike: Partial<Gasto>): Observable<Gasto> {

@@ -53,42 +53,56 @@ export class GastosAdminPageComponent {
       key: 'id',
       label: 'Id',
       sortable: true,
-      width: '130px',
+      width: '60px',
       type: 'text'
     },
     {
       key: 'idTipoGasto',
+      label: 'Cod. Tipo Gasto',
+      sortable: true,
+      width: '60px',
+      type: 'text'
+    },
+    {
+      key: 'descripcion',
       label: 'Tipo Gasto',
       sortable: true,
-      width: '130px',
+      width: '260px',
       type: 'text'
     },
     {
       key: 'idDep',
       label: 'Departamento',
       sortable: true,
-      width: '130px',
+      width: '60px',
+      type: 'text'
+    },
+    {
+      key: 'nombre',
+      label: 'Departamento',
+      sortable: true,
+      width: '260px',
       type: 'text'
     },
     {
       key: 'monto',
       label: 'Monto',
       sortable: true,
-      width: '130px',
+      width: '260px',
       type: 'text'
     },
     {
       key: 'fecha',
       label: 'fecha',
       sortable: true,
-      width: '130px',
+      width: '260px',
       type: 'text'
     },
     {
       key: 'observaciones',
       label: 'Observaciones',
       sortable: true,
-      width: '130px',
+      width: '380px',
       type: 'text'
     }
   ];

@@ -1,1 +1,124 @@
-<p>form works!</p>,
+
+<div class="container mx-auto p-1">
+  <!-- Encabezado -->
+  <div class="mb-1">
+    <h2 class="text-base font-bold mb-1">Registrar Nuevo Pago</h2>
+    <p class="text-sm text-base-content/70">Complete la información del pago</p>
+  </div>
+
+  <!-- Formulario en 2 columnas -->
+  <div class="bg-base-100 rounded-box p-3 shadow">
+    <form [formGroup]="pagosForm" (ngSubmit)="onSubmit()">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        <!-- Columna Izquierda -->
+        <div class="space-y-2">
+
+          <!-- Código Tipo Pago -->
+          <label class="form-control w-full">
+            <select
+              class="select select-bordered w-full"
+              [class.select-error]="pagosForm.get('idTipoPago')?.invalid && (pagosForm.get('idTipoPago')?.dirty || pagosForm.get('idTipoPago')?.touched)"
+              title="Código Tipo Pago"
+              formControlName="idTipoPago"
+            >
+              <option value=0>Tipo Pago</option>
+                @if (tipoPagoResource.isLoading()) {
+                  <option disabled>Cargando Tipo de Pagos...</option>
+                } @else {
+                  @for (tipoPago of tipoPagos(); track tipoPago.id) {
+                    <option [value]="tipoPago.id">
+                      {{ tipoPago.descripcion }}
+                    </option>
+                  }
+                }
+            </select>
+            <!-- <form-error-label [control]="departamentos.get('idProp')!" /> -->
+          </label>
+
+          <!-- Código Departamento -->
+          <label class="form-control w-full">
+            <select
+              class="select select-bordered w-full"
+              title="Código departamento"
+              formControlName="idDep"
+            >
+              <option value=0 selected>Código departamento</option>
+                @if (departamentosResource.isLoading()) {
+                  <option disabled>Cargando propietarios...</option>
+                } @else {
+                  @for (departamento of departamentos(); track departamento.id) {
+                    <option [value]="departamento.id">
+                      {{ departamento.nombre }}
+                      @if (departamento.calle) {
+                        - {{ departamento.calle }}
+                      }
+                      @if (departamento.observaciones) {
+                        - {{ departamento.observaciones }}
+                      }
+                    </option>
+                  }
+                }
+            </select>
+            <!-- <form-error-label [control]="departamentos.get('idProp')!" /> -->
+          </label>
+
+          <!-- Monto Gasto -->
+          <label class="input input-bordered flex items-center gap-2">
+            $ Monto
+            <input
+              type="text"
+              class="grow"
+              placeholder="$10.000"
+              formControlName="monto"
+            />
+            <form-error-label [control]="pagosForm.get('monto')!" />
+          </label>
+
+        </div>
+
+        <!-- Columna Derecha -->
+        <div class="space-y-2">
+
+          <!-- Fecha -->
+          <label class="input input-bordered flex items-center gap-2">
+            Fecha
+            <input
+              type="date"
+              class="grow"
+              placeholder=""
+              formControlName="fecha"
+            />
+            <form-error-label [control]="pagosForm.get('fecha')!" />
+          </label>
+
+          <!-- Observaciones -->
+          <label class="input input-bordered flex items-center gap-2">
+            Observaciones
+            <input
+              type="text"
+              class="grow"
+              placeholder=""
+              formControlName="observaciones"
+            />
+            <form-error-label [control]="pagosForm.get('observaciones')!" />
+          </label>
+
+        </div>
+
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="divider col-span-1 lg:col-span-2"></div>
+      <div class="col-span-1 lg:col-span-2 flex gap-2 justify-end">
+        <button type="button" class="btn btn-outline" (click)="limpiarForm()">
+          Limpiar
+        </button>
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i>
+          Crear nuevo Gasto
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
