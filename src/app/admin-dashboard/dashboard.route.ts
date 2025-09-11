@@ -5,6 +5,7 @@ import { NotFoundPageComponent } from "../shared/pages/not-found-page/not-found-
 import { DashboardPropietariosPageComponent } from "./pages/dashboard-propietarios-page/dashboard-propietarios-page.component";
 import { DashboardDepartamentosPageComponent } from "./pages/dashboard-departamentos-page/dashboard-departamentos-page.component";
 import { DashboardEstadisticasPageComponent } from "./pages/dashboard-estadisticas-page/dashboard-estadisticas-page.component";
+import { GastosDepartamentosPageComponent } from "./pages/dashboard-estadisticas-page/gastosDepartamentos-page/gastosDepartamentos-page.component";
 
 export const DashboardRoutes: Routes = [
   {
@@ -23,6 +24,10 @@ export const DashboardRoutes: Routes = [
       {
         path:'estadisticas',
         component: DashboardEstadisticasPageComponent,
+      },
+      {
+        path:'gastosxdep',
+        component: GastosDepartamentosPageComponent,
       },
       {
         path: '**',

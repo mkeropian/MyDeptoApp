@@ -19,6 +19,6 @@ export class GastosService {
   }
 
   createGasto(gastoLike: Partial<Gasto>): Observable<Gasto> {
-    return this.http.put<Gasto>(`${baseUrl}/gasto`, gastoLike);
+    return this.http.put<Gasto>(`${baseUrl}/gastos`, gastoLike);
   }
 }

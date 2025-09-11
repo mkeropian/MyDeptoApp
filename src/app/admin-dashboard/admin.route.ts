@@ -10,6 +10,8 @@ import { PermisosRolesSettingsPageComponent } from "./pages/settings/permisos-ro
 import { UserPageComponent } from "./pages/user-page/user-page.component";
 import { GastosAdminPageComponent } from "./pages/gastos-admin-page/gastos-admin-page.component";
 import { IngresosAdminPageComponent } from "./pages/ingresos-admin-page/ingresos-admin-page.component";
+import { RendicionesAdminPageComponent } from "./pages/rendiciones-admin-page/rendiciones-admin-page.component";
+
 
 export const adminRoutes: Routes = [
   {
@@ -35,6 +37,10 @@ export const adminRoutes: Routes = [
       {
         path:'admin-ingresos',
         component: IngresosAdminPageComponent,
+      },
+      {
+        path:'rendiciones-admin',
+        component: RendicionesAdminPageComponent,
       },
       {
         path:'themes-settings',
