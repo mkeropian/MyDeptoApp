@@ -2,7 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 
 import { environment } from "../../../environments/environment";
-import { User } from "../interfaces/user.interface";
+import { Rol, User } from "../interfaces/user.interface";
 import { Observable } from "rxjs";
 
 const baseUrl = environment.baseUrl;
@@ -42,5 +42,9 @@ export class UsuariosService {
     formData.append('avatar', file);
 
     return this.http.post(`${baseUrl}/usuarios/${userId}/avatar`, formData);
+  }
+
+  getRoles() {
+    return this.http.get<Rol[]>(`${baseUrl}/roles/all`);
   }
 }

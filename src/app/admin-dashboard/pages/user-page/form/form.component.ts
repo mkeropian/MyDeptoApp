@@ -1,9 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { UsuariosService } from '../../../../users/services/users.service';
 import { User } from '../../../../users/interfaces/user.interface';
+import { rxResource } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-form',
@@ -37,6 +38,13 @@ export class FormComponent {
 
   router = inject(Router);
   usersService = inject(UsuariosService);
+
+  rolesResource = rxResource({
+    request:() => ({}),
+    loader: () => this.usersService.getRoles()
+  });
+
+  roles = computed(() => this.rolesResource.value() || []);
 
   // FormGroup para manejar el formulario
   userForm: FormGroup;

@@ -71,24 +71,52 @@
             </label>
           </div>
 
-          <!-- Clave - Ancho completo -->
-          <div class="form-control w-full">
-            <label class="label">
-              <span class="label-text font-medium">Contraseña</span>
-            </label>
-            <input
-              type="password"
-              placeholder="Ingrese la contraseña"
-              class="input input-bordered w-full"
-              [class.input-error]="clave?.invalid && clave?.touched"
-              formControlName="clave"
-            />
-            <label class="label" *ngIf="clave?.invalid && clave?.touched">
-              <span class="label-text-alt text-error">
-                <span *ngIf="clave?.errors?.['required']">La contraseña es requerida</span>
-                <span *ngIf="clave?.errors?.['minlength']">Mínimo 6 caracteres</span>
-              </span>
-            </label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Clave -->
+            <div class="form-control w-full">
+              <label class="label">
+                <span class="label-text font-medium">Contraseña</span>
+              </label>
+              <input
+                type="password"
+                placeholder="Ingrese la contraseña"
+                class="input input-bordered w-full"
+                [class.input-error]="clave?.invalid && clave?.touched"
+                formControlName="clave"
+              />
+              <label class="label" *ngIf="clave?.invalid && clave?.touched">
+                <span class="label-text-alt text-error">
+                  <span *ngIf="clave?.errors?.['required']">La contraseña es requerida</span>
+                  <span *ngIf="clave?.errors?.['minlength']">Mínimo 6 caracteres</span>
+                </span>
+              </label>
+            </div>
+
+            <!-- Roles -->
+            <div class="form-control w-full">
+              <label class="label">
+                <span class="label-text font-medium">Roles</span>
+              </label>
+              <select
+                class="select select-bordered w-full"
+                title="Rol"
+              >
+                <option value=0 selected>Seleccione el Rol</option>
+                  @if (rolesResource.isLoading()) {
+                    <option disabled>Cargando Roles...</option>
+                  } @else {
+                    @for (rol of roles(); track rol.id) {
+                      <option [value]="rol.id">
+                        {{ rol.nombre }}
+                        @if (rol.descripcion) {
+                          - {{ rol.descripcion }}
+                        }
+                      </option>
+                    }
+                  }
+              </select>
+            </div>
+
           </div>
 
           <!-- Grid para Estado y Avatar -->

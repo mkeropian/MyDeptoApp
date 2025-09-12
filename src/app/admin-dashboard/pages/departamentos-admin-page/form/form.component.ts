@@ -1,10 +1,9 @@
 import { Component, computed, inject, OnInit, Output, EventEmitter } from '@angular/core';
 import { FormErrorLabelComponent } from "../../../../shared/components/form-error-label/form-error-label.component";
-import { Departamento, DepartamentoBackend } from '../../../../departamentos/interfaces/departamento.interface';
+import { DepartamentoBackend } from '../../../../departamentos/interfaces/departamento.interface';
 import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { DepartamentosService } from '../../../../departamentos/services/departamentos.service';
-import { Propietario } from '../../../../propietarios/interfaces/propietario.interface';
 import { PropietariosService } from '../../../../propietarios/services/propietarios.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common'

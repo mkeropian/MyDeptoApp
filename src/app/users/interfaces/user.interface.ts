@@ -1,5 +1,5 @@
 export interface User {
-  id: string;
+  id: number;
   usuario: string;
   nombreCompleto: string;
   email: string;
@@ -12,4 +12,10 @@ export interface User {
 export interface UserTema {
   id: number;
   tema: string;
+}
+
+export interface Rol{
+  id: number;
+  nombre: string;
+  descripcion: string;
 }
