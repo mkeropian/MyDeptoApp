@@ -35,11 +35,11 @@
         <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
           <li><a routerLink="/admin/admin-departamentos" (click)="onMenuItemClick()" routerLinkActive="active">Departamentos</a></li>
           <li><a routerLink="/admin/admin-propietarios" (click)="onMenuItemClick()" routerLinkActive="active">Propietarios</a></li>
-          <li><a (click)="onMenuItemClick()">Opción 2</a></li>
+          <li><a routerLink="/admin/rendiciones-admin" (click)="onMenuItemClick()" routerLinkActive="active">Rendiciónes</a></li>
         </ul>
       </li>
 
-      <!-- Dropdown Parent2 -->
+      <!-- Dropdown Departamentos -->
       <li class="dropdown dropdown-hover" [class.dropdown-open]="isParent2Open">
         <div tabindex="0" role="button" (click)="toggleParent2()">Departamentos</div>
         <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">

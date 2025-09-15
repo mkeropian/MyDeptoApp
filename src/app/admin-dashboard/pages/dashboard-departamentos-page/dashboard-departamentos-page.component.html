@@ -45,7 +45,10 @@
         </div>
 
         <div class="h-12 flex justify-end items-end">
-          <button class="btn btn-primary btn-circle absolute bottom-3 right-3">
+          <button
+            class="btn btn-primary btn-circle absolute bottom-3 right-3"
+            (click) = "openModal(departamento)"
+          >
             <strong class="text-2xl">+</strong>
           </button>
         </div>
@@ -56,3 +59,148 @@
   }
 
 </section>
+
+
+<!-- Modal -->
+@if (showModal()) {
+  <div class="modal modal-open">
+    <div class="modal-box w-11/12 max-w-md">
+      <h3 class="text-base font-semibold mb-3">Nueva Operación - {{ selectedDepartamento()?.nombre }}</h3>
+
+      <form [formGroup]="operacionForm" (ngSubmit)="onSubmit()" class="space-y-2">
+
+        <!-- ========== SWITCH INGRESOS/GASTOS ========== -->
+        <div class="form-control">
+          <label class="label py-1">
+            <span class="label-text text-sm">Tipo de Operación</span>
+          </label>
+          <div class="flex items-center justify-center space-x-4 p-2 bg-gray-50 rounded-lg">
+            <button
+              type="button"
+              class="btn btn-sm px-4"
+              [class.btn-success]="tipoOperacion() === 'ingresos'"
+              [class.btn-outline]="tipoOperacion() !== 'ingresos'"
+              [class.text-white]="tipoOperacion() === 'ingresos'"
+              (click)="setTipoOperacion('ingresos')">
+              Ingresos
+            </button>
+            <div class="divider divider-horizontal mx-0"></div>
+            <button
+              type="button"
+              class="btn btn-sm px-4"
+              [class.btn-error]="tipoOperacion() === 'gastos'"
+              [class.btn-outline]="tipoOperacion() !== 'gastos'"
+              [class.text-white]="tipoOperacion() === 'gastos'"
+              (click)="setTipoOperacion('gastos')">
+              Gastos
+            </button>
+          </div>
+        </div>
+        <!-- ========== FIN SWITCH ========== -->
+
+        <!-- Categoría -->
+        <div class="form-control">
+          <label class="label py-1">
+            <span class="label-text text-sm">Categoría</span>
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            formControlName="categoria"
+            title="Categoria"
+          >
+            <option disabled value="">Seleccionar...</option>
+            @for (categoria of categoriasDisponibles(); track categoria.value) {
+              <option [value]="categoria.value">{{ categoria.label }}</option>
+            }
+          </select>
+          @if (operacionForm.get('categoria')?.invalid && operacionForm.get('categoria')?.touched) {
+            <span class="text-xs text-error mt-1">Este campo es requerido</span>
+          }
+        </div>
+
+        <!-- Seleccionar Departamento (readonly) -->
+        <div class="form-control">
+          <label class="label py-1">
+            <span class="label-text text-sm">Departamento</span>
+          </label>
+          <input
+            type="text"
+            class="input input-bordered input-sm w-full bg-gray-100 text-sm"
+            [value]="selectedDepartamento()?.nombre"
+            title="Departamento"
+            readonly
+          >
+        </div>
+
+        <!-- Monto y Fecha en la misma fila -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Monto -->
+          <div class="form-control">
+            <label class="label py-1">
+              <span class="label-text text-sm">Monto ($)</span>
+            </label>
+            <input
+              type="number"
+              class="input input-bordered input-sm w-full text-sm"
+              placeholder="0.00"
+              formControlName="monto"
+              min="0"
+              step="0.01">
+            @if (operacionForm.get('monto')?.invalid && operacionForm.get('monto')?.touched) {
+              <span class="text-xs text-error mt-1">
+                @if (operacionForm.get('monto')?.errors?.['required']) {
+                  Requerido
+                } @else if (operacionForm.get('monto')?.errors?.['min']) {
+                  Mayor a 0
+                }
+              </span>
+            }
+          </div>
+
+          <!-- Fecha -->
+          <div class="form-control">
+            <label class="label py-1">
+              <span class="label-text text-sm">Fecha</span>
+            </label>
+            <input
+              type="date"
+              class="input input-bordered input-sm w-full text-sm"
+              formControlName="fecha"
+              title="Fecha"
+            >
+            @if (operacionForm.get('fecha')?.invalid && operacionForm.get('fecha')?.touched) {
+              <span class="text-xs text-error mt-1">Requerido</span>
+            }
+          </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="form-control">
+          <label class="label py-1">
+            <span class="label-text text-sm">Observaciones</span>
+          </label>
+          <textarea
+            class="textarea textarea-bordered textarea-sm w-full text-sm resize-y"
+            placeholder="Agregar observaciones (opcional)..."
+            formControlName="observaciones"
+            rows="2">
+          </textarea>
+        </div>
+
+        <!-- Botones -->
+        <div class="modal-action pt-4">
+          <button type="button" class="btn btn-ghost btn-sm" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary btn-sm"
+            [disabled]="operacionForm.invalid">
+            Guardar
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}

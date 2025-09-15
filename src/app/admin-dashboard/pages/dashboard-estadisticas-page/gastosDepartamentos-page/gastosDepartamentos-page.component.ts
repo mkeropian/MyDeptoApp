@@ -33,7 +33,6 @@ export class GastosDepartamentosPageComponent implements OnInit{
 
   ngOnInit(): void {
 
-
     this.chartOptions = {
       series: [
         {
