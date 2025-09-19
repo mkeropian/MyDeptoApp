@@ -31,7 +31,7 @@ export class UsuariosService {
    * Sube el archivo de avatar al servidor
    */
   uploadAvatar(formData: FormData) {
-    return this.http.post(`${baseUrl}/usuarios/upload-avatar`, formData);
+    return this.http.post(`${baseUrl}/archivos/upload`, formData);
   }
 
   /**

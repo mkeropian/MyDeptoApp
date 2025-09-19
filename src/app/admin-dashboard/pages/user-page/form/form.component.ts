@@ -136,6 +136,7 @@ export class FormComponent {
     this.usersService.createUsuario(userData as User).subscribe(
       usuario => {
         console.log('Propietario creado:', usuario);
+        console.log(selectedFile);
 
         if (selectedFile) {
           this.uploadAvatarFile(selectedFile, usuario);
@@ -160,7 +161,7 @@ export class FormComponent {
    */
   private uploadAvatarFile(file: File, usuario: User): void {
     const formData = new FormData();
-    formData.append('avatar', file);
+    formData.append('archivo', file);
     formData.append('userId', usuario.id?.toString() || '');
 
     // Ejemplo de llamada para subir el archivo
