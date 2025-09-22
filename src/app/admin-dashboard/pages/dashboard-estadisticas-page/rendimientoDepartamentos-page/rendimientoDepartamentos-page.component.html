@@ -1,13 +1,132 @@
+<!-- Loading State -->
+<div *ngIf="isLoading" class="loading">
+  <div class="loading-spinner"></div>
+  <p>Cargando datos...</p>
+</div>
 
-<div id="chart">
-  <apx-chart
-    [series]="chartOptions.series"
-    [chart]="chartOptions.chart"
-    [dataLabels]="chartOptions.dataLabels"
-    [plotOptions]="chartOptions.plotOptions"
-    [yaxis]="chartOptions.yaxis"
-    [xaxis]="chartOptions.xaxis"
-    [fill]="chartOptions.fill"
-    [title]="chartOptions.title"
-  ></apx-chart>
+<!-- Error State -->
+<div *ngIf="errorMessage && !isLoading" class="error-message">
+  <h4>❌ Error al cargar datos</h4>
+  <p>{{ errorMessage }}</p>
+  <button
+    style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;"
+    (click)="reloadData()"
+  >
+    🔄 Reintentar
+  </button>
+</div>
+
+<!-- Filtros Container -->
+<div *ngIf="!isLoading && !errorMessage" class="filters-container">
+
+  <!-- FILTRO DE DEPARTAMENTOS (Selección única) -->
+  <div class="filter-section">
+    <div class="filter-title">Departamento (seleccione uno)</div>
+    <div class="checkbox-group">
+      <div
+        class="checkbox-pill"
+        *ngFor="let dept of departamentosOptions; trackBy: trackByDeptId"
+        [class.selected]="dept.selected"
+        (click)="toggleDepartamento(dept)"
+      >
+        {{ dept.nombre }}
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTROS DE AÑOS Y MESES EN LA MISMA LÍNEA -->
+  <div class="filter-section" *ngIf="anosOptions.length > 0 || mesesOptions.length > 0">
+    <div class="filters-row">
+
+      <!-- FILTRO DE AÑOS -->
+      <div class="filter-column" *ngIf="anosOptions.length > 0">
+        <div class="filter-title">Años (opcional)</div>
+        <div class="checkbox-group">
+          <div
+            class="checkbox-pill"
+            *ngFor="let ano of anosOptions; trackBy: trackByAnoValue"
+            [class.selected]="ano.selected"
+            (click)="toggleAno(ano)"
+          >
+            {{ ano.label }}
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTRO DE MESES -->
+      <div class="filter-column" *ngIf="mesesOptions.length > 0">
+        <div class="filter-title">Meses (opcional)</div>
+        <div class="checkbox-group">
+          <div
+            class="checkbox-pill"
+            *ngFor="let mes of mesesOptions; trackBy: trackByMesValue"
+            [class.selected]="mes.selected"
+            (click)="toggleMes(mes)"
+          >
+            {{ mes.label }}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- INFORMACIÓN DE FILTROS ACTIVOS Y BOTÓN LIMPIAR -->
+  <div class="filter-info">
+    <small style="color: #6c757d; font-size: 11px;">
+      <strong>Filtros:</strong>
+      <span *ngIf="getSelectedDepartamento()">{{ getSelectedDepartamento()?.nombre }}</span>
+      <span *ngIf="!getSelectedDepartamento()">Sin departamento</span>
+      <span *ngIf="getSelectedAnosCount() > 0"> | {{ getSelectedAnosCount() }} año(s)</span>
+      <span *ngIf="getSelectedMesesCount() > 0"> | {{ getSelectedMesesCount() }} mes(es)</span>
+      | <strong>Datos:</strong> {{ filteredData.length }}
+    </small>
+    <button
+      class="clear-filters-btn"
+      (click)="clearFilters()"
+      [disabled]="!hasActiveFilters()"
+    >
+      🗑️ Limpiar
+    </button>
+  </div>
+</div>
+
+<!-- CONTENEDOR DEL GRÁFICO -->
+<div id="chart" *ngIf="!isLoading && !errorMessage">
+
+  <!-- Mensaje cuando no hay departamento seleccionado -->
+  <div *ngIf="!getSelectedDepartamento()" class="no-data">
+    <h3 style="color: #6c757d; margin-bottom: 10px;">🏢 Selecciona un departamento</h3>
+    <p style="color: #868e96; margin: 0;">
+      Por favor selecciona un departamento para ver su rendimiento.
+    </p>
+  </div>
+
+  <!-- Mensaje cuando hay departamento pero sin datos -->
+  <div *ngIf="getSelectedDepartamento() && filteredData.length === 0" class="no-data">
+    <h3 style="color: #6c757d; margin-bottom: 10px;">📊 No hay datos disponibles</h3>
+    <p style="color: #868e96; margin: 0;">
+      No hay registros para el departamento "{{ getSelectedDepartamento()?.nombre }}" con los filtros seleccionados.
+    </p>
+  </div>
+
+  <!-- GRÁFICO APEX CHARTS -->
+  <div *ngIf="getSelectedDepartamento() && filteredData.length > 0">
+    <apx-chart
+      [series]="chartOptions.series"
+      [chart]="chartOptions.chart"
+      [dataLabels]="chartOptions.dataLabels"
+      [plotOptions]="chartOptions.plotOptions"
+      [yaxis]="chartOptions.yaxis"
+      [xaxis]="chartOptions.xaxis"
+      [fill]="chartOptions.fill"
+      [title]="chartOptions.title"
+      [stroke]="chartOptions.stroke"
+      [colors]="chartOptions.colors"
+      [legend]="chartOptions.legend"
+      [tooltip]="chartOptions.tooltip"
+      [labels]="chartOptions.labels"
+      [markers]="chartOptions.markers"
+    ></apx-chart>
+  </div>
 </div>

@@ -7,6 +7,7 @@ import { DashboardDepartamentosPageComponent } from "./pages/dashboard-departame
 import { DashboardEstadisticasPageComponent } from "./pages/dashboard-estadisticas-page/dashboard-estadisticas-page.component";
 import { GastosDepartamentosPageComponent } from "./pages/dashboard-estadisticas-page/gastosDepartamentos-page/gastosDepartamentos-page.component";
 import { RendimientoDepartamentosPageComponent } from "./pages/dashboard-estadisticas-page/rendimientoDepartamentos-page/rendimientoDepartamentos-page.component";
+import { IngresosDepartamentosPageComponent } from "./pages/dashboard-estadisticas-page/ingresosDepartamentos-page/ingresosDepartamentos-page.component";
 
 export const DashboardRoutes: Routes = [
   {
@@ -25,6 +26,10 @@ export const DashboardRoutes: Routes = [
       {
         path:'estadisticas',
         component: DashboardEstadisticasPageComponent,
+      },
+      {
+        path:'pagosxdep',
+        component: IngresosDepartamentosPageComponent,
       },
       {
         path:'gastosxdep',

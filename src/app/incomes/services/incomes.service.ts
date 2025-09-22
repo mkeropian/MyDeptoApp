@@ -4,7 +4,6 @@ import { environment } from "../../../environments/environment";
 import { Observable } from "rxjs";
 import { Pago, PagoGrid, TipoPago } from "../interfaces/incomes.interface";
 
-
 const baseUrl = environment.baseUrl;
 
 @Injectable({providedIn: 'root'})

@@ -2,7 +2,7 @@
 <div class="chart-container">
   <!-- Header con título y filtros -->
   <div class="chart-header">
-    <h2 class="chart-title">Gastos por Departamento - {{ selectedYear }}</h2>
+    <h2 class="chart-title">Ingresos por Departamento - {{ selectedYear }}</h2>
 
     <div class="chart-filters">
       <!-- Selector de año -->
@@ -35,7 +35,7 @@
 
   <!-- Estado de carga -->
   <div *ngIf="isLoading" class="loading-spinner">
-    <div>Cargando datos de gastos...</div>
+    <div>Cargando datos de ingresos...</div>
   </div>
 
   <!-- Estado de error -->
@@ -46,7 +46,7 @@
   <!-- Mensaje cuando no hay datos -->
   <div *ngIf="!isLoading && !hasError && departmentExpenses.length === 0" class="no-data">
     <div class="no-data-icon">📊</div>
-    <div>No hay datos de gastos para mostrar en {{ selectedYear }}</div>
+    <div>No hay datos de ingresos para mostrar en {{ selectedYear }}</div>
   </div>
 
   <!-- Gráfico -->
@@ -69,8 +69,8 @@
     <!-- Tarjetas de resumen -->
     <div class="summary-cards">
       <div class="summary-card">
-        <span class="label">Total Gastos {{ selectedYear }}</span>
-        <span class="value">{{ totalGastos | currency:'ARS':'symbol':'1.0-0' }}</span>
+        <span class="label">Total ingresos {{ selectedYear }}</span>
+        <span class="value">{{ totalIngresos | currency:'ARS':'symbol':'1.0-0' }}</span>
       </div>
 
       <div class="summary-card">
@@ -78,14 +78,14 @@
         <span class="value">{{ promedioMensual | currency:'ARS':'symbol':'1.0-0' }}</span>
       </div>
 
-      <div class="summary-card" *ngIf="departamentoMayorGasto">
-        <span class="label">Mayor Gasto</span>
-        <span class="value">{{ departamentoMayorGasto }}</span>
+      <div class="summary-card" *ngIf="departamentoMayorIngreso">
+        <span class="label">Mayor Ingreso</span>
+        <span class="value">{{ departamentoMayorIngreso }}</span>
       </div>
 
-      <div class="summary-card" *ngIf="mesConMayorGasto">
+      <div class="summary-card" *ngIf="mesConMayorIngreso">
         <span class="label">Mes Pico</span>
-        <span class="value">{{ mesConMayorGasto }}</span>
+        <span class="value">{{ mesConMayorIngreso }}</span>
       </div>
     </div>
   </div>
