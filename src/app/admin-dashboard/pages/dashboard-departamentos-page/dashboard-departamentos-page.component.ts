@@ -6,6 +6,8 @@ import { Departamento, DepartamentoBackend } from '../../../departamentos/interf
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GastosService } from '../../../gastos/services/gastos.service';
 import { PagosService } from '../../../incomes/services/incomes.service';
+import { Pago } from '../../../incomes/interfaces/incomes.interface';
+import { Gasto } from '../../../gastos/interfaces/gasto.interface';
 
 // Interface para la operación
 interface Operacion {
@@ -213,20 +215,40 @@ export class DashboardDepartamentosPageComponent {
 
   onSubmit(): void {
     if (this.operacionForm.valid && this.selectedDepartamento()) {
-      const operacion: Operacion = {
-        tipoOperacion: this.tipoOperacion(),
-        categoria: this.operacionForm.get('categoria')?.value,
-        departamentoId: this.selectedDepartamento()!.id,
-        departamentoNombre: this.selectedDepartamento()!.nombre,
-        monto: this.operacionForm.get('monto')?.value,
-        fecha: this.operacionForm.get('fecha')?.value,
-        observaciones: this.operacionForm.get('observaciones')?.value || undefined
-      };
 
-      console.log('Operación a guardar:', operacion);
+      // console.log('Operación a guardar:', operacion);
 
-      // Aquí puedes llamar a tu servicio para guardar la operación
-      // this.operacionesService.crearOperacion(operacion).subscribe(...)
+      if (this.tipoOperacion() === 'ingresos'){
+
+        const formValue: Pago = {
+          id: 0,
+          idTipoPago: this.operacionForm.get('categoria')?.value,
+          idDep: this.selectedDepartamento()!.id,
+          monto: this.operacionForm.get('monto')?.value,
+          fecha: this.operacionForm.get('fecha')?.value,
+          observaciones: this.operacionForm.get('observaciones')?.value || undefined
+        }
+
+        this.pagosService.createPago(formValue as Pago).subscribe(
+          pago => {
+            console.log('Pago creado:', pago);
+          });
+      } else if (this.tipoOperacion() === 'gastos'){
+
+        const formValue: Gasto = {
+          id: 0,
+          idTipoGasto: this.operacionForm.get('categoria')?.value,
+          idDep: this.selectedDepartamento()!.id,
+          monto: this.operacionForm.get('monto')?.value,
+          fecha: this.operacionForm.get('fecha')?.value,
+          observaciones: this.operacionForm.get('observaciones')?.value || undefined
+        }
+
+        this.gastosService.createGasto(formValue as Gasto).subscribe(
+          gasto => {
+            console.log('Gasto creado:', gasto);
+          });
+      }
 
       // Mostrar mensaje de éxito (puedes usar un servicio de notificaciones)
       alert('Operación guardada exitosamente');

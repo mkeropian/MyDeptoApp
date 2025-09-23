@@ -20,6 +20,15 @@
 
       <li><a routerLink="/calendar" routerLinkActive="active">Calendario</a></li>
 
+      <!-- Dropdown Departamentos -->
+      <li class="dropdown dropdown-hover" [class.dropdown-open]="isParent2Open">
+        <div tabindex="0" role="button" (click)="toggleParent2()">Departamentos</div>
+        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
+          <li><a routerLink="/home/fullscreen_map" (click)="onMenuItemClick()" routerLinkActive="active">FullMap</a></li>
+          <li><a routerLink="/home/cards" (click)="onMenuItemClick()" routerLinkActive="active">Cards</a></li>
+        </ul>
+      </li>
+
       <!-- Dropdown Operación -->
       <li class="dropdown dropdown-hover" [class.dropdown-open]="isOperacionOpen">
         <div tabindex="0" role="button" (click)="toggleOperacion()">Operación</div>
@@ -36,15 +45,6 @@
           <li><a routerLink="/admin/admin-departamentos" (click)="onMenuItemClick()" routerLinkActive="active">Departamentos</a></li>
           <li><a routerLink="/admin/admin-propietarios" (click)="onMenuItemClick()" routerLinkActive="active">Propietarios</a></li>
           <li><a routerLink="/admin/rendiciones-admin" (click)="onMenuItemClick()" routerLinkActive="active">Rendiciónes</a></li>
-        </ul>
-      </li>
-
-      <!-- Dropdown Departamentos -->
-      <li class="dropdown dropdown-hover" [class.dropdown-open]="isParent2Open">
-        <div tabindex="0" role="button" (click)="toggleParent2()">Departamentos</div>
-        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-          <li><a routerLink="/home/fullscreen_map" (click)="onMenuItemClick()" routerLinkActive="active">FullMap</a></li>
-          <li><a routerLink="/home/cards" (click)="onMenuItemClick()" routerLinkActive="active">Cards</a></li>
         </ul>
       </li>
 

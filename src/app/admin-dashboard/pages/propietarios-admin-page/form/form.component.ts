@@ -11,7 +11,7 @@ import { FormErrorLabelComponent } from "../../../../shared/components/form-erro
   imports: [
     ReactiveFormsModule,
     FormErrorLabelComponent
-],
+  ],
   templateUrl: './form.component.html',
 })
 export class FormComponent implements OnInit{

@@ -1,0 +1,153 @@
+/* src/app/admin-dashboard/pages/rendiciones-admin-page/rendiciones-admin-page.component.css */
+
+/* =============== ESTILOS EXISTENTES DE TU COMPONENTE =============== */
+/* Aquí van todos los estilos CSS que ya tenías en tu componente */
+
+/* =============== ESTILOS PARA EL MODAL DE EXPORTACIÓN =============== */
+
+/* Custom scrollbar para áreas con scroll */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background-color: hsl(var(--b2));
+  border-radius: 9999px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--bc) / 0.2);
+  border-radius: 9999px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--bc) / 0.3);
+}
+
+/* Animaciones suaves para las transiciones */
+.transition-colors {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Efecto hover personalizado para checkboxes */
+.label:hover {
+  transform: translateY(-1px);
+}
+
+/* Animación del backdrop */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-backdrop {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Animación del modal */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-box {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Estilos adicionales para los badges en el resumen */
+.badge {
+  font-weight: 500;
+}
+
+/* Mejora visual para el área de selección múltiple */
+.checkbox-container:focus-within {
+  border-color: hsl(var(--p));
+  box-shadow: 0 0 0 2px hsl(var(--p) / 0.2);
+}
+
+/* Estados de error mejorados */
+.select-error {
+  border-color: hsl(var(--er)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--er) / 0.2) !important;
+}
+
+.input-error {
+  border-color: hsl(var(--er)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--er) / 0.2) !important;
+}
+
+.border-error-custom {
+  border-color: hsl(var(--er)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--er) / 0.2) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .modal-box {
+    margin: 1rem;
+    width: calc(100% - 2rem);
+  }
+
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Botón de exportar mejorado */
+.export-btn {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.export-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Hover effects para cards */
+.hover-card:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+/* Estilos para loading spinner personalizado */
+.loading-custom {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Mejoras para el formulario */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label-required::after {
+  content: " *";
+  color: hsl(var(--er));
+}
+
+/* Estilos para checkboxes personalizados */
+.checkbox-custom:checked {
+  background-color: hsl(var(--p));
+  border-color: hsl(var(--p));
+}
+
+.checkbox-custom:focus {
+  outline: 2px solid hsl(var(--p));
+  outline-offset: 2px;
+}
