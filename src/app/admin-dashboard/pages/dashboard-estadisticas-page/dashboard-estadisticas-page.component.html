@@ -9,48 +9,47 @@
   </div>
 </section>
 
-<section class="px-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
 
-  <div class="card bg-base-100 w-85 shadow-xl p-1">
-    <figure>
+<section class="px-2 grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-6 gap-2">
+
+  <div class="card bg-base-100 shadow-xl">
+    <figure class="px-2 pt-2">
       <img
         class="cursor-pointer"
         [routerLink]="['/dashboard/rendimientodep']"
-        src='assets/images/graf06.png'
+        src='assets/images/graf04.png'
         alt="Rentabilidad Diaria por Departamento"
       />
     </figure>
-    <div class="card-body">
-      <h2 class="card-title">
+    <div class="compact-card-body">
+      <h3 class="text-sm font-bold mb-1">
         Rentabilidad Diaria por Departamento
-        <div class="badge badge-secondary">NEW</div>
-      </h2>
-      <p>Este grafico representado en barras muestra la rentabilidad diaria por departamento</p>
-      <div class="card-actions justify-end"></div>
+        <span class="badge badge-secondary badge-xs ml-1">NEW</span>
+      </h3>
+      <p class="text-xs">Este grafico representado en barras muestra la rentabilidad diaria por departamento</p>
     </div>
   </div>
 
-  <div class="card bg-base-100 w-85 shadow-xl p-1">
-    <figure>
+  <div class="card bg-base-100 shadow-xl">
+    <figure class="px-2 pt-2">
       <img
         class="cursor-pointer"
         [routerLink]="['/dashboard/rendimientoprop']"
-        src='assets/images/graf07.png'
+        src='assets/images/graf04.png'
         alt="Rentabilidad Diaria por Propietario"
       />
     </figure>
-    <div class="card-body">
-      <h2 class="card-title">
+    <div class="compact-card-body">
+      <h2 class="text-sm font-bold mb-1">
         Rentabilidad Diaria por Propietario
-        <div class="badge badge-secondary">NEW</div>
+        <div class="badge badge-secondary badge-xs ml-1">NEW</div>
       </h2>
-      <p>Este grafico representado en barras muestra la rentabilidad diaria por Propietario</p>
-      <div class="card-actions justify-end"></div>
+      <p class="text-xs">Este grafico representado en barras muestra la rentabilidad diaria por Propietario</p>
     </div>
   </div>
 
-  <div class="card bg-base-100 w-85 shadow-xl p-1">
-    <figure>
+  <div class="card bg-base-100 shadow-xl">
+    <figure class="px-2 pt-2">
       <img
         class="cursor-pointer"
         [routerLink]="['/dashboard/pagosxdep']"
@@ -58,12 +57,12 @@
         alt="Ingresos"
       />
     </figure>
-    <div class="card-body">
-      <h2 class="card-title">
+    <div class="compact-card-body">
+      <h2 class="text-sm font-bold mb-1">
         Ingresos Diarios por Departamento
         <!-- <div class="badge badge-secondary">NEW</div> -->
       </h2>
-      <p>Este grafico muestra los Ingresos Diarios por Departamento</p>
+      <p class="text-xs">Este grafico muestra los Ingresos Diarios por Departamento</p>
       <div class="card-actions justify-end">
         <!-- <div class="badge badge-outline">New</div> -->
         <!-- <div class="badge badge-outline">Products</div> -->
@@ -71,8 +70,8 @@
     </div>
   </div>
 
-  <div class="card bg-base-100 w-85 shadow-xl p-1">
-    <figure>
+  <div class="card bg-base-100 shadow-xl">
+    <figure class="px-2 pt-2">
       <img
         class="cursor-pointer"
         [routerLink]="['/dashboard/gastosxdep']"
@@ -80,16 +79,95 @@
         alt="Gastos"
       />
     </figure>
-    <div class="card-body">
-      <h2 class="card-title">
+    <div class="compact-card-body">
+      <h2 class="text-sm font-bold mb-1">
         Gastos Diarios por departamento
         <!-- <div class="badge badge-secondary">NEW</div> -->
       </h2>
-      <p>Este grafico muestra los Gastos Diarios por Departamento</p>
+      <p class="text-xs">Este grafico muestra los Gastos Diarios por Departamento</p>
       <div class="card-actions justify-end">
         <!-- <div class="badge badge-outline">New</div> -->
         <!-- <div class="badge badge-outline">Products</div> -->
       </div>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl">
+    <figure class="px-2 pt-2">
+      <img
+        class="cursor-pointer"
+        [routerLink]="['/dashboard/ingrankingmesdep']"
+        src='assets/images/graf02.png'
+        alt="Ranking"
+      />
+    </figure>
+    <div class="compact-card-body">
+      <h2 class="text-sm font-bold mb-1">
+        Top 5 Mayor Facturación
+        <!-- <div class="badge badge-secondary">NEW</div> -->
+      </h2>
+      <p class="text-xs">Este grafico muestra el ranking de los 5 departamentos con mayor facturación mensual</p>
+      <div class="card-actions justify-end">
+        <!-- <div class="badge badge-outline">New</div> -->
+        <!-- <div class="badge badge-outline">Products</div> -->
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl">
+    <figure class="px-2 pt-2">
+      <img
+        class="cursor-pointer"
+        src='assets/images/graf03.png'
+        alt="Gastos"
+      />
+    </figure>
+    <div class="compact-card-body">
+      <h2 class="text-sm font-bold mb-1">
+        Gastos Diarios por departamento
+        <!-- <div class="badge badge-secondary">NEW</div> -->
+      </h2>
+      <p class="text-xs">Este grafico muestra los Gastos Diarios por Departamento</p>
+      <div class="card-actions justify-end">
+        <!-- <div class="badge badge-outline">New</div> -->
+        <!-- <div class="badge badge-outline">Products</div> -->
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl">
+    <figure class="px-2 pt-2">
+      <img
+        class="cursor-pointer"
+        [routerLink]="['/dashboard/rendimientomesdep']"
+        src='assets/images/graf04.png'
+        alt="Rentabilidad Mensual por Departamento"
+      />
+    </figure>
+    <div class="compact-card-body">
+      <h3 class="text-sm font-bold mb-1">
+        Rentabilidad Mensual por Departamento
+        <span class="badge badge-secondary badge-xs ml-1">NEW</span>
+      </h3>
+      <p class="text-xs">Este grafico representado en barras muestra la rentabilidad mensual por departamento</p>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl">
+    <figure class="px-2 pt-2">
+      <img
+        class="cursor-pointer"
+        [routerLink]="['/dashboard/rendimientomesprop']"
+        src='assets/images/graf04.png'
+        alt="Rentabilidad Mensual por Propietario"
+      />
+    </figure>
+    <div class="compact-card-body">
+      <h2 class="text-sm font-bold mb-1">
+        Rentabilidad Mensual por Propietario
+        <div class="badge badge-secondary badge-xs ml-1">NEW</div>
+      </h2>
+      <p class="text-xs">Este grafico representado en barras muestra la rentabilidad mensual por Propietario</p>
     </div>
   </div>
 

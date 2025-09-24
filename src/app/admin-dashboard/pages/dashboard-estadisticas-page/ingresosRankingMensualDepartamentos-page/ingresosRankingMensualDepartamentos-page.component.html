@@ -1,0 +1,160 @@
+<!-- ingresosRankingMensualDepartamentos-page.component.html -->
+<div class="chart-container">
+  <!-- Header con título y filtros -->
+  <div class="chart-header">
+    <h2 class="chart-title">Ranking Mensual de Ingresos por Departamento</h2>
+
+    <div class="chart-filters">
+      <!-- Selector de año -->
+      <select
+        class="filter-select"
+        [value]="selectedYear"
+        (change)="onYearChange($event)"
+        [disabled]="isLoading"
+        title="Seleccione el año para filtrar los datos"
+        aria-label="Selector de año"
+      >
+        <option *ngFor="let year of availableYears" [value]="year">
+          {{ year }}
+        </option>
+      </select>
+
+      <!-- Selector múltiple de meses -->
+      <div class="month-selector-container">
+        <button
+          type="button"
+          class="month-selector-header"
+          (click)="toggleMonthDropdown()"
+          [attr.aria-expanded]="isMonthDropdownOpen"
+          aria-label="Selector de meses"
+          title="Haga clic para seleccionar los meses"
+        >
+          <span>{{ getSelectedMonthsText() }}</span>
+          <span class="dropdown-arrow" aria-hidden="true">▼</span>
+        </button>
+
+        <div
+          class="month-dropdown"
+          [class.open]="isMonthDropdownOpen"
+          aria-label="Lista de meses disponibles"
+        >
+          <div class="month-option select-all">
+            <input
+              type="checkbox"
+              id="select-all-months"
+              [checked]="areAllMonthsSelected()"
+              (change)="toggleAllMonths($event)"
+              aria-label="Seleccionar todos los meses"
+              title="Marque para seleccionar todos los meses"
+            >
+            <label for="select-all-months">Seleccionar todos</label>
+          </div>
+
+          <div
+            class="month-option"
+            *ngFor="let month of availableMonths; let i = index"
+          >
+            <input
+              type="checkbox"
+              [id]="'month-' + i"
+              [checked]="selectedMonths.includes(month)"
+              (change)="onMonthToggle(month, $event)"
+              [attr.aria-label]="'Seleccionar mes de ' + month"
+              [title]="'Marque para incluir ' + month + ' en el análisis'"
+            >
+            <label [for]="'month-' + i">{{ month }}</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="isLoading" class="loading-spinner">
+    <div>Cargando ranking de departamentos...</div>
+  </div>
+
+  <!-- Estado de error -->
+  <div *ngIf="hasError && !isLoading" class="error-message">
+    <div>{{ errorMessage }}</div>
+  </div>
+
+  <!-- Mensaje cuando no hay datos -->
+  <div *ngIf="!isLoading && !hasError && departmentRanking.length === 0" class="no-data">
+    <div class="no-data-icon">📊</div>
+    <div>No hay datos de ingresos para mostrar</div>
+  </div>
+
+  <!-- Gráfico Radial -->
+  <div *ngIf="!isLoading && !hasError && departmentRanking.length > 0">
+    <apx-chart
+      #chart
+      [series]="chartOptions.series"
+      [chart]="chartOptions.chart"
+      [labels]="chartOptions.labels"
+      [colors]="chartOptions.colors"
+      [legend]="chartOptions.legend"
+      [plotOptions]="chartOptions.plotOptions"
+      [fill]="chartOptions.fill"
+      [stroke]="chartOptions.stroke">
+    </apx-chart>
+
+    <!-- Tabla de ranking -->
+    <div class="ranking-table-container">
+      <h3 class="ranking-title">Detalle del Ranking</h3>
+      <div class="table-wrapper">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th>Posición</th>
+              <th>Departamento</th>
+              <th>Total Ingresos</th>
+              <th>Porcentaje</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let dept of departmentRanking; let i = index"
+              [class]="'rank-' + (i + 1)"
+            >
+              <td class="position">
+                <span class="rank-badge" [class]="'rank-' + (i + 1)">
+                  {{ i + 1 }}
+                </span>
+              </td>
+              <td class="department-name">{{ dept.departmentName }}</td>
+              <td class="amount">{{ dept.total | currency:'ARS':'symbol':'1.0-0' }}</td>
+              <td class="percentage">{{ dept.percentage.toFixed(1) }}%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tarjetas de resumen -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <span class="label">Total Período</span>
+        <span class="value">{{ totalIngresos | currency:'ARS':'symbol':'1.0-0' }}</span>
+      </div>
+
+      <div class="summary-card" *ngIf="topDepartment">
+        <span class="label">Líder</span>
+        <span class="value">{{ topDepartment.departmentName }}</span>
+        <span class="sub-value">{{ topDepartment.percentage.toFixed(1) }}% del total</span>
+      </div>
+
+      <div class="summary-card">
+        <span class="label">Período Analizado</span>
+        <span class="value">{{ selectedYear }}</span>
+        <span class="sub-value">{{ getSelectedMonthsText() }}</span>
+      </div>
+
+      <div class="summary-card">
+        <span class="label">Departamentos</span>
+        <span class="value">{{ departmentRanking.length }}</span>
+        <span class="sub-value">con ingresos</span>
+      </div>
+    </div>
+  </div>
+</div>

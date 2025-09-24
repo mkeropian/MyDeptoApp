@@ -3,9 +3,9 @@ import { ApexAxisChartSeries, ApexChart, ApexXAxis, ApexDataLabels, ApexYAxis, A
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { Propietario } from '../../../../propietarios/interfaces/propietario.interface';
-import { rendPropGrid } from '../../../../estadisticasReportes/interfaces/estadisticasReportes.interface';
-import { PropietariosService } from '../../../../propietarios/services/propietarios.service';
+import { Departamento } from '../../../../departamentos/interfaces/departamento.interface';
+import { rendDepGrid } from '../../../../estadisticasReportes/interfaces/estadisticasReportes.interface';
+import { DepartamentosService } from '../../../../departamentos/services/departamentos.service';
 import { EstadisticasReportesService } from '../../../../estadisticasReportes/services/estadisticasReportes.service';
 
 export type ChartOptions = {
@@ -22,10 +22,9 @@ export type ChartOptions = {
   title: ApexTitleSubtitle;
 };
 
-interface PropietarioOption {
+interface DepartamentoOption {
   id: number;
   nombre: string;
-  email: string;
   selected: boolean;
 }
 
@@ -42,9 +41,9 @@ interface AnoOption {
 }
 
 @Component({
-  selector: 'app-rendimiento-propietarios-page',
+  selector: 'app-rendimiento-mensual-departamentos-page',
   imports: [ChartComponent, CommonModule, FormsModule],
-  templateUrl: './rendimientoPropietarios-page.component.html',
+  templateUrl: './rendimientoMensualDepartamentos-page.component.html',
   styles: `
     #chart {
       max-width: 1200px;
@@ -184,27 +183,28 @@ interface AnoOption {
     }
   `
 })
-export class RendimientoPropietariosPageComponent implements OnInit {
+
+export class RendimientoMensualDepartamentosPageComponent implements OnInit {
 
   @ViewChild("chart") chart: ChartComponent | any;
   public chartOptions: Partial<ChartOptions> | any;
 
   // Opciones de filtros
-  public propietariosOptions: PropietarioOption[] = [];
+  public departamentosOptions: DepartamentoOption[] = [];
   public mesesOptions: MesOption[] = [];
   public anosOptions: AnoOption[] = [];
 
   // Datos desde servicios
-  public propietariosActivos: Propietario[] = [];
-  public rendimientoData: rendPropGrid[] = [];
-  public filteredData: rendPropGrid[] = [];
+  public departamentosActivos: Departamento[] = [];
+  public rendimientoData: rendDepGrid[] = [];
+  public filteredData: rendDepGrid[] = [];
 
   // Estados
   public isLoading: boolean = true;
   public errorMessage: string = '';
 
   constructor(
-    private propietariosService: PropietariosService,
+    private departamentosService: DepartamentosService,
     private estadisticasService: EstadisticasReportesService
   ) {
     this.initializeChart();
@@ -218,13 +218,13 @@ export class RendimientoPropietariosPageComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    // Cargar propietarios y datos de rendimiento en paralelo
+    // Cargar departamentos y datos de rendimiento en paralelo
     forkJoin({
-      propietarios: this.propietariosService.getPropietariosActivos(),
-      rendimiento: this.estadisticasService.getRendDiarioProp()
+      departamentos: this.departamentosService.getDepartamentosActivos(),
+      rendimiento: this.estadisticasService.getRendDiarioDep()
     }).subscribe({
       next: (data) => {
-        this.propietariosActivos = data.propietarios;
+        this.departamentosActivos = data.departamentos;
         this.rendimientoData = data.rendimiento;
 
         this.initializeFilters();
@@ -239,96 +239,11 @@ export class RendimientoPropietariosPageComponent implements OnInit {
     });
   }
 
-  private initializeChart() {
-    this.chartOptions = {
-      series: [],
-      chart: {
-        height: 550,
-        type: 'line',
-        stacked: false
-      },
-      stroke: {
-        width: [0, 0, 4],
-        curve: 'smooth'
-      },
-      plotOptions: {
-        bar: {
-          columnWidth: '20%'
-        }
-      },
-      fill: {
-        opacity: [0.85, 0.85, 1],
-        gradient: {
-          inverseColors: false,
-          shade: 'light',
-          type: "vertical",
-          opacityFrom: 0.85,
-          opacityTo: 0.55,
-          stops: [0, 100, 100, 100]
-        }
-      },
-      labels: [],
-      markers: {
-        size: 0
-      },
-      xaxis: {
-        type: 'category',
-        labels: {
-          rotate: -45,
-          style: {
-            fontSize: '10px'
-          },
-          maxHeight: 120
-        }
-      },
-      yaxis: {
-        title: {
-          text: 'Monto ($)',
-        },
-        labels: {
-          formatter: function(val: number) {
-            return '$' + val.toLocaleString();
-          }
-        }
-      },
-      tooltip: {
-        shared: true,
-        intersect: false,
-        y: {
-          formatter: function (y: number) {
-            if (typeof y !== "undefined") {
-              return '$' + y.toLocaleString();
-            }
-            return y;
-          }
-        }
-      },
-      colors: ['#28a745', '#dc3545', '#007bff'],
-      legend: {
-        position: 'top',
-        horizontalAlign: 'left'
-      },
-      dataLabels: {
-        enabled: false
-      },
-      title: {
-        text: 'Rendimiento por Propietarios',
-        align: 'center',
-        style: {
-          fontSize: '18px',
-          fontWeight: 'bold',
-          color: '#333'
-        }
-      }
-    };
-  }
-
   private initializeFilters() {
-    // Inicializar filtros de propietarios (NINGUNO seleccionado por defecto)
-    this.propietariosOptions = this.propietariosActivos.map(prop => ({
-      id: prop.id,
-      nombre: prop.nombreApellido,
-      email: prop.email || '',
+    // Inicializar filtros de departamentos (NINGUNO seleccionado por defecto)
+    this.departamentosOptions = this.departamentosActivos.map(dept => ({
+      id: dept.id,
+      nombre: dept.nombre,
       selected: false
     })).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
@@ -382,8 +297,8 @@ export class RendimientoPropietariosPageComponent implements OnInit {
       return;
     }
 
-    // Obtener propietario seleccionado (solo uno permitido)
-    const selectedPropietario = this.propietariosOptions.find(prop => prop.selected);
+    // Obtener departamento seleccionado (solo uno permitido)
+    const selectedDepartamento = this.departamentosOptions.find(dept => dept.selected);
 
     // Obtener años seleccionados
     const selectedAnos = this.anosOptions
@@ -395,8 +310,8 @@ export class RendimientoPropietariosPageComponent implements OnInit {
       .filter(mes => mes.selected)
       .map(mes => mes.value);
 
-    // Si no hay propietario seleccionado, no mostrar datos
-    if (!selectedPropietario) {
+    // Si no hay departamento seleccionado, no mostrar datos
+    if (!selectedDepartamento) {
       this.filteredData = [];
       this.processChartData();
       return;
@@ -408,20 +323,20 @@ export class RendimientoPropietariosPageComponent implements OnInit {
       const ano = fecha.getFullYear();
       const mesAno = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
 
-      const matchesPropietario = Number(item.propietario_id) === Number(selectedPropietario.id);
+      const matchesDepartamento = item.departamento_id === selectedDepartamento.id;
       const matchesAno = selectedAnos.length === 0 || selectedAnos.includes(ano);
       const matchesMes = selectedMeses.length === 0 || selectedMeses.includes(mesAno);
 
-      return matchesPropietario && matchesAno && matchesMes;
+      return matchesDepartamento && matchesAno && matchesMes;
     });
 
     this.processChartData();
   }
 
-  public togglePropietario(prop: PropietarioOption) {
-    // Solo permite un propietario seleccionado a la vez
-    this.propietariosOptions.forEach(p => p.selected = false);
-    prop.selected = !prop.selected;
+  public toggleDepartamento(dept: DepartamentoOption) {
+    // Solo permite un departamento seleccionado a la vez
+    this.departamentosOptions.forEach(d => d.selected = false);
+    dept.selected = !dept.selected;
     this.applyFilters();
   }
 
@@ -437,14 +352,14 @@ export class RendimientoPropietariosPageComponent implements OnInit {
 
   public clearFilters() {
     // Limpiar todos los filtros
-    this.propietariosOptions.forEach(prop => prop.selected = false);
+    this.departamentosOptions.forEach(dept => dept.selected = false);
     this.anosOptions.forEach(ano => ano.selected = false);
     this.mesesOptions.forEach(mes => mes.selected = false);
     this.applyFilters();
   }
 
   public hasActiveFilters(): boolean {
-    return this.propietariosOptions.some(prop => prop.selected) ||
+    return this.departamentosOptions.some(dept => dept.selected) ||
            this.anosOptions.some(ano => ano.selected) ||
            this.mesesOptions.some(mes => mes.selected);
   }
@@ -453,56 +368,173 @@ export class RendimientoPropietariosPageComponent implements OnInit {
     this.loadData();
   }
 
-  private processChartData() {
-    // Obtener nombre del propietario seleccionado para el título
-    const selectedPropietario = this.propietariosOptions.find(prop => prop.selected);
-    const tituloChart = selectedPropietario
-      ? `Rendimiento Propietario ${selectedPropietario.nombre}`
-      : 'Rendimiento por Propietarios';
+private processChartData() {
+  // Obtener nombre del departamento seleccionado para el título
+  const selectedDepartamento = this.departamentosOptions.find(dept => dept.selected);
+  const tituloChart = selectedDepartamento
+    ? `Rendimiento Departamento ${selectedDepartamento.nombre}`
+    : 'Rendimiento por Departamentos';
 
-    if (this.filteredData.length === 0) {
-      this.chartOptions = {
-        ...this.chartOptions,
-        series: [],
-        labels: [],
-        title: {
-          ...this.chartOptions.title,
-          text: tituloChart
-        },
-        xaxis: {
-          ...this.chartOptions.xaxis,
-          categories: []
-        }
+  if (this.filteredData.length === 0) {
+    this.chartOptions = {
+      ...this.chartOptions,
+      series: [],
+      labels: [],
+      title: {
+        ...this.chartOptions.title,
+        text: tituloChart
+      },
+      xaxis: {
+        ...this.chartOptions.xaxis,
+        categories: []
+      }
+    };
+    return;
+  }
+
+  // NUEVA LÓGICA: Agrupar datos por mes
+  const groupedByMonth = this.filteredData.reduce((acc, item) => {
+    const fecha = new Date(item.fecha);
+    const year = fecha.getFullYear();
+    const month = fecha.getMonth() + 1; // Mes desde 1
+    const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
+
+    if (!acc[monthKey]) {
+      acc[monthKey] = {
+        year,
+        month,
+        totalPagos: 0,
+        totalGastos: 0,
+        balance: 0,
+        fechaOrden: new Date(year, month - 1, 1) // Para ordenar
       };
-      return;
     }
 
-    // Procesar cada registro individualmente mostrando día
-    const processedData = this.filteredData.map(item => {
-      const fecha = new Date(item.fecha);
-      const dia = fecha.getDate().toString().padStart(2, '0');
-      const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-      const fechaFormateada = `${dia}/${mes}`;
+    // Sumar los valores del mes
+    acc[monthKey].totalPagos += Number(item.total_pagos);
+    acc[monthKey].totalGastos += Number(item.total_gastos);
+    acc[monthKey].balance += Number(item.balance_fecha);
+
+    return acc;
+  }, {} as any);
+
+  // Convertir el objeto agrupado a array y ordenar por fecha
+  const processedData = Object.keys(groupedByMonth)
+    .map(key => {
+      const data = groupedByMonth[key];
+      const nombresMeses = [
+        'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+      ];
 
       return {
-        label: fechaFormateada,
-        totalPagos: Number(item.total_pagos),
-        totalGastos: Number(item.total_gastos),
-        balance: Number(item.balance_fecha),
-        fecha: new Date(item.fecha)
+        label: `${nombresMeses[data.month - 1]} ${data.year}`,
+        totalPagos: data.totalPagos,
+        totalGastos: data.totalGastos,
+        balance: data.balance,
+        fechaOrden: data.fechaOrden
       };
-    });
+    })
+    .sort((a, b) => a.fechaOrden.getTime() - b.fechaOrden.getTime());
 
-    // Ordenar por fecha cronológicamente
-    processedData.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
+  const labels = processedData.map(item => item.label);
+  const totalPagos = processedData.map(item => item.totalPagos);
+  const totalGastos = processedData.map(item => item.totalGastos);
+  const balances = processedData.map(item => item.balance);
 
-    const labels = processedData.map(item => item.label);
-    const totalPagos = processedData.map(item => item.totalPagos);
-    const totalGastos = processedData.map(item => item.totalGastos);
-    const balances = processedData.map(item => item.balance);
+  this.updateChartOptions(labels, totalPagos, totalGastos, balances, tituloChart);
+}
 
-    this.updateChartOptions(labels, totalPagos, totalGastos, balances, tituloChart);
-  }
+// MODIFICACIÓN EN EL MÉTODO initializeChart() - Actualizar configuración del eje X
+private initializeChart() {
+  this.chartOptions = {
+    series: [],
+    chart: {
+      height: 550,
+      type: 'line',
+      stacked: false
+    },
+    stroke: {
+      width: [0, 0, 4],
+      curve: 'smooth'
+    },
+    plotOptions: {
+      bar: {
+        columnWidth: '50%'  // Aumentar el ancho de las columnas para datos mensuales
+      }
+    },
+    fill: {
+      opacity: [0.85, 0.85, 1],
+      gradient: {
+        inverseColors: false,
+        shade: 'light',
+        type: "vertical",
+        opacityFrom: 0.85,
+        opacityTo: 0.55,
+        stops: [0, 100, 100, 100]
+      }
+    },
+    labels: [],
+    markers: {
+      size: 0
+    },
+    xaxis: {
+      type: 'category',
+      labels: {
+        rotate: -20,  // Menos rotación para etiquetas mensuales
+        style: {
+          fontSize: '11px'  // Texto ligeramente más grande
+        },
+        maxHeight: 80
+      },
+      axisBorder: {
+        show: true
+      },
+      axisTicks: {
+        show: true
+      }
+    },
+    yaxis: {
+      title: {
+        text: 'Monto ($)',
+      },
+      labels: {
+        formatter: function(val: number) {
+          return '$' + val.toLocaleString();
+        }
+      }
+    },
+    tooltip: {
+      shared: true,
+      intersect: false,
+      y: {
+        formatter: function (y: number) {
+          if (typeof y !== "undefined") {
+            return '$' + y.toLocaleString();
+          }
+          return y;
+        }
+      }
+    },
+    colors: ['#28a745', '#dc3545', '#007bff'],
+    legend: {
+      position: 'top',
+      horizontalAlign: 'left'
+    },
+    dataLabels: {
+      enabled: false
+    },
+    title: {
+      text: 'Rendimiento por Departamentos',
+      align: 'center',
+      style: {
+        fontSize: '18px',
+        fontWeight: 'bold',
+        color: '#333'
+      }
+    }
+  };
+}
 
   private updateChartOptions(labels: string[], totalPagos: number[], totalGastos: number[], balances: number[], titulo: string) {
     this.chartOptions = {
@@ -537,7 +569,7 @@ export class RendimientoPropietariosPageComponent implements OnInit {
   }
 
   // Métodos auxiliares para el template
-  public trackByPropId(index: number, item: PropietarioOption): number {
+  public trackByDeptId(index: number, item: DepartamentoOption): number {
     return item.id;
   }
 
@@ -549,8 +581,8 @@ export class RendimientoPropietariosPageComponent implements OnInit {
     return item.value;
   }
 
-  public getSelectedPropietario(): PropietarioOption | undefined {
-    return this.propietariosOptions.find(prop => prop.selected);
+  public getSelectedDepartamento(): DepartamentoOption | undefined {
+    return this.departamentosOptions.find(dept => dept.selected);
   }
 
   public getSelectedAnosCount(): number {

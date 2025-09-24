@@ -42,9 +42,9 @@ interface AnoOption {
 }
 
 @Component({
-  selector: 'app-rendimiento-propietarios-page',
+  selector: 'app-rendimiento-mensual-propietarios-page',
   imports: [ChartComponent, CommonModule, FormsModule],
-  templateUrl: './rendimientoPropietarios-page.component.html',
+  templateUrl: './rendimientoMensualPropietarios-page.component.html',
   styles: `
     #chart {
       max-width: 1200px;
@@ -184,7 +184,7 @@ interface AnoOption {
     }
   `
 })
-export class RendimientoPropietariosPageComponent implements OnInit {
+export class RendimientoMensualPropietariosPageComponent implements OnInit {
 
   @ViewChild("chart") chart: ChartComponent | any;
   public chartOptions: Partial<ChartOptions> | any;
@@ -312,7 +312,7 @@ export class RendimientoPropietariosPageComponent implements OnInit {
         enabled: false
       },
       title: {
-        text: 'Rendimiento por Propietarios',
+        text: 'Rendimiento Mensual por Propietarios',
         align: 'center',
         style: {
           fontSize: '18px',
@@ -457,8 +457,8 @@ export class RendimientoPropietariosPageComponent implements OnInit {
     // Obtener nombre del propietario seleccionado para el título
     const selectedPropietario = this.propietariosOptions.find(prop => prop.selected);
     const tituloChart = selectedPropietario
-      ? `Rendimiento Propietario ${selectedPropietario.nombre}`
-      : 'Rendimiento por Propietarios';
+      ? `Rendimiento Mensual - ${selectedPropietario.nombre}`
+      : 'Rendimiento Mensual por Propietarios';
 
     if (this.filteredData.length === 0) {
       this.chartOptions = {
@@ -477,19 +477,56 @@ export class RendimientoPropietariosPageComponent implements OnInit {
       return;
     }
 
-    // Procesar cada registro individualmente mostrando día
-    const processedData = this.filteredData.map(item => {
+    // Agrupar datos por mes
+    const dataByMonth = new Map<string, {
+      totalPagos: number;
+      totalGastos: number;
+      balance: number;
+      count: number;
+    }>();
+
+    this.filteredData.forEach(item => {
       const fecha = new Date(item.fecha);
-      const dia = fecha.getDate().toString().padStart(2, '0');
-      const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-      const fechaFormateada = `${dia}/${mes}`;
+      const mesAno = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
+
+      const nombresMeses = [
+        'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+      ];
+
+      const mesLabel = `${nombresMeses[fecha.getMonth()]} ${fecha.getFullYear()}`;
+
+      if (!dataByMonth.has(mesAno)) {
+        dataByMonth.set(mesAno, {
+          totalPagos: 0,
+          totalGastos: 0,
+          balance: 0,
+          count: 0
+        });
+      }
+
+      const monthData = dataByMonth.get(mesAno)!;
+      monthData.totalPagos += Number(item.total_pagos);
+      monthData.totalGastos += Number(item.total_gastos);
+      monthData.balance += Number(item.balance_fecha);
+      monthData.count += 1;
+    });
+
+    // Convertir Map a array y ordenar por fecha
+    const processedData = Array.from(dataByMonth.entries()).map(([mesAno, data]) => {
+      const [year, month] = mesAno.split('-');
+      const nombresMeses = [
+        'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+      ];
 
       return {
-        label: fechaFormateada,
-        totalPagos: Number(item.total_pagos),
-        totalGastos: Number(item.total_gastos),
-        balance: Number(item.balance_fecha),
-        fecha: new Date(item.fecha)
+        mesAno,
+        label: `${nombresMeses[parseInt(month) - 1]} ${year}`,
+        totalPagos: data.totalPagos,
+        totalGastos: data.totalGastos,
+        balance: data.balance,
+        fecha: new Date(parseInt(year), parseInt(month) - 1, 1)
       };
     });
 

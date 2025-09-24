@@ -1,0 +1,61 @@
+<div class="stats stats-vertical lg:stats-horizontal shadow">
+  <div *ngIf="loading" class="stat">
+    <div class="stat-title">Cargando...</div>
+    <div class="loading loading-spinner loading-md"></div>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <!-- 1. Departamento con más Facturación Mensual -->
+    <div class="stat">
+      <div class="stat-title">Dpto. Top Facturación</div>
+      <div class="stat-value text-primary">{{ topDepartmentByRevenue.name }}</div>
+      <div class="stat-value text-sm">{{ formatCurrency(topDepartmentByRevenue.value) }}</div>
+      <div class="stat-desc" [ngClass]="{
+        'text-success': topDepartmentByRevenue.trend === '↗︎',
+        'text-error': topDepartmentByRevenue.trend === '↘︎'
+      }">
+        {{ topDepartmentByRevenue.trend }} {{ topDepartmentByRevenue.comparison }}
+      </div>
+    </div>
+
+    <!-- 2. Departamento con mejor Rendimiento Mensual -->
+    <div class="stat">
+      <div class="stat-title">Dpto. Top Rendimiento</div>
+      <div class="stat-value text-secondary">{{ topDepartmentByPerformance.name }}</div>
+      <div class="stat-value text-sm">{{ formatCurrency(topDepartmentByPerformance.value) }}</div>
+      <div class="stat-desc" [ngClass]="{
+        'text-success': topDepartmentByPerformance.trend === '↗︎',
+        'text-error': topDepartmentByPerformance.trend === '↘︎'
+      }">
+        {{ topDepartmentByPerformance.trend }} {{ topDepartmentByPerformance.comparison }}
+      </div>
+    </div>
+
+    <!-- 3. Propietario con Mayor Facturación Mensual -->
+    <div class="stat">
+      <div class="stat-title">Propietario Top</div>
+      <div class="stat-value text-accent">{{ topOwnerByRevenue.name }}</div>
+      <div class="stat-value text-sm">{{ formatCurrency(topOwnerByRevenue.value) }}</div>
+      <div class="stat-desc" [ngClass]="{
+        'text-success': topOwnerByRevenue.trend === '↗︎',
+        'text-error': topOwnerByRevenue.trend === '↘︎'
+      }">
+        {{ topOwnerByRevenue.trend }} {{ topOwnerByRevenue.comparison }}
+      </div>
+    </div>
+
+    <!-- 4. Facturación TOTAL Mensual -->
+    <div class="stat">
+      <div class="stat-title">Facturación Total</div>
+      <div class="stat-value text-success">{{ formatCurrency(totalMonthlyRevenue) }}</div>
+      <div class="stat-desc text-base-content/70">Mes actual</div>
+    </div>
+
+    <!-- 5. Sumatoria Mensual del tipo de Gasto "Honorarios" -->
+    <div class="stat">
+      <div class="stat-title">Honorarios</div>
+      <div class="stat-value text-warning">{{ formatCurrency(monthlyHonorarios) }}</div>
+      <div class="stat-desc text-base-content/70">Mes actual</div>
+    </div>
+  </ng-container>
+</div>

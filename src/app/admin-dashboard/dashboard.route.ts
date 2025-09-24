@@ -8,6 +8,10 @@ import { DashboardEstadisticasPageComponent } from "./pages/dashboard-estadistic
 import { GastosDepartamentosPageComponent } from "./pages/dashboard-estadisticas-page/gastosDepartamentos-page/gastosDepartamentos-page.component";
 import { RendimientoDepartamentosPageComponent } from "./pages/dashboard-estadisticas-page/rendimientoDepartamentos-page/rendimientoDepartamentos-page.component";
 import { IngresosDepartamentosPageComponent } from "./pages/dashboard-estadisticas-page/ingresosDepartamentos-page/ingresosDepartamentos-page.component";
+import { RendimientoMensualDepartamentosPageComponent } from "./pages/dashboard-estadisticas-page/rendimientoMensualDepartamentos-page/rendimientoMensualDepartamentos-page.component";
+import { RendimientoPropietariosPageComponent } from "./pages/dashboard-estadisticas-page/rendimientoPropietarios-page/rendimientoPropietarios-page.component";
+import { RendimientoMensualPropietariosPageComponent } from "./pages/dashboard-estadisticas-page/rendimientoMensualPropietarios-page/rendimientoMensualPropietarios-page.component";
+import { IngresosRankingMensualDepartamentosPageComponent } from "./pages/dashboard-estadisticas-page/ingresosRankingMensualDepartamentos-page/ingresosRankingMensualDepartamentos-page.component";
 
 export const DashboardRoutes: Routes = [
   {
@@ -38,6 +42,22 @@ export const DashboardRoutes: Routes = [
       {
         path:'rendimientodep',
         component: RendimientoDepartamentosPageComponent,
+      },
+      {
+        path:'rendimientoprop',
+        component: RendimientoPropietariosPageComponent,
+      },
+      {
+        path:'rendimientomesdep',
+        component: RendimientoMensualDepartamentosPageComponent,
+      },
+      {
+        path:'rendimientomesprop',
+        component: RendimientoMensualPropietariosPageComponent,
+      },
+      {
+        path:'ingrankingmesdep',
+        component: IngresosRankingMensualDepartamentosPageComponent,
       },
       {
         path: '**',

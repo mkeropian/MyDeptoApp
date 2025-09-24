@@ -19,18 +19,17 @@
 <!-- Filtros Container -->
 <div *ngIf="!isLoading && !errorMessage" class="filters-container">
 
-  <!-- FILTRO DE PROPIETARIOS (Selección única) -->
+  <!-- FILTRO DE DEPARTAMENTOS (Selección única) -->
   <div class="filter-section">
-    <div class="filter-title">Propietario (seleccione uno)</div>
+    <div class="filter-title">Departamento (seleccione uno)</div>
     <div class="checkbox-group">
       <div
         class="checkbox-pill"
-        *ngFor="let prop of propietariosOptions; trackBy: trackByPropId"
-        [class.selected]="prop.selected"
-        (click)="togglePropietario(prop)"
+        *ngFor="let dept of departamentosOptions; trackBy: trackByDeptId"
+        [class.selected]="dept.selected"
+        (click)="toggleDepartamento(dept)"
       >
-        {{ prop.nombre }}
-        <small *ngIf="prop.email" style="opacity: 0.7; margin-left: 4px;">({{ prop.email }})</small>
+        {{ dept.nombre }}
       </div>
     </div>
   </div>
@@ -76,8 +75,8 @@
   <div class="filter-info">
     <small style="color: #6c757d; font-size: 11px;">
       <strong>Filtros:</strong>
-      <span *ngIf="getSelectedPropietario()">{{ getSelectedPropietario()?.nombre }}</span>
-      <span *ngIf="!getSelectedPropietario()">Sin propietario</span>
+      <span *ngIf="getSelectedDepartamento()">{{ getSelectedDepartamento()?.nombre }}</span>
+      <span *ngIf="!getSelectedDepartamento()">Sin departamento</span>
       <span *ngIf="getSelectedAnosCount() > 0"> | {{ getSelectedAnosCount() }} año(s)</span>
       <span *ngIf="getSelectedMesesCount() > 0"> | {{ getSelectedMesesCount() }} mes(es)</span>
       | <strong>Datos:</strong> {{ filteredData.length }}
@@ -95,24 +94,24 @@
 <!-- CONTENEDOR DEL GRÁFICO -->
 <div id="chart" *ngIf="!isLoading && !errorMessage">
 
-  <!-- Mensaje cuando no hay propietario seleccionado -->
-  <div *ngIf="!getSelectedPropietario()" class="no-data">
-    <h3 style="color: #6c757d; margin-bottom: 10px;">👤 Selecciona un propietario</h3>
+  <!-- Mensaje cuando no hay departamento seleccionado -->
+  <div *ngIf="!getSelectedDepartamento()" class="no-data">
+    <h3 style="color: #6c757d; margin-bottom: 10px;">🏢 Selecciona un departamento</h3>
     <p style="color: #868e96; margin: 0;">
-      Por favor selecciona un propietario para ver su rendimiento.
+      Por favor selecciona un departamento para ver su rendimiento.
     </p>
   </div>
 
-  <!-- Mensaje cuando hay propietario pero sin datos -->
-  <div *ngIf="getSelectedPropietario() && filteredData.length === 0" class="no-data">
+  <!-- Mensaje cuando hay departamento pero sin datos -->
+  <div *ngIf="getSelectedDepartamento() && filteredData.length === 0" class="no-data">
     <h3 style="color: #6c757d; margin-bottom: 10px;">📊 No hay datos disponibles</h3>
     <p style="color: #868e96; margin: 0;">
-      No hay registros para el propietario "{{ getSelectedPropietario()?.nombre }}" con los filtros seleccionados.
+      No hay registros para el departamento "{{ getSelectedDepartamento()?.nombre }}" con los filtros seleccionados.
     </p>
   </div>
 
   <!-- GRÁFICO APEX CHARTS -->
-  <div *ngIf="getSelectedPropietario() && filteredData.length > 0">
+  <div *ngIf="getSelectedDepartamento() && filteredData.length > 0">
     <apx-chart
       [series]="chartOptions.series"
       [chart]="chartOptions.chart"
