@@ -28,7 +28,7 @@ interface DepartmentExpense {
 
 @Component({
   selector: 'app-gastos-departamentos-page',
-  imports: [ChartComponent, JsonPipe, DatePipe, CurrencyPipe, CommonModule],
+  imports: [ChartComponent, CurrencyPipe, CommonModule],
   templateUrl: './gastosDepartamentos-page.component.html',
   styles: `
     .chart-container {

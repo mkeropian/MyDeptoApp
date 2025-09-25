@@ -27,7 +27,7 @@ interface DepartmentExpense {
 
 @Component({
   selector: 'app-ingresos-departamentos-page',
-  imports: [ChartComponent, JsonPipe, DatePipe, CurrencyPipe, CommonModule],
+  imports: [ChartComponent, CurrencyPipe, CommonModule],
   templateUrl: './ingresosDepartamentos-page.component.html',
   styles: `
     .chart-container {

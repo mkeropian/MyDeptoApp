@@ -24,7 +24,7 @@ interface DepartmentRanking {
 
 @Component({
   selector: 'app-ingresos-ranking-mensual-departamentos-page',
-  imports: [ChartComponent, JsonPipe, DatePipe, CurrencyPipe, CommonModule],
+  imports: [ChartComponent, CurrencyPipe, CommonModule],
   templateUrl: './ingresosRankingMensualDepartamentos-page.component.html',
   styles: `
     .chart-container {

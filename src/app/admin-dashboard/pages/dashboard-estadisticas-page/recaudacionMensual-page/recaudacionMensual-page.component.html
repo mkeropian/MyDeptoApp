@@ -1,0 +1,57 @@
+<div class="recaudacion-container">
+  <div class="header-section">
+    <h2 class="page-title">Gastos en Honorarios por Mes</h2>
+
+    <!-- Selector de Año -->
+    <div class="year-selector">
+      <label for="yearSelect" class="year-label">Seleccionar Año:</label>
+      <select
+        id="yearSelect"
+        class="form-select year-select"
+        [(ngModel)]="selectedYear"
+        (change)="onYearChange()">
+        <option *ngFor="let year of availableYears" [value]="year">
+          {{ year }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="loading-text">Cargando datos...</p>
+  </div>
+
+  <!-- Gráfico y Estadísticas lado a lado -->
+  <div *ngIf="!loading" class="chart-stats-container">
+    <!-- Gráfico a la izquierda -->
+    <div class="chart-section">
+      <apx-chart
+        [series]="chartOptions.series"
+        [chart]="chartOptions.chart"
+        [xaxis]="chartOptions.xaxis"
+        [yaxis]="chartOptions.yaxis"
+        [dataLabels]="chartOptions.dataLabels"
+        [plotOptions]="chartOptions.plotOptions"
+        [stroke]="chartOptions.stroke"
+        [fill]="chartOptions.fill"
+        [tooltip]="chartOptions.tooltip"
+        [title]="chartOptions.title"
+        [legend]="chartOptions.legend"
+        [grid]="chartOptions.grid">
+      </apx-chart>
+    </div>
+  </div>
+
+  <!-- Mensaje si no hay datos -->
+  <div *ngIf="!loading && (!availableYears || availableYears.length === 0)" class="no-data-message">
+    <div class="alert alert-info">
+      <i class="fas fa-info-circle"></i>
+      No se encontraron datos de gastos en Honorarios para mostrar.
+    </div>
+  </div>
+
+</div>

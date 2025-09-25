@@ -12,6 +12,7 @@ import { RendimientoMensualDepartamentosPageComponent } from "./pages/dashboard-
 import { RendimientoPropietariosPageComponent } from "./pages/dashboard-estadisticas-page/rendimientoPropietarios-page/rendimientoPropietarios-page.component";
 import { RendimientoMensualPropietariosPageComponent } from "./pages/dashboard-estadisticas-page/rendimientoMensualPropietarios-page/rendimientoMensualPropietarios-page.component";
 import { IngresosRankingMensualDepartamentosPageComponent } from "./pages/dashboard-estadisticas-page/ingresosRankingMensualDepartamentos-page/ingresosRankingMensualDepartamentos-page.component";
+import { RecaudacionMensualPageComponent } from "./pages/dashboard-estadisticas-page/recaudacionMensual-page/recaudacionMensual-page.component";
 
 export const DashboardRoutes: Routes = [
   {
@@ -58,6 +59,10 @@ export const DashboardRoutes: Routes = [
       {
         path:'ingrankingmesdep',
         component: IngresosRankingMensualDepartamentosPageComponent,
+      },
+      {
+        path:'recaudacionmensual',
+        component: RecaudacionMensualPageComponent,
       },
       {
         path: '**',
