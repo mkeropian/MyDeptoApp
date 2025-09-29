@@ -8,6 +8,7 @@ import { FullscreenMapPageComponent } from "./pages/departamentos-page/fullscree
 import { CardsPageComponent } from "./pages/departamentos-page/cards-page/cards-page.component";
 
 import { NotFoundPageComponent } from "../shared/pages/not-found-page/not-found-page.component";
+import { UserProfilePageComponent } from "./pages/user-profile-page/user-profile-page.component";
 
 export const webFrontRoutes: Routes = [
   {
@@ -37,6 +38,10 @@ export const webFrontRoutes: Routes = [
       {
         path: 'incomes',
         component: IncomesPageComponent,
+      },
+      {
+        path: 'profile',
+        component: UserProfilePageComponent,
       },
       {
         path: '**',

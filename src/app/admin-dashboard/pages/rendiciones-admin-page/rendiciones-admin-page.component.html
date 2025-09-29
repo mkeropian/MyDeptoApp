@@ -1,228 +1,191 @@
-<!-- src/app/admin-dashboard/pages/rendiciones-admin-page/rendiciones-admin-page.component.html -->
-
-<!-- TU CONTENIDO EXISTENTE VA AQUÍ -->
-<!-- ... todo tu HTML existente ... -->
-
-<!-- BOTÓN PARA ABRIR EL MODAL -->
-<div class="flex justify-end mb-4">
-  <button class="btn btn-primary gap-2 export-btn" (click)="openExportModal()">
-    <span>📊</span>
-    Exportar Rendiciones
-  </button>
-</div>
-
-<!-- RESTO DE TU CONTENIDO EXISTENTE -->
-<!-- ... el resto de tu HTML existente ... -->
-
-<!-- =============== MODAL DE EXPORTACIÓN (AGREGAR AL FINAL) =============== -->
-
-<!-- Modal Backdrop -->
+<!-- Archivo HTML completamente reescrito y validado -->
 <div *ngIf="showExportModal"
      class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop"
      (click)="closeExportModal()">
 
-  <!-- Modal Container -->
   <div class="modal-box w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto relative"
        (click)="$event.stopPropagation()">
 
-    <!-- Modal Header -->
+    <!-- Header -->
     <div class="flex justify-between items-center mb-6">
-      <h3 class="text-2xl font-bold text-primary flex items-center gap-3">
-        📊 Exportar Rendiciones
-      </h3>
+      <h3 class="text-2xl font-bold text-primary">Exportar Rendiciones</h3>
       <button
-        class="btn btn-sm btn-circle btn-ghost hover:btn-error"
-        [disabled]="isExporting"
-        (click)="closeExportModal()">
-        ✕
-      </button>
+        class="btn btn-sm btn-circle btn-ghost"
+        [disabled]="isExporting || isLoadingData"
+        (click)="closeExportModal()">X</button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoadingData" class="text-center py-12">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+      <p class="mt-4">Cargando datos...</p>
     </div>
 
     <!-- Form -->
-    <form [formGroup]="exportForm" (ngSubmit)="onExportSubmit()" class="space-y-6">
+    <div *ngIf="!isLoadingData" class="space-y-6">
+      <form [formGroup]="exportForm">
 
-      <!-- Período Selection -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        <!-- Mes -->
+        <!-- Filtro -->
         <div class="form-control">
           <label class="label">
-            <span class="label-text font-semibold form-label-required">
-              Mes
-            </span>
+            <span class="label-text font-semibold">Tipo de Filtro *</span>
           </label>
-          <select
-            formControlName="month"
-            class="select select-bordered w-full"
-            [class.select-error]="isExportFieldInvalid('month')">
-            <option disabled value="">Selecciona un mes</option>
-            <option *ngFor="let month of months" [value]="month.value">
-              {{ month.label }}
-            </option>
-          </select>
-          <div class="label" *ngIf="isExportFieldInvalid('month')">
-            <span class="label-text-alt text-error">{{ getExportFieldError('month') }}</span>
+
+          <div class="space-y-2">
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input type="radio" name="filterType" value="owner" class="radio" formControlName="filterType">
+                <span>Por Propietario</span>
+              </label>
+            </div>
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input type="radio" name="filterType" value="department" class="radio" formControlName="filterType">
+                <span>Por Departamento</span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <!-- Año -->
+        <!-- Reporte -->
         <div class="form-control">
           <label class="label">
-            <span class="label-text font-semibold form-label-required">
-              Año
-            </span>
+            <span class="label-text font-semibold">Tipo de Reporte *</span>
           </label>
-          <select
-            formControlName="year"
-            class="select select-bordered w-full"
-            [class.select-error]="isExportFieldInvalid('year')">
-            <option disabled value="">Selecciona un año</option>
-            <option *ngFor="let year of years" [value]="year">
-              {{ year }}
-            </option>
-          </select>
-          <div class="label" *ngIf="isExportFieldInvalid('year')">
-            <span class="label-text-alt text-error">{{ getExportFieldError('year') }}</span>
+
+          <div class="space-y-2">
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input type="radio" name="reportType" value="daily" class="radio" formControlName="reportType">
+                <span>Reporte Diario</span>
+              </label>
+            </div>
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input type="radio" name="reportType" value="monthly" class="radio" formControlName="reportType">
+                <span>Reporte Mensual</span>
+              </label>
+            </div>
           </div>
         </div>
 
-      </div>
-
-      <!-- Departamentos -->
-      <div class="form-control form-group">
-        <label class="label">
-          <span class="label-text font-semibold form-label-required">
-            Departamentos
-          </span>
-          <span class="label-text-alt">Selecciona uno o más</span>
-        </label>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 p-4 border border-base-300 rounded-lg checkbox-container"
-             [class.border-error-custom]="isExportFieldInvalid('departments')">
-
-          <label *ngFor="let dept of departments"
-                 class="cursor-pointer label justify-start gap-3 hover:bg-base-200 rounded-lg p-2 transition-colors">
-            <input
-              type="checkbox"
-              class="checkbox checkbox-primary checkbox-custom"
-              [checked]="isDepartmentSelected(dept.value)"
-              (change)="toggleDepartment(dept.value)">
-            <span class="label-text">{{ dept.label }}</span>
+        <!-- Fecha para diario -->
+        <div *ngIf="isDailyReport()" class="form-control">
+          <label class="label">
+            <span class="label-text font-semibold">Fecha *</span>
           </label>
-
+          <input
+            type="date"
+            class="input input-bordered w-full max-w-xs"
+            formControlName="selectedDate">
         </div>
 
-        <div class="label" *ngIf="isExportFieldInvalid('departments')">
-          <span class="label-text-alt text-error">{{ getExportFieldError('departments') }}</span>
-        </div>
-      </div>
-
-      <!-- Propietarios -->
-      <div class="form-control form-group">
-        <label class="label">
-          <span class="label-text font-semibold form-label-required">
-            Propietarios
-          </span>
-          <span class="label-text-alt">Selecciona uno o más</span>
-        </label>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 border border-base-300 rounded-lg max-h-40 overflow-y-auto checkbox-container"
-             [class.border-error-custom]="isExportFieldInvalid('owners')">
-
-          <label *ngFor="let owner of owners"
-                 class="cursor-pointer label justify-start gap-3 hover:bg-base-200 rounded-lg p-2 transition-colors">
-            <input
-              type="checkbox"
-              class="checkbox checkbox-secondary checkbox-custom"
-              [checked]="isOwnerSelected(owner.value)"
-              (change)="toggleOwner(owner.value)">
-            <span class="label-text">{{ owner.label }}</span>
-          </label>
-
-        </div>
-
-        <div class="label" *ngIf="isExportFieldInvalid('owners')">
-          <span class="label-text-alt text-error">{{ getExportFieldError('owners') }}</span>
-        </div>
-      </div>
-
-      <!-- Formato de Archivo -->
-      <div class="form-control form-group">
-        <label class="label">
-          <span class="label-text font-semibold form-label-required">
-            Formato de Archivo
-          </span>
-        </label>
-
-        <div class="flex flex-col sm:flex-row gap-4">
-          <label *ngFor="let format of fileFormats"
-                 class="cursor-pointer label justify-start gap-3 p-4 border border-base-300 rounded-lg hover:border-primary transition-colors hover-card"
-                 [class.border-primary]="exportForm.get('fileFormat')?.value === format.value"
-                 [class.bg-primary]="exportForm.get('fileFormat')?.value === format.value">
-            <input
-              type="radio"
-              class="radio radio-primary"
-              [value]="format.value"
-              formControlName="fileFormat">
-            <div class="flex items-center gap-2">
-              <span class="text-2xl">{{ format.icon }}</span>
-              <span class="label-text font-medium">{{ format.label }}</span>
-            </div>
-          </label>
-        </div>
-
-        <div class="label" *ngIf="isExportFieldInvalid('fileFormat')">
-          <span class="label-text-alt text-error">{{ getExportFieldError('fileFormat') }}</span>
-        </div>
-      </div>
-
-      <!-- Resumen -->
-      <div *ngIf="exportForm.valid" class="alert alert-info shadow-lg">
-        <div class="flex-1">
-          <div class="flex items-center gap-2 mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-6 h-6 stroke-current">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span class="font-semibold text-lg">Resumen de Exportación</span>
+        <!-- Mes/Año para mensual -->
+        <div *ngIf="isMonthlyReport()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">Año *</span>
+            </label>
+            <select class="select select-bordered w-full" formControlName="year">
+              <option value="">Selecciona año</option>
+              <option *ngFor="let year of years" [value]="year">{{year}}</option>
+            </select>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            <div>
-              <strong>Período:</strong>
-              {{ getSelectedMonthName() }} {{ exportForm.value.year }}
-            </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">Mes *</span>
+            </label>
+            <select class="select select-bordered w-full" formControlName="month">
+              <option value="">Selecciona mes</option>
+              <option *ngFor="let month of months" [value]="month.value">{{month.label}}</option>
+            </select>
+          </div>
+        </div>
 
-            <div>
-              <strong>Formato:</strong>
-              {{ getSelectedFormatLabel() }}
-            </div>
+        <!-- Departamentos -->
+        <div *ngIf="isDepartmentFilter()" class="form-control">
+          <label class="label">
+            <span class="label-text font-semibold">Departamentos *</span>
+            <span class="label-text-alt">Selecciona uno o más</span>
+          </label>
 
-            <div>
-              <strong>Departamentos:</strong>
-              <span class="flex flex-wrap gap-1">
-                <span *ngFor="let deptName of getSelectedDepartmentNames(); let last = last"
-                      class="badge badge-primary badge-sm">
-                  {{ deptName }}<span *ngIf="!last">,</span>
-                </span>
-              </span>
-            </div>
-
-            <div>
-              <strong>Propietarios:</strong>
-              <span class="flex flex-wrap gap-1">
-                <span *ngFor="let ownerName of getSelectedOwnerNames(); let last = last"
-                      class="badge badge-secondary badge-sm">
-                  {{ ownerName }}<span *ngIf="!last">,</span>
-                </span>
-              </span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 border rounded-lg max-h-60 overflow-y-auto">
+            <div *ngFor="let dept of departments" class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-sm"
+                  [checked]="isDepartmentSelected(dept.id)"
+                  (change)="toggleDepartment(dept.id)">
+                <span class="label-text">{{dept.nombre}}</span>
+              </label>
             </div>
           </div>
         </div>
-      </div>
-    </form>
 
-    <!-- Modal Actions -->
-    <div class="modal-action mt-8">
+        <!-- Propietarios -->
+        <div *ngIf="isOwnerFilter()" class="form-control">
+          <label class="label">
+            <span class="label-text font-semibold">Propietarios *</span>
+            <span class="label-text-alt">Selecciona uno o más</span>
+          </label>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 border rounded-lg max-h-60 overflow-y-auto">
+            <div *ngFor="let owner of owners" class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-sm"
+                  [checked]="isOwnerSelected(owner.id)"
+                  (change)="toggleOwner(owner.id)">
+                <span class="label-text">{{owner.nombreApellido}}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Formato -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-semibold">Formato *</span>
+          </label>
+
+          <div class="space-y-2">
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input type="radio" name="fileFormat" value="csv" class="radio" formControlName="fileFormat">
+                <span>CSV (.csv)</span>
+              </label>
+            </div>
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input type="radio" name="fileFormat" value="excel" class="radio" formControlName="fileFormat">
+                <span>Excel (.xlsx)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen -->
+        <div *ngIf="exportForm.valid" class="alert alert-info">
+          <div>
+            <h4 class="font-bold">Resumen</h4>
+            <div class="text-sm mt-2 space-y-1">
+              <p><strong>Filtro:</strong> {{getSelectedFilterTypeLabel()}}</p>
+              <p><strong>Reporte:</strong> {{getSelectedReportTypeLabel()}}</p>
+              <p *ngIf="isDailyReport()"><strong>Fecha:</strong> {{exportForm.value.selectedDate}}</p>
+              <p *ngIf="isMonthlyReport()"><strong>Período:</strong> {{getSelectedMonthName()}} {{exportForm.value.year}}</p>
+              <p><strong>Formato:</strong> {{getSelectedFormatLabel()}}</p>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Actions -->
+    <div class="modal-action" *ngIf="!isLoadingData">
       <button
         type="button"
         class="btn btn-ghost"
@@ -233,17 +196,11 @@
 
       <button
         type="button"
-        class="btn btn-primary gap-2"
+        class="btn btn-primary"
         [disabled]="!canSubmitExport()"
         (click)="onExportSubmit()">
-
-        <!-- Loading Spinner -->
         <span *ngIf="isExporting" class="loading loading-spinner loading-sm"></span>
-
-        <!-- Button Content -->
-        <span *ngIf="!isExporting">📤</span>
-        <span>{{ isExporting ? 'Exportando...' : 'Exportar Rendiciones' }}</span>
-
+        <span>{{isExporting ? 'Exportando...' : 'Exportar'}}</span>
       </button>
     </div>
 

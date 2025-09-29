@@ -19,3 +19,15 @@ export interface Rol{
   nombre: string;
   descripcion: string;
 }
+
+export interface UserLogin {
+  id: number;
+  email: string;
+  nombreCompleto: string;
+  activo: number;
+  roles: string[];
+  avatarUrl?: string;
+  tema?: string;
+}
+
+

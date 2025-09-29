@@ -5,7 +5,10 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { ExportApiService } from '../../../shared/services/export-api.service';
 import { ExportRequest } from '../../../shared/interfaces/export-request.interface';
 import { CommonModule } from '@angular/common';
-
+import { Departamento } from '../../../departamentos/interfaces/departamento.interface';
+import { DepartamentosService } from '../../../departamentos/services/departamentos.service';
+import { Propietario } from '../../../propietarios/interfaces/propietario.interface';
+import { PropietariosService } from '../../../propietarios/services/propietarios.service';
 
 @Component({
   selector: 'app-rendiciones-admin-page',
@@ -20,20 +23,13 @@ import { CommonModule } from '@angular/common';
 })
 export class RendicionesAdminPageComponent implements OnInit {
 
-  // =============== TUS PROPIEDADES EXISTENTES ===============
-  // Aquí van todas las propiedades que ya tenías en tu componente
-  // Por ejemplo:
-  // rendiciones: any[] = [];
-  // filtros: any = {};
-  // isLoading = false;
-  // etc...
-
   // =============== PROPIEDADES DEL MODAL DE EXPORTACIÓN ===============
   showExportModal = false;
   exportForm!: FormGroup;
   isExporting = false;
+  isLoadingData = false;
 
-  // Opciones para los dropdowns del modal
+  // Arrays para opciones
   months = [
     { value: 1, label: 'Enero' },
     { value: 2, label: 'Febrero' },
@@ -51,58 +47,84 @@ export class RendicionesAdminPageComponent implements OnInit {
 
   years: number[] = [];
 
-  departments = [
-    { value: 'IT', label: 'Tecnología' },
-    { value: 'HR', label: 'Recursos Humanos' },
-    { value: 'SALES', label: 'Ventas' },
-    { value: 'MARKETING', label: 'Marketing' },
-    { value: 'FINANCE', label: 'Finanzas' },
-    { value: 'OPERATIONS', label: 'Operaciones' }
-  ];
-
-  owners = [
-    { value: 'juan.perez', label: 'Juan Pérez' },
-    { value: 'maria.garcia', label: 'María García' },
-    { value: 'carlos.lopez', label: 'Carlos López' },
-    { value: 'ana.martinez', label: 'Ana Martínez' },
-    { value: 'pedro.rodriguez', label: 'Pedro Rodríguez' },
-    { value: 'laura.fernandez', label: 'Laura Fernández' }
-  ];
+  // Datos cargados desde servicios
+  departments: Departamento[] = [];
+  owners: Propietario[] = [];
 
   fileFormats = [
     { value: 'csv', label: 'CSV (.csv)', icon: '📄' },
     { value: 'excel', label: 'Excel (.xlsx)', icon: '📊' }
   ];
 
+  reportTypes = [
+    { value: 'daily', label: 'Reporte Diario', icon: '📅' },
+    { value: 'monthly', label: 'Reporte Mensual', icon: '📊' }
+  ];
+
+  filterTypes = [
+    { value: 'owner', label: 'Por Propietario', icon: '👤' },
+    { value: 'department', label: 'Por Departamento', icon: '🏢' }
+  ];
+
   constructor(
     private formBuilder: FormBuilder,
-    private exportApiService: ExportApiService
-    // ... otros servicios que ya tengas inyectados
+    private exportApiService: ExportApiService,
+    private departamentosService: DepartamentosService,
+    private propietariosService: PropietariosService
   ) {
     this.initializeYears();
   }
 
   ngOnInit(): void {
-    // =============== TU LÓGICA EXISTENTE DE ngOnInit ===============
-    // Aquí va toda la lógica que ya tenías
-    // Por ejemplo:
-    // this.loadRendiciones();
-    // this.setupFilters();
-    // etc...
+    // Cargar datos iniciales
+    this.loadInitialData();
 
     // Inicializar formulario de exportación
     this.createExportForm();
+
+    // Abrir modal automáticamente al cargar el componente
+    this.openExportModal();
   }
 
-  // =============== TUS MÉTODOS EXISTENTES DEL COMPONENTE ===============
-  // Aquí van todos los métodos que ya tenías
-  // Por ejemplo:
-  // loadRendiciones() { ... }
-  // filterData() { ... }
-  // onPageChange() { ... }
-  // etc...
+  // =============== MÉTODOS DE CARGA DE DATOS ===============
 
-  // =============== MÉTODOS DEL MODAL DE EXPORTACIÓN ===============
+  /**
+   * Cargar datos iniciales (departamentos y propietarios)
+   */
+  private async loadInitialData(): Promise<void> {
+    this.isLoadingData = true;
+
+    try {
+      // Cargar departamentos y propietarios en paralelo
+      const [departamentos, propietarios] = await Promise.all([
+        this.departamentosService.getDepartamentosActivos().toPromise(),
+        this.propietariosService.getPropietariosActivos().toPromise()
+      ]);
+
+      this.departments = departamentos || [];
+      this.owners = propietarios || [];
+
+      console.log('Datos cargados:', {
+        departamentos: this.departments.length,
+        propietarios: this.owners.length
+      });
+
+    } catch (error) {
+      console.error('Error cargando datos iniciales:', error);
+      this.handleDataLoadError();
+    } finally {
+      this.isLoadingData = false;
+    }
+  }
+
+  /**
+   * Manejar error en la carga de datos
+   */
+  private handleDataLoadError(): void {
+    alert('Error al cargar departamentos y propietarios. Por favor, recarga la página.');
+  }
+
+  // =============== MÉTODOS DEL FORMULARIO ===============
 
   /**
    * Inicializar array de años
@@ -121,13 +143,95 @@ export class RendicionesAdminPageComponent implements OnInit {
     const currentDate = new Date();
 
     this.exportForm = this.formBuilder.group({
-      month: [currentDate.getMonth() + 1, [Validators.required]],
-      year: [currentDate.getFullYear(), [Validators.required]],
-      departments: [[], [Validators.required, Validators.minLength(1)]],
-      owners: [[], [Validators.required, Validators.minLength(1)]],
+      // Tipo de filtro: propietario o departamento
+      filterType: ['owner', [Validators.required]],
+
+      // Tipo de reporte: diario o mensual
+      reportType: ['monthly', [Validators.required]],
+
+      // Para reporte diario
+      selectedDate: [currentDate.toISOString().split('T')[0]], // formato YYYY-MM-DD
+
+      // Para reporte mensual
+      month: [currentDate.getMonth() + 1],
+      year: [currentDate.getFullYear()],
+
+      // Selecciones múltiples (IDs)
+      departments: [[]],
+      owners: [[]],
+
+      // Formato de archivo
       fileFormat: ['excel', [Validators.required]]
     });
+
+    // Escuchar cambios en el tipo de reporte para validar campos apropiados
+    this.exportForm.get('reportType')?.valueChanges.subscribe(reportType => {
+      this.updateValidators(reportType);
+    });
+
+    // Escuchar cambios en el tipo de filtro para validar campos apropiados
+    this.exportForm.get('filterType')?.valueChanges.subscribe(filterType => {
+      this.updateFilterValidators(filterType);
+    });
+
+    // Configurar validadores iniciales
+    this.updateValidators(this.exportForm.get('reportType')?.value);
+    this.updateFilterValidators(this.exportForm.get('filterType')?.value);
   }
+
+  /**
+   * Actualizar validadores según el tipo de reporte
+   */
+  private updateValidators(reportType: string): void {
+    const dateControl = this.exportForm.get('selectedDate');
+    const monthControl = this.exportForm.get('month');
+    const yearControl = this.exportForm.get('year');
+
+    // Limpiar validadores existentes
+    dateControl?.clearValidators();
+    monthControl?.clearValidators();
+    yearControl?.clearValidators();
+
+    if (reportType === 'daily') {
+      dateControl?.setValidators([Validators.required]);
+    } else if (reportType === 'monthly') {
+      monthControl?.setValidators([Validators.required]);
+      yearControl?.setValidators([Validators.required]);
+    }
+
+    // Actualizar validez
+    dateControl?.updateValueAndValidity();
+    monthControl?.updateValueAndValidity();
+    yearControl?.updateValueAndValidity();
+  }
+
+  /**
+   * Actualizar validadores según el tipo de filtro
+   */
+  private updateFilterValidators(filterType: string): void {
+    const departmentsControl = this.exportForm.get('departments');
+    const ownersControl = this.exportForm.get('owners');
+
+    // Limpiar validadores existentes
+    departmentsControl?.clearValidators();
+    ownersControl?.clearValidators();
+
+    if (filterType === 'department') {
+      departmentsControl?.setValidators([Validators.required, Validators.minLength(1)]);
+      // Limpiar selección de propietarios
+      ownersControl?.setValue([]);
+    } else if (filterType === 'owner') {
+      ownersControl?.setValidators([Validators.required, Validators.minLength(1)]);
+      // Limpiar selección de departamentos
+      departmentsControl?.setValue([]);
+    }
+
+    // Actualizar validez
+    departmentsControl?.updateValueAndValidity();
+    ownersControl?.updateValueAndValidity();
+  }
+
+  // =============== MÉTODOS DEL MODAL ===============
 
   /**
    * Abrir modal de exportación
@@ -147,6 +251,26 @@ export class RendicionesAdminPageComponent implements OnInit {
   }
 
   /**
+   * Resetear formulario de exportación
+   */
+  private resetExportForm(): void {
+    const currentDate = new Date();
+    this.exportForm.patchValue({
+      filterType: 'owner',
+      reportType: 'monthly',
+      selectedDate: currentDate.toISOString().split('T')[0],
+      month: currentDate.getMonth() + 1,
+      year: currentDate.getFullYear(),
+      departments: [],
+      owners: [],
+      fileFormat: 'excel'
+    });
+    this.exportForm.markAsUntouched();
+  }
+
+  // =============== MÉTODOS DE EXPORTACIÓN ===============
+
+  /**
    * Manejar envío del formulario de exportación
    */
   onExportSubmit(): void {
@@ -154,14 +278,7 @@ export class RendicionesAdminPageComponent implements OnInit {
       this.isExporting = true;
 
       const formValue = this.exportForm.value;
-      const exportRequest: ExportRequest = {
-        month: formValue.month,
-        year: formValue.year,
-        departments: formValue.departments,
-        owners: formValue.owners,
-        fileFormat: formValue.fileFormat,
-        fileName: this.generateFileName(formValue)
-      };
+      const exportRequest: ExportRequest = this.buildExportRequest(formValue);
 
       if (formValue.fileFormat === 'csv') {
         this.exportToCSV(exportRequest);
@@ -174,11 +291,42 @@ export class RendicionesAdminPageComponent implements OnInit {
   }
 
   /**
+   * Construir objeto de petición de exportación
+   */
+  private buildExportRequest(formValue: any): ExportRequest {
+    const request: ExportRequest = {
+      filterType: formValue.filterType,
+      reportType: formValue.reportType,
+      fileFormat: formValue.fileFormat,
+      fileName: this.generateFileName(formValue)
+    };
+
+    // Agregar datos según el tipo de reporte
+    if (formValue.reportType === 'daily') {
+      request.selectedDate = formValue.selectedDate;
+    } else if (formValue.reportType === 'monthly') {
+      request.month = formValue.month;
+      request.year = formValue.year;
+    }
+
+    // Agregar selecciones según el tipo de filtro
+    if (formValue.filterType === 'department') {
+      request.departments = formValue.departments;
+    } else if (formValue.filterType === 'owner') {
+      request.owners = formValue.owners;
+    }
+
+    return request;
+  }
+
+  /**
    * Exportar a CSV
    */
   private exportToCSV(request: ExportRequest): void {
     this.exportApiService.exportToCSV(request).subscribe({
-      next: (response) => {
+      next: (response: Blob) => {
+        // Descargar archivo
+        this.exportApiService.downloadFile(response, request.fileName, 'csv');
         this.handleExportSuccess('CSV exportado exitosamente');
       },
       error: (error) => {
@@ -195,7 +343,9 @@ export class RendicionesAdminPageComponent implements OnInit {
    */
   private exportToExcel(request: ExportRequest): void {
     this.exportApiService.exportToExcel(request).subscribe({
-      next: (response) => {
+      next: (response: Blob) => {
+        // Descargar archivo
+        this.exportApiService.downloadFile(response, request.fileName, 'xlsx');
         this.handleExportSuccess('Excel exportado exitosamente');
       },
       error: (error) => {
@@ -232,10 +382,19 @@ export class RendicionesAdminPageComponent implements OnInit {
    * Generar nombre de archivo
    */
   private generateFileName(formValue: any): string {
-    const monthName = this.months.find(m => m.value === formValue.month)?.label.toLowerCase();
-    const departments = formValue.departments.join('-').toLowerCase();
-    return `rendiciones_${monthName}_${formValue.year}_${departments}`;
+    const filterTypeLabel = formValue.filterType === 'owner' ? 'propietarios' : 'departamentos';
+    const reportTypeLabel = formValue.reportType === 'daily' ? 'diario' : 'mensual';
+
+    if (formValue.reportType === 'daily') {
+      const dateStr = formValue.selectedDate.replace(/-/g, '_');
+      return `rendiciones_${filterTypeLabel}_${reportTypeLabel}_${dateStr}`;
+    } else {
+      const monthName = this.months.find(m => m.value === formValue.month)?.label.toLowerCase() || 'mes';
+      return `rendiciones_${filterTypeLabel}_${reportTypeLabel}_${monthName}_${formValue.year}`;
+    }
   }
+
+  // =============== MÉTODOS DE VALIDACIÓN ===============
 
   /**
    * Marcar todos los campos como tocados
@@ -245,21 +404,6 @@ export class RendicionesAdminPageComponent implements OnInit {
       const control = this.exportForm.get(key);
       control?.markAsTouched();
     });
-  }
-
-  /**
-   * Resetear formulario de exportación
-   */
-  private resetExportForm(): void {
-    const currentDate = new Date();
-    this.exportForm.patchValue({
-      month: currentDate.getMonth() + 1,
-      year: currentDate.getFullYear(),
-      departments: [],
-      owners: [],
-      fileFormat: 'excel'
-    });
-    this.exportForm.markAsUntouched();
   }
 
   /**
@@ -293,6 +437,9 @@ export class RendicionesAdminPageComponent implements OnInit {
    */
   private getExportFieldLabel(fieldName: string): string {
     const labels: { [key: string]: string } = {
+      'filterType': 'Tipo de filtro',
+      'reportType': 'Tipo de reporte',
+      'selectedDate': 'Fecha',
       'month': 'Mes',
       'year': 'Año',
       'departments': 'Departamento',
@@ -307,20 +454,22 @@ export class RendicionesAdminPageComponent implements OnInit {
    * Verificar si el formulario se puede enviar
    */
   canSubmitExport(): boolean {
-    return this.exportForm.valid && !this.isExporting;
+    return this.exportForm.valid && !this.isExporting && !this.isLoadingData;
   }
+
+  // =============== MÉTODOS DE SELECCIÓN MÚLTIPLE ===============
 
   /**
    * Toggle de selección para departamentos
    */
-  toggleDepartment(deptValue: string): void {
+  toggleDepartment(deptId: number): void {
     const departments = this.exportForm.get('departments')?.value || [];
-    const index = departments.indexOf(deptValue);
+    const index = departments.indexOf(deptId);
 
     if (index > -1) {
       departments.splice(index, 1);
     } else {
-      departments.push(deptValue);
+      departments.push(deptId);
     }
 
     this.exportForm.patchValue({ departments });
@@ -329,14 +478,14 @@ export class RendicionesAdminPageComponent implements OnInit {
   /**
    * Toggle de selección para propietarios
    */
-  toggleOwner(ownerValue: string): void {
+  toggleOwner(ownerId: number): void {
     const owners = this.exportForm.get('owners')?.value || [];
-    const index = owners.indexOf(ownerValue);
+    const index = owners.indexOf(ownerId);
 
     if (index > -1) {
       owners.splice(index, 1);
     } else {
-      owners.push(ownerValue);
+      owners.push(ownerId);
     }
 
     this.exportForm.patchValue({ owners });
@@ -345,20 +494,24 @@ export class RendicionesAdminPageComponent implements OnInit {
   /**
    * Verificar si un departamento está seleccionado
    */
-  isDepartmentSelected(deptValue: string): boolean {
+  isDepartmentSelected(deptId: number): boolean {
     const departments = this.exportForm.get('departments')?.value || [];
-    return departments.includes(deptValue);
+    return departments.includes(deptId);
   }
 
   /**
    * Verificar si un propietario está seleccionado
    */
-  isOwnerSelected(ownerValue: string): boolean {
+  isOwnerSelected(ownerId: number): boolean {
     const owners = this.exportForm.get('owners')?.value || [];
-    return owners.includes(ownerValue);
+    return owners.includes(ownerId);
   }
 
+  // =============== MÉTODOS DE PRESENTACIÓN ===============
 
+  /**
+   * Obtener nombre del mes seleccionado
+   */
   getSelectedMonthName(): string {
     const monthValue = this.exportForm?.get('month')?.value;
     return this.months.find(m => m.value === monthValue)?.label || '';
@@ -373,12 +526,28 @@ export class RendicionesAdminPageComponent implements OnInit {
   }
 
   /**
+   * Obtener label del tipo de reporte seleccionado
+   */
+  getSelectedReportTypeLabel(): string {
+    const reportTypeValue = this.exportForm?.get('reportType')?.value;
+    return this.reportTypes.find(r => r.value === reportTypeValue)?.label || '';
+  }
+
+  /**
+   * Obtener label del tipo de filtro seleccionado
+   */
+  getSelectedFilterTypeLabel(): string {
+    const filterTypeValue = this.exportForm?.get('filterType')?.value;
+    return this.filterTypes.find(f => f.value === filterTypeValue)?.label || '';
+  }
+
+  /**
    * Obtener nombres de departamentos seleccionados
    */
   getSelectedDepartmentNames(): string[] {
-    const deptValues = this.exportForm?.get('departments')?.value || [];
-    return deptValues.map((deptValue: string) =>
-      this.departments.find(d => d.value === deptValue)?.label || deptValue
+    const deptIds = this.exportForm?.get('departments')?.value || [];
+    return deptIds.map((deptId: number) =>
+      this.departments.find(d => d.id === deptId)?.nombre || `Departamento ${deptId}`
     );
   }
 
@@ -386,10 +555,37 @@ export class RendicionesAdminPageComponent implements OnInit {
    * Obtener nombres de propietarios seleccionados
    */
   getSelectedOwnerNames(): string[] {
-    const ownerValues = this.exportForm?.get('owners')?.value || [];
-    return ownerValues.map((ownerValue: string) =>
-      this.owners.find(o => o.value === ownerValue)?.label || ownerValue
+    const ownerIds = this.exportForm?.get('owners')?.value || [];
+    return ownerIds.map((ownerId: number) =>
+      this.owners.find(o => o.id === ownerId)?.nombreApellido || `Propietario ${ownerId}`
     );
   }
 
+  /**
+   * Verificar si el tipo de reporte es diario
+   */
+  isDailyReport(): boolean {
+    return this.exportForm?.get('reportType')?.value === 'daily';
+  }
+
+  /**
+   * Verificar si el tipo de reporte es mensual
+   */
+  isMonthlyReport(): boolean {
+    return this.exportForm?.get('reportType')?.value === 'monthly';
+  }
+
+  /**
+   * Verificar si el filtro es por departamento
+   */
+  isDepartmentFilter(): boolean {
+    return this.exportForm?.get('filterType')?.value === 'department';
+  }
+
+  /**
+   * Verificar si el filtro es por propietario
+   */
+  isOwnerFilter(): boolean {
+    return this.exportForm?.get('filterType')?.value === 'owner';
+  }
 }

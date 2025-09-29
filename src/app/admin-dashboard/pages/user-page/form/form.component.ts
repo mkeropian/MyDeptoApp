@@ -2,8 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { UsuariosService } from '../../../../users/services/users.service';
-import { User } from '../../../../users/interfaces/user.interface';
+import { UsuariosService } from '../../../../auth/services/users.service';
+import { User } from '../../../../auth/interfaces/user.interface';
 import { rxResource } from '@angular/core/rxjs-interop';
 
 @Component({

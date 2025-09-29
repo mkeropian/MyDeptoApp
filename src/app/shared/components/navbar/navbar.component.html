@@ -38,74 +38,147 @@
         </ul>
       </li>
 
-      <!-- Dropdown Administración -->
-      <li class="dropdown dropdown-hover" [class.dropdown-open]="isAdminOpen">
-        <div tabindex="0" role="button" (click)="toggleAdmin()">Administración</div>
-        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-          <li><a routerLink="/admin/admin-departamentos" (click)="onMenuItemClick()" routerLinkActive="active">Departamentos</a></li>
-          <li><a routerLink="/admin/admin-propietarios" (click)="onMenuItemClick()" routerLinkActive="active">Propietarios</a></li>
-          <li><a routerLink="/admin/rendiciones-admin" (click)="onMenuItemClick()" routerLinkActive="active">Rendiciónes</a></li>
-        </ul>
-      </li>
+      <!-- Dropdown Administración - Solo visible para admins -->
+      @if (isAdmin()) {
+        <li class="dropdown dropdown-hover" [class.dropdown-open]="isAdminOpen">
+          <div tabindex="0" role="button" (click)="toggleAdmin()">Administración</div>
+          <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
+            <li><a routerLink="/admin/admin-departamentos" (click)="onMenuItemClick()" routerLinkActive="active">Departamentos</a></li>
+            <li><a routerLink="/admin/admin-propietarios" (click)="onMenuItemClick()" routerLinkActive="active">Propietarios</a></li>
 
-      <!-- Dropdown Configuración -->
-      <li class="dropdown dropdown-hover" [class.dropdown-open]="isConfigOpen">
-        <div tabindex="0" role="button" (click)="toggleConfig()">Configuración</div>
-        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-          <li>
-            <a
-              routerLink="/admin/themes-settings"
-              (click)="onMenuItemClick()"
-              routerLinkActive="active"
-            >... del Sistema
-            </a>
-          </li>
-          <li>
-            <a
-              routerLink="/admin/roles-settings"
-              (click)="onMenuItemClick()"
-              routerLinkActive="active"
-            >... de Roles
-            </a>
-          </li>
-          <li>
-            <a
-              routerLink="/admin/settings-permisos-roles"
-              (click)="onMenuItemClick()"
-              routerLinkActive="active"
-            >... de Permisos
-            </a>
-          </li>
-          <li>
-            <a
-              routerLink="/admin/admin-usuarios"
-              (click)="onMenuItemClick()"
-              routerLinkActive="active"
-            >Usuarios
-            </a>
-          </li>
-        </ul>
-      </li>
+            <li><a (click)="onRendicionesClick()" class="cursor-pointer">Rendiciones</a></li>
+            <!-- <li><a routerLink="/admin/rendiciones-admin" (click)="onMenuItemClick()" routerLinkActive="active">Rendiciones</a></li> -->
+          </ul>
+        </li>
+      }
+
+      <!-- Dropdown Configuración - Solo visible para admins -->
+      @if (isAdmin()) {
+        <li class="dropdown dropdown-hover" [class.dropdown-open]="isConfigOpen">
+          <div tabindex="0" role="button" (click)="toggleConfig()">Configuración</div>
+          <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
+            <li>
+              <a
+                routerLink="/admin/themes-settings"
+                (click)="onMenuItemClick()"
+                routerLinkActive="active"
+              >... del Sistema
+              </a>
+            </li>
+            <li>
+              <a
+                routerLink="/admin/roles-settings"
+                (click)="onMenuItemClick()"
+                routerLinkActive="active"
+              >... de Roles
+              </a>
+            </li>
+            <li>
+              <a
+                routerLink="/admin/settings-permisos-roles"
+                (click)="onMenuItemClick()"
+                routerLinkActive="active"
+              >... de Permisos
+              </a>
+            </li>
+            <li>
+              <a
+                routerLink="/admin/admin-usuarios"
+                (click)="onMenuItemClick()"
+                routerLinkActive="active"
+              >Usuarios
+              </a>
+            </li>
+          </ul>
+        </li>
+      }
     </ul>
   </div>
 
-  <!-- Avatar dropdown -->
+  <!-- Avatar dropdown - REDISEÑADO -->
   <div class="flex-none gap-2">
-    <div class="dropdown dropdown-end" [class.dropdown-open]="isProfileOpen">
-      <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar" (click)="toggleProfile()">
+    <div class="dropdown dropdown-end">
+      <div
+        tabindex="0"
+        role="button"
+        class="btn btn-ghost btn-circle avatar"
+        (click)="toggleProfile()"
+        aria-label="Menú de usuario"
+        [attr.aria-expanded]="isProfileOpen"
+      >
         <div class="w-10 rounded-full">
-          <img alt="Avatar del usuario" src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+          <img
+            alt="Avatar de usuario"
+            [src]="currentUser()?.avatarUrl || 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp'"
+            title="Abrir menú de usuario"
+          />
         </div>
       </div>
-      <ul class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1000] mt-3 w-52 p-2 shadow">
-        <li>
-          <a class="justify-between" (click)="onMenuItemClick()">
-            Profile
-            <span class="badge">New</span>
-          </a>
-        </li>
-        <li><a (click)="onMenuItemClick()">Logout</a></li>
-      </ul>
+
+      @if (isProfileOpen) {
+        <ul
+          tabindex="0"
+          class="mt-1 z-[1] shadow-xl menu dropdown-content bg-base-100 rounded-box w-80"
+          role="menu"
+        >
+          <!-- User Info Card -->
+          <li role="none" class="p-4 hover:bg-transparent cursor-default">
+            <span class="flex items-center gap-3 active:bg-transparent focus:bg-transparent">
+              <div class="avatar">
+                <div class="w-12 rounded-full">
+                  <img
+                    [src]="currentUser()?.avatarUrl || 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp'"
+                    alt="Avatar de usuario"
+                    title=""
+                  />
+                </div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <span class="font-semibold text-base">{{ currentUser()?.nombreCompleto || 'Usuario' }}</span>
+                <span class="text-sm opacity-60">{{ currentUser()?.email }}</span>
+                @if (isAdmin()) {
+                  <span class="badge badge-primary badge-sm">Administrador</span>
+                }
+              </div>
+            </span>
+          </li>
+
+          <li role="none"><hr class="my-1 border-base-300"></li>
+
+          <!-- Menu Items -->
+          <li role="none">
+            <a
+              routerLink="/home/profile"
+              (click)="onMenuItemClick()"
+              class="py-3"
+              role="menuitem"
+              tabindex="0"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span>Mi Perfil</span>
+            </a>
+          </li>
+
+          <li role="none"><hr class="my-1 border-base-300"></li>
+
+          <!-- Logout -->
+          <li role="none">
+            <a
+              (click)="onLogout()"
+              class="py-3 text-error hover:bg-error/10"
+              role="menuitem"
+              tabindex="0"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+              </svg>
+              <span class="font-medium">Cerrar Sesión</span>
+            </a>
+          </li>
+        </ul>
+      }
     </div>
   </div>
 </div>

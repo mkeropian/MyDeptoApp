@@ -1,11 +1,19 @@
-// NOMBRE: export-request.interface.ts
-// UBICACIÓN: src/app/interfaces/export-request.interface.ts
+// src/app/shared/interfaces/export-request.interface.ts
 
 export interface ExportRequest {
-  month: number;
-  year: number;
-  departments: string[];
-  owners: string[];
-  fileFormat: 'csv' | 'excel';
-  fileName: string;
+  filterType: 'owner' | 'department'; // Por propietario o departamento
+  reportType: 'daily' | 'monthly'; // Diario o mensual
+  fileFormat: 'csv' | 'excel'; // Formato del archivo
+  fileName: string; // Nombre del archivo generado
+
+  // Para reporte diario
+  selectedDate?: string; // YYYY-MM-DD
+
+  // Para reporte mensual
+  month?: number; // 1-12
+  year?: number;
+
+  // Selecciones múltiples
+  departments?: number[]; // IDs de departamentos
+  owners?: number[]; // IDs de propietarios
 }

@@ -1,106 +1,74 @@
-// NOMBRE: export-api.service.ts
-// UBICACIÓN: src/app/services/export-api.service.ts
+// src/app/shared/services/export-api.service.ts
 
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { ExportRequest } from '../interfaces/export-request.interface';
 
+const baseUrl = environment.baseUrl;
 
 @Injectable({
   providedIn: 'root'
 })
 export class ExportApiService {
 
-  // Usar tu baseUrl único (puerto 3050)
-  private readonly baseUrl = environment.baseUrl;
-
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   /**
-   * Exportar datos a CSV
+   * Exportar rendiciones a formato CSV
    */
-  exportToCSV(request: ExportRequest): Observable<any> {
-    const url = `${this.baseUrl}/export/csv`;
-
-    console.log('📄 Enviando petición para exportar CSV:', request);
+  exportToCSV(request: ExportRequest): Observable<Blob> {
+    const url = `${baseUrl}/reports/export/csv`;
 
     return this.http.post(url, request, {
       responseType: 'blob',
-      observe: 'response'
-    }).pipe(
-      tap(response => {
-        console.log('📄 Respuesta CSV recibida');
-        this.downloadFile(response, request.fileName + '.csv');
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
       })
-    );
+    });
   }
 
   /**
-   * Exportar datos a Excel
+   * Exportar rendiciones a formato Excel
    */
-  exportToExcel(request: ExportRequest): Observable<any> {
-    const url = `${this.baseUrl}/export/excel`;
-
-    console.log('📊 Enviando petición para exportar Excel:', request);
+  exportToExcel(request: ExportRequest): Observable<Blob> {
+    const url = `${baseUrl}/reports/export/excel`;
 
     return this.http.post(url, request, {
       responseType: 'blob',
-      observe: 'response'
-    }).pipe(
-      tap(response => {
-        console.log('📊 Respuesta Excel recibida');
-        this.downloadFile(response, request.fileName + '.xlsx');
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
       })
-    );
+    });
   }
 
   /**
-   * Probar conexión con el backend
+   * Método genérico para exportar (detecta el formato automáticamente)
    */
-  testConnection(): Observable<any> {
-    const url = `${this.baseUrl}/test`;
-    return this.http.get(url);
+  export(request: ExportRequest): Observable<Blob> {
+    if (request.fileFormat === 'csv') {
+      return this.exportToCSV(request);
+    } else {
+      return this.exportToExcel(request);
+    }
   }
 
   /**
-   * Descargar archivo desde la respuesta HTTP
+   * Descargar archivo blob con nombre específico
    */
-  private downloadFile(response: HttpResponse<Blob>, defaultFileName: string): void {
-    const blob = response.body;
-    if (!blob) {
-      console.error('❌ No se recibió contenido del archivo');
-      return;
-    }
-
-    // Intentar obtener el nombre del archivo de los headers
-    const contentDisposition = response.headers.get('content-disposition');
-    let fileName = defaultFileName;
-
-    if (contentDisposition) {
-      const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-      if (fileNameMatch && fileNameMatch[1]) {
-        fileName = fileNameMatch[1].replace(/['"]/g, '');
-      }
-    }
-
-    console.log(`💾 Descargando archivo: ${fileName}`);
-
-    // Crear URL del blob y descargar
+  public downloadFile(blob: Blob, fileName: string, fileExtension: string): void {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = fileName;
-    link.style.display = 'none';
+    link.download = `${fileName}.${fileExtension}`;
 
-    // Agregar al DOM, hacer click y limpiar
+    // Simular click para descargar
     document.body.appendChild(link);
     link.click();
+
+    // Limpiar
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-
-    console.log('✅ Descarga iniciada exitosamente');
   }
 }

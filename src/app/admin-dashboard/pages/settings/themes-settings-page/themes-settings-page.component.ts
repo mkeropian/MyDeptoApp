@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { UsuariosService } from '../../../../users/services/users.service';
+import { UsuariosService } from '../../../../auth/services/users.service';
 
 @Component({
   selector: 'app-settings-page',

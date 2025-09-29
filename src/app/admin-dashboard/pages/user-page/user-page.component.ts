@@ -1,12 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormComponent } from './form/form.component';
-import { UsuariosService } from '../../../users/services/users.service';
+import { UsuariosService } from '../../../auth/services/users.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 
 import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-grid.component";
 import { TableAction, TableColumn } from '../../../shared/components/smart-grid/smart-grid.interface';
 
-import { User } from '../../../users/interfaces/user.interface';
+import { User } from '../../../auth/interfaces/user.interface';
 
 @Component({
   selector: 'users-page',

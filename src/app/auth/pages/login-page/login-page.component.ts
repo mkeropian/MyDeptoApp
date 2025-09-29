@@ -1,26 +1,9 @@
+// src/app/auth/pages/login-page/login-page.component.ts
 import { Component, signal, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-
-// Interfaz para las credenciales de login
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-// Interfaz para la respuesta del login
-export interface LoginResponse {
-  success: boolean;
-  token?: string;
-  user?: {
-    id: string;
-    email: string;
-    nombre: string;
-    avatar?: string;
-  };
-  message?: string;
-}
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login-page',
@@ -28,10 +11,11 @@ export interface LoginResponse {
   templateUrl: './login-page.component.html',
 })
 export class LoginPageComponent {
-  
+
   // Inyección de dependencias
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private authService = inject(AuthService);
 
   // Signals para el manejo del estado
   showPassword = signal<boolean>(false);
@@ -43,9 +27,19 @@ export class LoginPageComponent {
 
   constructor() {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      usuario: ['', [Validators.required]], // Cambiado de 'email' a 'usuario'
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
+  }
+
+  // Getter para acceder fácilmente al control 'usuario'
+  get usuario() {
+    return this.loginForm.get('usuario');
+  }
+
+  // Getter para acceder fácilmente al control 'password'
+  get password() {
+    return this.loginForm.get('password');
   }
 
   /**
@@ -56,119 +50,60 @@ export class LoginPageComponent {
   }
 
   /**
-   * Maneja el submit del formulario de login
+   * Maneja el evento de submit del formulario
    */
-  async onLogin(): Promise<void> {
-    if (this.loginForm.valid) {
-      this.isLoading.set(true);
-      this.loginError.set('');
+  onSubmit(): void {
+    // Limpiar error previo
+    this.loginError.set('');
 
-      try {
-        const credentials: LoginCredentials = this.loginForm.value;
-        
-        // Simular llamada al servicio de autenticación
-        const response = await this.authenticateUser(credentials);
-        
-        if (response.success) {
-          // Guardar token y datos del usuario
-          this.saveAuthData(response);
-          
-          // Mostrar mensaje de éxito (opcional)
-          console.log('Login exitoso:', response.user);
-          
-          // Redirigir al dashboard o página principal
-          await this.router.navigate(['/admin']);
-          
-        } else {
-          this.loginError.set(response.message || 'Credenciales inválidas');
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      this.loginError.set('Por favor completa todos los campos correctamente');
+      return;
+    }
+
+    const { usuario, password } = this.loginForm.value;
+
+    this.isLoading.set(true);
+
+    this.authService
+      .login(usuario, password)
+      .subscribe({
+        next: (isAuthenticated) => {
+          this.isLoading.set(false);
+
+          if (isAuthenticated) {
+            // Login exitoso - redirigir al dashboard
+            this.router.navigateByUrl('/dashboard');
+          } else {
+            // Login falló pero sin error HTTP
+            this.loginError.set('Credenciales inválidas');
+          }
+        },
+        error: (error) => {
+          this.isLoading.set(false);
+
+          // Manejar diferentes tipos de errores
+          if (error.status === 400) {
+            this.loginError.set('Usuario o contraseña incorrectos');
+          } else if (error.status === 0) {
+            this.loginError.set('No se puede conectar con el servidor');
+          } else {
+            this.loginError.set('Error en el inicio de sesión. Intenta nuevamente');
+          }
+
+          console.error('Error en login:', error);
         }
-        
-      } catch (error) {
-        console.error('Error durante el login:', error);
-        this.loginError.set('Error de conexión. Intente nuevamente.');
-        
-      } finally {
-        this.isLoading.set(false);
-      }
-    } else {
-      this.markFormGroupTouched();
-    }
+      });
   }
 
   /**
-   * Simula la autenticación del usuario (reemplazar con servicio real)
-   */
-  private async authenticateUser(credentials: LoginCredentials): Promise<LoginResponse> {
-    // Simular delay de red
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Simular validación (reemplazar con tu lógica de autenticación)
-    const validUsers = [
-      { email: 'admin@mydeptoapp.com', password: '123456', nombre: 'Administrador' },
-      { email: 'user@mydeptoapp.com', password: 'password', nombre: 'Usuario Test' },
-      { email: 'demo@demo.com', password: 'demo123', nombre: 'Usuario Demo' }
-    ];
-    
-    const user = validUsers.find(u => 
-      u.email === credentials.email && u.password === credentials.password
-    );
-    
-    if (user) {
-      return {
-        success: true,
-        token: 'jwt-token-example-' + Date.now(),
-        user: {
-          id: Math.random().toString(36).substr(2, 9),
-          email: user.email,
-          nombre: user.nombre,
-          avatar: ''
-        }
-      };
-    }
-    
-    return {
-      success: false,
-      message: 'Email o contraseña incorrectos'
-    };
-  }
-
-  /**
-   * Guarda los datos de autenticación en localStorage
-   */
-  private saveAuthData(response: LoginResponse): void {
-    if (response.token) {
-      localStorage.setItem('auth_token', response.token);
-    }
-    
-    if (response.user) {
-      localStorage.setItem('user_data', JSON.stringify(response.user));
-    }
-  }
-
-  /**
-   * Maneja el click en "Olvidé mi contraseña"
+   * Maneja el evento de olvidar contraseña
    */
   onForgotPassword(event: Event): void {
     event.preventDefault();
-    // Redirigir a página de recuperación de contraseña
-    // O mostrar modal de recuperación
+    // TODO: Implementar lógica de recuperación de contraseña
     console.log('Recuperar contraseña');
-    // this.router.navigate(['/auth/forgot-password']);
+    // this.router.navigateByUrl('/auth/forgot-password');
   }
-
-  /**
-   * Marca todos los campos como tocados para mostrar errores
-   */
-  private markFormGroupTouched(): void {
-    Object.keys(this.loginForm.controls).forEach(key => {
-      const control = this.loginForm.get(key);
-      control?.markAsTouched();
-    });
-  }
-
-  /**
-   * Getters para facilitar el acceso a los controles en el template
-   */
-  get email() { return this.loginForm.get('email'); }
-  get password() { return this.loginForm.get('password'); }
 }
