@@ -1,182 +1,241 @@
-<!-- Archivo HTML completamente reescrito y validado -->
-<div *ngIf="showExportModal"
-     class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop"
-     (click)="closeExportModal()">
+<!-- src/app/admin-dashboard/pages/rendiciones-admin-page/rendiciones-admin-page.component.html -->
 
-  <div class="modal-box w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto relative"
-       (click)="$event.stopPropagation()">
+<div *ngIf="showExportModal"
+  class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop"
+  (click)="closeExportModal()"
+>
+
+  <div class="modal-box w-11/12 max-w-5xl max-h-[90vh] overflow-y-auto bg-base-100"
+    (click)="$event.stopPropagation()"
+  >
 
     <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
-      <h3 class="text-2xl font-bold text-primary">Exportar Rendiciones</h3>
+    <div class="flex justify-between items-center mb-6 pb-4 border-b border-base-300">
+      <div>
+        <h3 class="text-2xl font-bold text-primary">Exportar Rendiciones</h3>
+        <p class="text-sm font-bold text-base-content mt-1">Genera reportes en formato CSV o Excel</p>
+      </div>
       <button
         class="btn btn-sm btn-circle btn-ghost"
         [disabled]="isExporting || isLoadingData"
-        (click)="closeExportModal()">X</button>
+        (click)="closeExportModal()">
+        ✕
+      </button>
     </div>
 
     <!-- Loading -->
-    <div *ngIf="isLoadingData" class="text-center py-12">
+    <div *ngIf="isLoadingData" class="text-center py-16">
       <span class="loading loading-spinner loading-lg text-primary"></span>
-      <p class="mt-4">Cargando datos...</p>
+      <p class="mt-4 opacity-70">Cargando datos...</p>
     </div>
 
     <!-- Form -->
-    <div *ngIf="!isLoadingData" class="space-y-6">
+    <div *ngIf="!isLoadingData">
       <form [formGroup]="exportForm">
 
-        <!-- Filtro -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Tipo de Filtro *</span>
-          </label>
+        <div class="space-y-6">
 
-          <div class="space-y-2">
-            <div class="form-control">
-              <label class="label cursor-pointer justify-start gap-3">
-                <input type="radio" name="filterType" value="owner" class="radio" formControlName="filterType">
-                <span>Por Propietario</span>
-              </label>
+          <!-- Primera fila: 2 columnas -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- Card: Tipo de Filtro -->
+            <div class="card bg-base-200 shadow-sm">
+              <div class="card-body p-5">
+                <h4 class="text-base font-bold mb-3 text-base-content">Emitir rendición por:</h4>
+
+                <div class="space-y-2">
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3 p-3 rounded-lg hover:bg-base-300">
+                      <input
+                        type="radio"
+                        name="filterType"
+                        value="department"
+                        class="radio radio-primary"
+                        formControlName="filterType">
+                      <span class="label-text font-medium text-base-content">Departamentos</span>
+                    </label>
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3 p-3 rounded-lg hover:bg-base-300">
+                      <input
+                        type="radio"
+                        name="filterType"
+                        value="owner"
+                        class="radio radio-primary"
+                        formControlName="filterType">
+                      <span class="label-text font-medium text-base-content">Propietarios</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Selector desplegable -->
+                <div class="mt-4">
+                  <div class="form-control" *ngIf="isDepartmentFilter()">
+                    <label class="label">
+                      <span class="label-text font-semibold text-base-content">Seleccionar Departamento *</span>
+                    </label>
+                    <select
+                      class="select select-bordered w-full text-base-content"
+                      [class.select-error]="isFieldInvalid('selectedDepartmentId')"
+                      formControlName="selectedDepartmentId">
+                      <option [value]="null" disabled selected>Elige un departamento</option>
+                      <option *ngFor="let dept of departments" [value]="dept.id">
+                        {{ dept.nombre }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="form-control" *ngIf="isOwnerFilter()">
+                    <label class="label">
+                      <span class="label-text font-semibold text-base-content">Seleccionar Propietario *</span>
+                    </label>
+                    <select
+                      class="select select-bordered w-full text-base-content"
+                      [class.select-error]="isFieldInvalid('selectedOwnerId')"
+                      formControlName="selectedOwnerId">
+                      <option [value]="null" disabled selected>Elige un propietario</option>
+                      <option *ngFor="let owner of owners" [value]="owner.id">
+                        {{ owner.nombreApellido }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="form-control">
-              <label class="label cursor-pointer justify-start gap-3">
-                <input type="radio" name="filterType" value="department" class="radio" formControlName="filterType">
-                <span>Por Departamento</span>
-              </label>
+
+            <!-- Card: Formato -->
+            <div class="card bg-base-200 shadow-sm">
+              <div class="card-body p-5">
+                <h4 class="text-base font-bold mb-3 text-base-content">Formato de Exportable:</h4>
+
+                <div class="space-y-2">
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3 p-3 rounded-lg hover:bg-base-300">
+                      <input
+                        type="radio"
+                        name="fileFormat"
+                        value="csv"
+                        class="radio radio-primary"
+                        formControlName="fileFormat">
+                      <span class="label-text font-medium text-base-content">.CSV</span>
+                    </label>
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3 p-3 rounded-lg hover:bg-base-300">
+                      <input
+                        type="radio"
+                        name="fileFormat"
+                        value="excel"
+                        class="radio radio-primary"
+                        formControlName="fileFormat">
+                      <span class="label-text font-medium text-base-content">Excel</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Segunda fila: Período (ancho completo) -->
+          <div class="card bg-base-200 shadow-sm">
+            <div class="card-body p-5">
+              <h4 class="text-base font-bold mb-3 text-base-content">Período:</h4>
+
+              <div class="flex flex-wrap gap-4 items-end">
+                <div class="form-control">
+                  <label class="label cursor-pointer justify-start gap-3 p-3 rounded-lg hover:bg-base-300">
+                    <input
+                      type="radio"
+                      name="reportType"
+                      value="daily"
+                      class="radio radio-primary"
+                      formControlName="reportType">
+                    <span class="label-text font-medium text-base-content">Diario</span>
+                  </label>
+                </div>
+
+                <div class="form-control">
+                  <label class="label cursor-pointer justify-start gap-3 p-3 rounded-lg hover:bg-base-300">
+                    <input
+                      type="radio"
+                      name="reportType"
+                      value="monthly"
+                      class="radio radio-primary"
+                      formControlName="reportType">
+                    <span class="label-text font-medium text-base-content">Mensual</span>
+                  </label>
+                </div>
+
+                <!-- Selectores de fecha -->
+                <div class="flex-1 min-w-[280px]">
+                  <!-- Para Diario -->
+                  <div *ngIf="isDailyReport()" class="form-control">
+                    <label class="label py-1">
+                      <span class="label-text font-semibold text-base-content">Seleccionar Día *</span>
+                    </label>
+                    <input
+                      type="date"
+                      class="input input-bordered w-full text-base-content"
+                      [class.input-error]="isFieldInvalid('selectedDate')"
+                      formControlName="selectedDate">
+                  </div>
+
+                  <!-- Para Mensual -->
+                  <div *ngIf="isMonthlyReport()" class="grid grid-cols-2 gap-3">
+                    <div class="form-control">
+                      <label class="label py-1">
+                        <span class="label-text font-semibold text-base-content">Año *</span>
+                      </label>
+                      <select
+                        class="select select-bordered w-full text-base-content"
+                        [class.select-error]="isFieldInvalid('year')"
+                        formControlName="year">
+                        <option value="" disabled>Año</option>
+                        <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+                      </select>
+                    </div>
+
+                    <div class="form-control">
+                      <label class="label py-1">
+                        <span class="label-text font-semibold text-base-content">Mes *</span>
+                      </label>
+                      <select
+                        class="select select-bordered w-full text-base-content"
+                        [class.select-error]="isFieldInvalid('month')"
+                        formControlName="month">
+                        <option value="" disabled>Mes</option>
+                        <option *ngFor="let month of months" [value]="month.value">
+                          {{ month.label }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+
         </div>
 
-        <!-- Reporte -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Tipo de Reporte *</span>
-          </label>
-
-          <div class="space-y-2">
-            <div class="form-control">
-              <label class="label cursor-pointer justify-start gap-3">
-                <input type="radio" name="reportType" value="daily" class="radio" formControlName="reportType">
-                <span>Reporte Diario</span>
-              </label>
+        <!-- Resumen de Selección -->
+        <div *ngIf="exportForm.valid" class="alert alert-info mt-6 shadow-sm">
+          <div class="w-full">
+            <div class="flex items-center gap-2 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <h4 class="font-bold">Resumen de Exportación</h4>
             </div>
-            <div class="form-control">
-              <label class="label cursor-pointer justify-start gap-3">
-                <input type="radio" name="reportType" value="monthly" class="radio" formControlName="reportType">
-                <span>Reporte Mensual</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Fecha para diario -->
-        <div *ngIf="isDailyReport()" class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Fecha *</span>
-          </label>
-          <input
-            type="date"
-            class="input input-bordered w-full max-w-xs"
-            formControlName="selectedDate">
-        </div>
-
-        <!-- Mes/Año para mensual -->
-        <div *ngIf="isMonthlyReport()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Año *</span>
-            </label>
-            <select class="select select-bordered w-full" formControlName="year">
-              <option value="">Selecciona año</option>
-              <option *ngFor="let year of years" [value]="year">{{year}}</option>
-            </select>
-          </div>
-
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Mes *</span>
-            </label>
-            <select class="select select-bordered w-full" formControlName="month">
-              <option value="">Selecciona mes</option>
-              <option *ngFor="let month of months" [value]="month.value">{{month.label}}</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Departamentos -->
-        <div *ngIf="isDepartmentFilter()" class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Departamentos *</span>
-            <span class="label-text-alt">Selecciona uno o más</span>
-          </label>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 border rounded-lg max-h-60 overflow-y-auto">
-            <div *ngFor="let dept of departments" class="form-control">
-              <label class="label cursor-pointer justify-start gap-3">
-                <input
-                  type="checkbox"
-                  class="checkbox checkbox-sm"
-                  [checked]="isDepartmentSelected(dept.id)"
-                  (change)="toggleDepartment(dept.id)">
-                <span class="label-text">{{dept.nombre}}</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Propietarios -->
-        <div *ngIf="isOwnerFilter()" class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Propietarios *</span>
-            <span class="label-text-alt">Selecciona uno o más</span>
-          </label>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 border rounded-lg max-h-60 overflow-y-auto">
-            <div *ngFor="let owner of owners" class="form-control">
-              <label class="label cursor-pointer justify-start gap-3">
-                <input
-                  type="checkbox"
-                  class="checkbox checkbox-sm"
-                  [checked]="isOwnerSelected(owner.id)"
-                  (change)="toggleOwner(owner.id)">
-                <span class="label-text">{{owner.nombreApellido}}</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Formato -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Formato *</span>
-          </label>
-
-          <div class="space-y-2">
-            <div class="form-control">
-              <label class="label cursor-pointer justify-start gap-3">
-                <input type="radio" name="fileFormat" value="csv" class="radio" formControlName="fileFormat">
-                <span>CSV (.csv)</span>
-              </label>
-            </div>
-            <div class="form-control">
-              <label class="label cursor-pointer justify-start gap-3">
-                <input type="radio" name="fileFormat" value="excel" class="radio" formControlName="fileFormat">
-                <span>Excel (.xlsx)</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Resumen -->
-        <div *ngIf="exportForm.valid" class="alert alert-info">
-          <div>
-            <h4 class="font-bold">Resumen</h4>
-            <div class="text-sm mt-2 space-y-1">
-              <p><strong>Filtro:</strong> {{getSelectedFilterTypeLabel()}}</p>
-              <p><strong>Reporte:</strong> {{getSelectedReportTypeLabel()}}</p>
-              <p *ngIf="isDailyReport()"><strong>Fecha:</strong> {{exportForm.value.selectedDate}}</p>
-              <p *ngIf="isMonthlyReport()"><strong>Período:</strong> {{getSelectedMonthName()}} {{exportForm.value.year}}</p>
-              <p><strong>Formato:</strong> {{getSelectedFormatLabel()}}</p>
+            <div class="text-sm space-y-1 ml-8">
+              <p><strong>Filtro:</strong> {{ getSelectedFilterLabel() }} - {{ getSelectedEntityName() }}</p>
+              <p><strong>Período:</strong> {{ getSelectedReportLabel() }}
+                <span *ngIf="isDailyReport()"> - {{ exportForm.value.selectedDate }}</span>
+                <span *ngIf="isMonthlyReport()"> - {{ getSelectedMonthName() }} {{ exportForm.value.year }}</span>
+              </p>
+              <p><strong>Formato:</strong> {{ getSelectedFormatLabel() }}</p>
             </div>
           </div>
         </div>
@@ -185,7 +244,7 @@
     </div>
 
     <!-- Actions -->
-    <div class="modal-action" *ngIf="!isLoadingData">
+    <div class="modal-action mt-6 pt-4 border-t border-base-300" *ngIf="!isLoadingData">
       <button
         type="button"
         class="btn btn-ghost"
@@ -196,11 +255,14 @@
 
       <button
         type="button"
-        class="btn btn-primary"
+        class="btn btn-primary gap-2"
         [disabled]="!canSubmitExport()"
         (click)="onExportSubmit()">
         <span *ngIf="isExporting" class="loading loading-spinner loading-sm"></span>
-        <span>{{isExporting ? 'Exportando...' : 'Exportar'}}</span>
+        <svg *ngIf="!isExporting" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+        </svg>
+        <span>{{ isExporting ? 'Exportando...' : 'Exportar' }}</span>
       </button>
     </div>
 

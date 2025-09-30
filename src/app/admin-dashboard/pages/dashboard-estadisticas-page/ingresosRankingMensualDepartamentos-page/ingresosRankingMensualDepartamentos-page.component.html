@@ -123,7 +123,7 @@
                 </span>
               </td>
               <td class="department-name">{{ dept.departmentName }}</td>
-              <td class="amount">{{ dept.total | currency:'ARS':'symbol':'1.0-0' }}</td>
+              <td class="amount">{{ (dept.total || 0) | currency:'ARS':'symbol':'1.0-0' }}</td>
               <td class="percentage">{{ dept.percentage.toFixed(1) }}%</td>
             </tr>
           </tbody>
@@ -135,7 +135,7 @@
     <div class="summary-cards">
       <div class="summary-card">
         <span class="label">Total Período</span>
-        <span class="value">{{ totalIngresos | currency:'ARS':'symbol':'1.0-0' }}</span>
+        <span class="value">{{ (totalIngresos || 0) | currency:'ARS':'symbol':'1.0-0' }}</span>
       </div>
 
       <div class="summary-card" *ngIf="topDepartment">

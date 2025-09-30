@@ -8,6 +8,13 @@ import { GastosService } from '../../../gastos/services/gastos.service';
 import { PagosService } from '../../../incomes/services/incomes.service';
 import { Pago } from '../../../incomes/interfaces/incomes.interface';
 import { Gasto } from '../../../gastos/interfaces/gasto.interface';
+import { Propietario } from '../../../propietarios/interfaces/propietario.interface';
+import { PropietariosService } from '../../../propietarios/services/propietarios.service';
+
+// Interface para la operación extendida con datos del propietario
+interface DepartamentoConPropietario extends Departamento {
+  propietario?: Propietario;
+}
 
 // Interface para la operación
 interface Operacion {
@@ -32,6 +39,8 @@ interface CategoriaOption {
 })
 export class DashboardDepartamentosPageComponent {
   departamentosService = inject(DepartamentosService);
+  propietariosService = inject(PropietariosService);
+
   pagosService = inject(PagosService);
   gastosService = inject(GastosService);
 
@@ -39,7 +48,7 @@ export class DashboardDepartamentosPageComponent {
 
   // Signals para el modal
   showModal = signal(false);
-  selectedDepartamento = signal<Departamento | null>(null);
+  selectedDepartamento = signal<DepartamentoConPropietario | null>(null);
   tipoOperacion = signal<'ingresos' | 'gastos'>('ingresos');
 
   // Formulario reactivo
@@ -57,6 +66,11 @@ export class DashboardDepartamentosPageComponent {
   departamentosResource = rxResource({
     request: () => ({}),
     loader: () => this.departamentosService.getDepartamentosRawActivos()
+  });
+
+  propietariosResource = rxResource<Propietario[], {}>({
+    request: () => ({}),
+    loader: () => this.propietariosService.getPropietariosActivos()
   });
 
   tipoPagoResource = rxResource({
@@ -79,11 +93,19 @@ export class DashboardDepartamentosPageComponent {
     });
   }
 
+
   departamentos = computed(() => {
     const backendData: DepartamentoBackend[] = this.departamentosResource.value() || [];
-    // console.log(backendData);
+    const propietariosData: Propietario[] = this.propietariosResource.value() || [];
+
+    // Crear un mapa de propietarios para búsqueda rápida
+    const propietariosMap = new Map<number, Propietario>();
+    propietariosData.forEach(prop => {
+      propietariosMap.set(prop.id, prop);
+    });
+
     // Transformar los datos del backend a la interfaz Departamento
-    const transformedData: Departamento[] = backendData.map(item => {
+    const transformedData: DepartamentoConPropietario[] = backendData.map(item => {
       try {
         // Parsear las coordenadas "lng,lat" a objeto
         const [lng, lat] = item.lngLat.split(',').map(coord => parseFloat(coord.trim()));
@@ -92,6 +114,9 @@ export class DashboardDepartamentosPageComponent {
         if (isNaN(lng) || isNaN(lat)) {
           throw new Error('Coordenadas inválidas');
         }
+
+        // Buscar el propietario correspondiente
+        const propietario = propietariosMap.get(item.idProp);
 
         return {
           id: item.id,
@@ -105,11 +130,12 @@ export class DashboardDepartamentosPageComponent {
           codigoPostal: item.codigoPostal,
           lngLat: { lng, lat }, // Crear el objeto esperado
           observaciones: item.observaciones,
-          activo: item.activo
+          activo: item.activo,
+          propietario: propietario
         };
       } catch (error) {
-        // console.error(`Error parseando coordenadas para ${item.nombre}:`, error);
-        // console.error('Coordenadas recibidas:', item.lngLat);
+        // Buscar el propietario correspondiente incluso si hay error en coordenadas
+        const propietario = propietariosMap.get(item.idProp);
 
         // Coordenadas por defecto (Buenos Aires) si hay error
         return {
@@ -124,7 +150,8 @@ export class DashboardDepartamentosPageComponent {
           codigoPostal: item.codigoPostal,
           lngLat: { lng: -58.3816, lat: -34.6037 }, // Buenos Aires por defecto
           observaciones: item.observaciones,
-          activo: item.activo
+          activo: item.activo,
+          propietario: propietario
         };
       }
     });
@@ -135,7 +162,7 @@ export class DashboardDepartamentosPageComponent {
   });
 
   // Métodos para el modal
-  openModal(departamento: Departamento): void {
+  openModal(departamento: DepartamentoConPropietario): void {
     this.selectedDepartamento.set(departamento);
     this.showModal.set(true);
     this.tipoOperacion.set('ingresos'); // Default a ingresos

@@ -70,12 +70,12 @@
     <div class="summary-cards">
       <div class="summary-card">
         <span class="label">Total Gastos {{ selectedYear }}</span>
-        <span class="value">{{ totalGastos | currency:'ARS':'symbol':'1.0-0' }}</span>
+        <span class="value">{{ (totalGastos || 0) | currency:'ARS':'symbol':'1.0-0' }}</span>
       </div>
 
       <div class="summary-card">
         <span class="label">Promedio Mensual</span>
-        <span class="value">{{ promedioMensual | currency:'ARS':'symbol':'1.0-0' }}</span>
+        <span class="value">{{ (promedioMensual || 0) | currency:'ARS':'symbol':'1.0-0' }}</span>
       </div>
 
       <div class="summary-card" *ngIf="departamentoMayorGasto">

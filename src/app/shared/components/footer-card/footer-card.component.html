@@ -9,12 +9,18 @@
     <div class="stat">
       <div class="stat-title">Dpto. Top Facturación</div>
       <div class="stat-value text-primary">{{ topDepartmentByRevenue.name }}</div>
-      <div class="stat-value text-sm">{{ formatCurrency(topDepartmentByRevenue.value) }}</div>
+      <div class="stat-value text-sm">{{ topDepartmentByRevenue.value | safeCurrency }}</div>
       <div class="stat-desc" [ngClass]="{
         'text-success': topDepartmentByRevenue.trend === '↗︎',
-        'text-error': topDepartmentByRevenue.trend === '↘︎'
+        'text-error': topDepartmentByRevenue.trend === '↘︎',
+        'text-base-content/50': !topDepartmentByRevenue.trend
       }">
-        {{ topDepartmentByRevenue.trend }} {{ topDepartmentByRevenue.comparison }}
+        <span *ngIf="topDepartmentByRevenue.trend">
+          {{ topDepartmentByRevenue.trend }} {{ topDepartmentByRevenue.comparison }}
+        </span>
+        <span *ngIf="!topDepartmentByRevenue.trend">
+          Sin cambios
+        </span>
       </div>
     </div>
 
@@ -22,12 +28,18 @@
     <div class="stat">
       <div class="stat-title">Dpto. Top Rendimiento</div>
       <div class="stat-value text-secondary">{{ topDepartmentByPerformance.name }}</div>
-      <div class="stat-value text-sm">{{ formatCurrency(topDepartmentByPerformance.value) }}</div>
+      <div class="stat-value text-sm">{{ topDepartmentByPerformance.value | safeCurrency }}</div>
       <div class="stat-desc" [ngClass]="{
         'text-success': topDepartmentByPerformance.trend === '↗︎',
-        'text-error': topDepartmentByPerformance.trend === '↘︎'
+        'text-error': topDepartmentByPerformance.trend === '↘︎',
+        'text-base-content/50': !topDepartmentByPerformance.trend
       }">
-        {{ topDepartmentByPerformance.trend }} {{ topDepartmentByPerformance.comparison }}
+        <span *ngIf="topDepartmentByPerformance.trend">
+          {{ topDepartmentByPerformance.trend }} {{ topDepartmentByPerformance.comparison }}
+        </span>
+        <span *ngIf="!topDepartmentByPerformance.trend">
+          Sin cambios
+        </span>
       </div>
     </div>
 
@@ -35,26 +47,32 @@
     <div class="stat">
       <div class="stat-title">Propietario Top</div>
       <div class="stat-value text-accent">{{ topOwnerByRevenue.name }}</div>
-      <div class="stat-value text-sm">{{ formatCurrency(topOwnerByRevenue.value) }}</div>
+      <div class="stat-value text-sm">{{ topOwnerByRevenue.value | safeCurrency }}</div>
       <div class="stat-desc" [ngClass]="{
         'text-success': topOwnerByRevenue.trend === '↗︎',
-        'text-error': topOwnerByRevenue.trend === '↘︎'
+        'text-error': topOwnerByRevenue.trend === '↘︎',
+        'text-base-content/50': !topOwnerByRevenue.trend
       }">
-        {{ topOwnerByRevenue.trend }} {{ topOwnerByRevenue.comparison }}
+        <span *ngIf="topOwnerByRevenue.trend">
+          {{ topOwnerByRevenue.trend }} {{ topOwnerByRevenue.comparison }}
+        </span>
+        <span *ngIf="!topOwnerByRevenue.trend">
+          Sin cambios
+        </span>
       </div>
     </div>
 
     <!-- 4. Facturación TOTAL Mensual -->
     <div class="stat">
       <div class="stat-title">Facturación Total</div>
-      <div class="stat-value text-success">{{ formatCurrency(totalMonthlyRevenue) }}</div>
+      <div class="stat-value text-success">{{ totalMonthlyRevenue | safeCurrency }}</div>
       <div class="stat-desc text-base-content/70">Mes actual</div>
     </div>
 
     <!-- 5. Sumatoria Mensual del tipo de Gasto "Honorarios" -->
     <div class="stat">
       <div class="stat-title">Honorarios</div>
-      <div class="stat-value text-warning">{{ formatCurrency(monthlyHonorarios) }}</div>
+      <div class="stat-value text-warning">{{ monthlyHonorarios | safeCurrency }}</div>
       <div class="stat-desc text-base-content/70">Mes actual</div>
     </div>
   </ng-container>

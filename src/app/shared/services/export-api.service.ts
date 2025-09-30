@@ -17,11 +17,13 @@ export class ExportApiService {
 
   /**
    * Exportar rendiciones a formato CSV
+   * Endpoint: POST /api/export/rendicioncsv
    */
   exportToCSV(request: ExportRequest): Observable<Blob> {
-    const url = `${baseUrl}/reports/export/csv`;
+    const url = `${baseUrl}/export/rendicioncsv`;
+    const body = this.buildRequestBody(request);
 
-    return this.http.post(url, request, {
+    return this.http.post(url, body, {
       responseType: 'blob',
       headers: new HttpHeaders({
         'Content-Type': 'application/json'
@@ -31,16 +33,46 @@ export class ExportApiService {
 
   /**
    * Exportar rendiciones a formato Excel
+   * Endpoint: POST /api/export/rendicionexcel
    */
   exportToExcel(request: ExportRequest): Observable<Blob> {
-    const url = `${baseUrl}/reports/export/excel`;
+    const url = `${baseUrl}/export/rendicionexcel`;
+    const body = this.buildRequestBody(request);
 
-    return this.http.post(url, request, {
+    return this.http.post(url, body, {
       responseType: 'blob',
       headers: new HttpHeaders({
         'Content-Type': 'application/json'
       })
     });
+  }
+
+  /**
+   * Construir el body de la petición según la estructura del backend
+   */
+  private buildRequestBody(request: ExportRequest): any {
+    const body: any = {
+      tipoReporte: request.tipoReporte
+    };
+
+    // Agregar ID según el tipo de reporte
+    if (request.tipoReporte === 'departamento') {
+      body.idDepartamento = request.idDepartamento;
+    } else if (request.tipoReporte === 'propietario') {
+      body.idPropietario = request.idPropietario;
+    }
+
+    // Agregar fechas según el tipo
+    if (request.fecha) {
+      // Reporte diario
+      body.fecha = request.fecha;
+    } else if (request.fechaDesde && request.fechaHasta) {
+      // Reporte mensual
+      body.fechaDesde = request.fechaDesde;
+      body.fechaHasta = request.fechaHasta;
+    }
+
+    return body;
   }
 
   /**

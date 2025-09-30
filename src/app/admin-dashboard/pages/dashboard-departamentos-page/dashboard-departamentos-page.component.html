@@ -3,7 +3,7 @@
   <h2 class="text-3xl font-bold mb-2">Dashboard</h2>
 </section>
 
-<section class="p-6 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
+<section class="p-6 grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-2">
 
   @for (departamento of departamentos(); track departamento.id || i; let i = $index) {
     <div class="card relative bg-base-100 shadow-xl rounded-t-md overflow-hidden m-1 flex flex-col">
@@ -44,18 +44,60 @@
           <p class="text-sm line-clamp-2">{{ departamento.observaciones}}</p>
         </div>
 
-        <div class="h-12 flex justify-end items-end">
-          <button
-            class="btn btn-primary btn-circle absolute bottom-3 right-3"
-            (click) = "openModal(departamento)"
-          >
-            <strong class="text-2xl">+</strong>
-          </button>
-        </div>
+          <!-- Información del Propietario -->
+          @if (departamento.propietario) {
+            <div class="mt-3 pt-3 border-t border-gray-200">
+              <div class="flex items-start space-x-2">
+                <div class="flex-shrink-0">
+                  @if (departamento.propietario.avatarUrl) {
+                    <img
+                      [src]="departamento.propietario.avatarUrl"
+                      [alt]="departamento.propietario.nombreApellido"
+                      class="w-10 h-10 rounded-full object-cover"
+                    />
+                  } @else {
+                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
+                      {{ departamento.propietario.nombreApellido.charAt(0).toUpperCase() }}
+                    </div>
+                  }
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-semibold text-gray-700 truncate">
+                    {{ departamento.propietario.nombreApellido }}
+                  </p>
+                  <p class="text-xs text-gray-500 truncate">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="inline h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    {{ departamento.propietario.telefono }}
+                  </p>
+                  @if (departamento.propietario.email) {
+                    <p class="text-xs text-gray-500 truncate">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="inline h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      {{ departamento.propietario.email }}
+                    </p>
+                  }
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="mt-3 pt-3 border-t border-gray-200">
+              <p class="text-xs text-gray-400 italic">Propietario no disponible</p>
+            </div>
+          }
       </div>
 
+      <div class="h-12 flex justify-end items-end">
+        <button
+          class="btn btn-primary btn-circle absolute bottom-3 right-3"
+          (click) = "openModal(departamento)"
+        >
+          <strong class="text-2xl">+</strong>
+        </button>
+      </div>
     </div>
-
   }
 
 </section>

@@ -458,7 +458,7 @@ export class IngresosRankingMensualDepartamentosPageComponent implements OnInit,
               color: '#111827',
               offsetY: 6,
               formatter: (val: number) => {
-                return val.toFixed(1) + '%';
+                return Number(val || 0).toFixed(1) + '%';
               }
             },
             total: {
@@ -595,7 +595,7 @@ export class IngresosRankingMensualDepartamentosPageComponent implements OnInit,
   private processDepartmentRanking(departmentGroups: { [key: string]: PagoGrid[] }): DepartmentRanking[] {
     const rankings = Object.entries(departmentGroups).map(([departmentKey, expenses]) => {
       const departmentName = expenses[0].nombre;
-      const total = expenses.reduce((sum, expense) => sum + expense.monto, 0);
+      const total = expenses.reduce((sum, expense) => sum + (Number(expense.monto) || 0), 0);
 
       return {
         departmentName,
@@ -638,7 +638,7 @@ export class IngresosRankingMensualDepartamentosPageComponent implements OnInit,
   }
 
   private calculateSummary(): void {
-    this.totalIngresos = this.departmentRanking.reduce((sum, dept) => sum + dept.total, 0);
+    this.totalIngresos = Number(this.departmentRanking.reduce((sum, dept) => sum + dept.total, 0));
     this.topDepartment = this.departmentRanking.length > 0 ? this.departmentRanking[0] : null;
   }
 

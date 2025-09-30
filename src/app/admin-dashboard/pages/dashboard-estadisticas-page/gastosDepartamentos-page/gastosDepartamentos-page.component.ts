@@ -398,7 +398,7 @@ export class GastosDepartamentosPageComponent implements OnInit, OnDestroy {
         const date = new Date(expense.fecha);
         const monthIndex = date.getMonth();
         const monthName = months[monthIndex];
-        monthlyData[monthName] += expense.monto;
+        monthlyData[monthName] += Number(expense.monto) || 0;
       });
 
       const total = Object.values(monthlyData).reduce((sum, amount) => sum + amount, 0);
@@ -454,10 +454,10 @@ export class GastosDepartamentosPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.totalGastos = this.departmentExpenses.reduce((sum, dept) => sum + dept.total, 0);
+    this.totalGastos = Number(this.departmentExpenses.reduce((sum, dept) => sum + dept.total, 0));
 
     const totalMonths = Object.keys(this.departmentExpenses[0].monthlyData).length;
-    this.promedioMensual = this.totalGastos / totalMonths;
+    this.promedioMensual = Number(this.totalGastos / totalMonths);
 
     // Departamento con mayor gasto
     const deptWithMaxExpense = this.departmentExpenses.reduce((max, dept) =>
