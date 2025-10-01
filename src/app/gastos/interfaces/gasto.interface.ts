@@ -16,6 +16,8 @@ export interface GastoGrid {
   monto: number;
   fecha: string;
   observaciones: string;
+  idProp?: number;
+  nombreApellido?: string;
 }
 
 export interface TipoGasto {

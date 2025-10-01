@@ -67,7 +67,8 @@ export class DisgregacionGastosPageComponent implements OnInit {
   // Detalle de categoría seleccionada
   public categoriaSeleccionada: string = '';
   public gastosDetalleCategoria: GastoGrid[] = [];
-  public mostrarTabla: boolean = false;
+  public iniciarTransicion: boolean = false; // Controla el cambio de tamaño del grid
+  public mostrarTabla: boolean = false; // Controla la renderización de la tabla
 
   // Filtros
   public anioSeleccionado: number;
@@ -351,12 +352,20 @@ export class DisgregacionGastosPageComponent implements OnInit {
   public onChartClick(dataPointIndex: number): void {
     this.ngZone.run(() => {
       const categoria = this.chartOptions.labels[dataPointIndex];
-      const hayCategoriaPrevia = !!this.categoriaSeleccionada;
 
-      if (hayCategoriaPrevia) {
-        this.mostrarTabla = false;
+      // Si se hace click en la misma categoría, deseleccionar
+      if (this.categoriaSeleccionada === categoria) {
+        this.limpiarSeleccion();
+        return;
       }
 
+      // Si hay una categoría previa, ocultar su tabla primero
+      if (this.categoriaSeleccionada) {
+        this.mostrarTabla = false;
+        this.iniciarTransicion = false;
+      }
+
+      // Actualizar categoría seleccionada y preparar datos
       this.categoriaSeleccionada = categoria;
 
       const gastosTemp = this.gastosFiltrados
@@ -365,30 +374,38 @@ export class DisgregacionGastosPageComponent implements OnInit {
 
       this.gastosDetalleCategoria = [...gastosTemp];
 
-      if (hayCategoriaPrevia) {
+      // FASE 1: Iniciar la transición del grid (cambiar su tamaño)
+      setTimeout(() => {
+        this.iniciarTransicion = true;
+        
+        // FASE 2: Esperar a que el gráfico termine completamente su movimiento
+        // 600ms = 300ms (transición CSS) + 300ms para el re-render completo de ApexCharts
         setTimeout(() => {
           this.mostrarTabla = true;
+          
+          // Forzar re-render del chart
           setTimeout(() => {
             window.dispatchEvent(new Event('resize'));
-          }, 310);
-        }, 10);
-      } else {
-        this.mostrarTabla = true;
-        setTimeout(() => {
-          window.dispatchEvent(new Event('resize'));
-        }, 310);
-      }
+          }, 50);
+        }, 600);
+      }, 10);
     });
   }
 
   public limpiarSeleccion(): void {
+    this.mostrarTabla = false;
     this.categoriaSeleccionada = '';
     this.gastosDetalleCategoria = [];
-    this.mostrarTabla = false;
-
+    
+    // Esperar un frame para que Angular procese el cambio de mostrarTabla
     setTimeout(() => {
-      window.dispatchEvent(new Event('resize'));
-    }, 350);
+      this.iniciarTransicion = false;
+      
+      // Esperar a que termine la transición del grid antes de hacer resize
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 320);
+    }, 10);
   }
 
   public formatearFecha(fechaISO: string): string {

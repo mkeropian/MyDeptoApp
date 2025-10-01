@@ -99,7 +99,7 @@
     <!-- Chart y Tabla de Detalle lado a lado -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Chart Container -->
-      <div [ngClass]="categoriaSeleccionada ? 'lg:col-span-6' : 'lg:col-span-12'" class="transition-all duration-300 ease-in-out">
+      <div [ngClass]="iniciarTransicion ? 'lg:col-span-6' : 'lg:col-span-12'" class="chart-container">
         <apx-chart
           #chart
           [series]="chartOptions.series"
@@ -118,8 +118,11 @@
       </div>
 
       <!-- Tabla de Detalle de Categoría Seleccionada -->
-      <div *ngIf="categoriaSeleccionada && mostrarTabla" class="lg:col-span-6 animate-slide-in">
-        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 mb-4 border border-indigo-200">
+      <!-- Contenedor que SIEMPRE ocupa espacio cuando iniciarTransicion = true -->
+      <div *ngIf="iniciarTransicion" class="lg:col-span-6">
+        <!-- Contenido de la tabla, solo visible cuando mostrarTabla = true -->
+        <div *ngIf="mostrarTabla" class="animate-slide-in">
+          <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 mb-4 border border-indigo-200">
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-lg font-bold text-indigo-900">{{ categoriaSeleccionada }}</h3>
@@ -140,17 +143,20 @@
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50 sticky top-0">
               <tr>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  ID
+                </th>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Fecha
                 </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Departamento
                 </th>
-                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Monto
                 </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Observaciones
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Propietario
                 </th>
               </tr>
             </thead>
@@ -158,32 +164,36 @@
               <tr *ngFor="let gasto of gastosDetalleCategoria; let i = index; trackBy: trackByGastoId"
                   [class.bg-gray-50]="i % 2 === 0"
                   class="hover:bg-indigo-50 transition-colors">
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-700">
+                  {{ gasto.id }}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                   {{ formatearFecha(gasto.fecha) }}
                 </td>
-                <td class="px-4 py-3 text-sm text-gray-700">
+                <td class="px-3 py-2 text-xs text-gray-700">
                   {{ gasto.nombre }}
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
+                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900 text-right font-semibold">
                   {{ gasto.monto | safeCurrency }}
                 </td>
-                <td class="px-4 py-3 text-sm text-gray-600">
-                  {{ gasto.observaciones || '-' }}
+                <td class="px-3 py-2 text-xs text-gray-700">
+                  {{ gasto.nombreApellido }}
                 </td>
               </tr>
             </tbody>
             <tfoot class="bg-gray-100 sticky bottom-0">
               <tr>
-                <td colspan="2" class="px-4 py-3 text-sm font-bold text-gray-900">
+                <td colspan="3" class="px-3 py-2 text-xs font-bold text-gray-900">
                   TOTAL
                 </td>
-                <td class="px-4 py-3 text-sm font-bold text-gray-900 text-right">
+                <td class="px-3 py-2 text-xs font-bold text-gray-900 text-right">
                   {{ calcularTotalCategoria() | safeCurrency }}
                 </td>
                 <td></td>
               </tr>
             </tfoot>
           </table>
+        </div>
         </div>
       </div>
     </div>
@@ -266,6 +276,16 @@
 </div>
 
 <style>
+/* Transición suave para el contenedor del gráfico */
+.chart-container {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Animación para el contenido de la tabla */
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out both;
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -275,9 +295,5 @@
     opacity: 1;
     transform: translateX(0);
   }
-}
-
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out;
 }
 </style>
