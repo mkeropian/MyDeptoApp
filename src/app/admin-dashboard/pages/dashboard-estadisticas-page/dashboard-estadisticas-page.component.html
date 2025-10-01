@@ -53,7 +53,7 @@
       <img
         class="cursor-pointer"
         [routerLink]="['/dashboard/pagosxdep']"
-        src='assets/images/graf01.png'
+        src='assets/images/graf06.png'
         alt="Ingresos"
       />
     </figure>
@@ -75,7 +75,7 @@
       <img
         class="cursor-pointer"
         [routerLink]="['/dashboard/gastosxdep']"
-        src='assets/images/graf03.png'
+        src='assets/images/graf06.png'
         alt="Gastos"
       />
     </figure>
@@ -169,6 +169,24 @@
         <span class="badge badge-secondary badge-xs ml-1">NEW</span>
       </h3>
       <p class="text-xs">Este grafico representado en barras muestra la rentabilidad mensual por Propietario</p>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl">
+    <figure class="px-2 pt-2">
+      <img
+        class="cursor-pointer"
+        [routerLink]="['/dashboard/disgregaGastos']"
+        src='assets/images/graf01.png'
+        alt="Disgregación de Gastos Mensual por Departamento"
+      />
+    </figure>
+    <div class="compact-card-body">
+      <h3 class="text-sm font-bold mb-1">
+        Disgregación de Gastos Mensual por Departamento
+        <span class="badge badge-secondary badge-xs ml-1">NEW</span>
+      </h3>
+      <p class="text-xs">En este grafico se separan los tipos de Gastos por Departamento de forma mensual</p>
     </div>
   </div>
 

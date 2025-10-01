@@ -64,21 +64,43 @@ export class RecaudacionMensualPageComponent implements OnInit {
       dataLabels: {
         enabled: true,
         formatter: (val: number) => {
-          return val > 0 ? '$' + val.toLocaleString('es-AR') : '';
+          // CORRECCIÓN: No convertir a string aquí, dejar que ApexCharts maneje el número
+          if (val === 0 || val === null || val === undefined) return '';
+          return '$' + val.toLocaleString('es-AR', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+          });
         }
       },
       xaxis: {
         categories: this.meses,
         labels: {
-          formatter: (val: number) => {
-            return '$' + val.toLocaleString('es-AR');
+          formatter: (val: string) => {
+            // CORRECCIÓN: val viene como string, convertir a número primero
+            const numVal = parseFloat(val);
+            if (isNaN(numVal)) return val;
+            return '$' + numVal.toLocaleString('es-AR', {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 2
+            });
+          }
+        }
+      },
+      yaxis: {
+        labels: {
+          style: {
+            fontSize: '12px'
           }
         }
       },
       tooltip: {
         y: {
           formatter: (val: number) => {
-            return '$' + val.toLocaleString('es-AR');
+            if (val === 0 || val === null || val === undefined) return '$0';
+            return '$' + val.toLocaleString('es-AR', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            });
           }
         }
       },
@@ -151,13 +173,15 @@ export class RecaudacionMensualPageComponent implements OnInit {
 
     // Sumar los montos por mes
     gastosHonorarios.forEach(gasto => {
-      const mes = new Date(gasto.fecha).getMonth();
+      const mes = new Date(gasto.fecha).getMonth(); // 0-11
       if (mes >= 0 && mes <= 11) {
-        montosPorMes[mes] += gasto.monto;
+        // Asegurar que estamos sumando números, no strings
+        const monto = typeof gasto.monto === 'string' ? parseFloat(gasto.monto) : gasto.monto;
+        montosPorMes[mes] += monto;
       }
     });
 
-    // Actualizar SOLO los datos
+    // Actualizar el gráfico con los nuevos datos
     this.chartOptions = {
       ...this.chartOptions,
       series: [{

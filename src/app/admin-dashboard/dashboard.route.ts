@@ -13,6 +13,7 @@ import { RendimientoPropietariosPageComponent } from "./pages/dashboard-estadist
 import { RendimientoMensualPropietariosPageComponent } from "./pages/dashboard-estadisticas-page/rendimientoMensualPropietarios-page/rendimientoMensualPropietarios-page.component";
 import { IngresosRankingMensualDepartamentosPageComponent } from "./pages/dashboard-estadisticas-page/ingresosRankingMensualDepartamentos-page/ingresosRankingMensualDepartamentos-page.component";
 import { RecaudacionMensualPageComponent } from "./pages/dashboard-estadisticas-page/recaudacionMensual-page/recaudacionMensual-page.component";
+import { DisgregacionGastosPageComponent } from "./pages/dashboard-estadisticas-page/disgregacionGastos-page/disgregacionGastos-page.component";
 
 export const DashboardRoutes: Routes = [
   {
@@ -63,6 +64,10 @@ export const DashboardRoutes: Routes = [
       {
         path:'recaudacionmensual',
         component: RecaudacionMensualPageComponent,
+      },
+      {
+        path:'disgregaGastos',
+        component: DisgregacionGastosPageComponent,
       },
       {
         path: '**',

@@ -1,0 +1,283 @@
+<div class="container mx-auto p-4">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Disgregación de Gastos por categoría</h1>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+      <!-- Selector de Año -->
+      <div>
+        <label for="anio" class="block text-sm font-semibold text-gray-700 mb-2">
+          Año
+        </label>
+        <select
+          id="anio"
+          [(ngModel)]="anioSeleccionado"
+          (change)="onAnioChange()"
+          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white">
+          <option *ngFor="let anio of aniosDisponibles" [value]="anio">
+            {{ anio }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Selector de Mes -->
+      <div>
+        <label for="mes" class="block text-sm font-semibold text-gray-700 mb-2">
+          Mes
+        </label>
+        <select
+          id="mes"
+          [(ngModel)]="mesSeleccionado"
+          (change)="onMesChange()"
+          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white">
+          <option *ngFor="let mes of meses" [value]="mes.value">
+            {{ mes.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center items-center h-96">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+  </div>
+
+  <!-- Chart Card -->
+  <div *ngIf="!isLoading && gastosFiltrados.length > 0" class="bg-white rounded-lg shadow-lg p-6">
+    <!-- Stats Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <!-- Total de Gastos -->
+      <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200 shadow-sm">
+        <p class="text-sm text-blue-700 font-semibold mb-1 flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Total de Gastos
+        </p>
+        <p class="text-2xl font-bold text-blue-900">
+          {{ totalGastos | safeCurrency }}
+        </p>
+      </div>
+
+      <!-- Categoría con Mayor Gasto -->
+      <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 border border-red-200 shadow-sm">
+        <p class="text-sm text-red-700 font-semibold mb-1 flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+          Categoría con Mayor Gasto
+        </p>
+        <p class="text-lg font-bold text-red-900 truncate" [title]="categoriaConMayorGasto">
+          {{ categoriaConMayorGasto || 'N/A' }}
+        </p>
+        <p class="text-sm text-red-700 font-semibold">
+          {{ montoMayorCategoria | safeCurrency }}
+        </p>
+      </div>
+
+      <!-- Cantidad de Categorías -->
+      <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200 shadow-sm">
+        <p class="text-sm text-purple-700 font-semibold mb-1 flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          Categorías Activas
+        </p>
+        <p class="text-2xl font-bold text-purple-900">
+          {{ cantidadCategorias | safeNumber }}
+        </p>
+        <p class="text-sm text-purple-700">
+          {{ gastosFiltrados.length }} gasto{{ gastosFiltrados.length !== 1 ? 's' : '' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Chart y Tabla de Detalle lado a lado -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Chart Container -->
+      <div [ngClass]="categoriaSeleccionada ? 'lg:col-span-6' : 'lg:col-span-12'" class="transition-all duration-300 ease-in-out">
+        <apx-chart
+          #chart
+          [series]="chartOptions.series"
+          [chart]="chartOptions.chart"
+          [labels]="chartOptions.labels"
+          [colors]="chartOptions.colors"
+          [plotOptions]="chartOptions.plotOptions"
+          [dataLabels]="chartOptions.dataLabels"
+          [legend]="chartOptions.legend"
+          [responsive]="chartOptions.responsive"
+          [tooltip]="chartOptions.tooltip"
+        ></apx-chart>
+        <p class="text-center text-sm text-gray-500 mt-2">
+          Haz click en una categoría para ver el detalle
+        </p>
+      </div>
+
+      <!-- Tabla de Detalle de Categoría Seleccionada -->
+      <div *ngIf="categoriaSeleccionada && mostrarTabla" class="lg:col-span-6 animate-slide-in">
+        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 mb-4 border border-indigo-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-indigo-900">{{ categoriaSeleccionada }}</h3>
+              <p class="text-sm text-indigo-700">{{ gastosDetalleCategoria.length }} registro{{ gastosDetalleCategoria.length !== 1 ? 's' : '' }}</p>
+            </div>
+            <button
+              (click)="limpiarSeleccion()"
+              class="px-3 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-lg border border-gray-300 transition-colors flex items-center gap-2 text-sm font-medium">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Cerrar
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50 sticky top-0">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Fecha
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Departamento
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Monto
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Observaciones
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let gasto of gastosDetalleCategoria; let i = index; trackBy: trackByGastoId"
+                  [class.bg-gray-50]="i % 2 === 0"
+                  class="hover:bg-indigo-50 transition-colors">
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  {{ formatearFecha(gasto.fecha) }}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700">
+                  {{ gasto.nombre }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
+                  {{ gasto.monto | safeCurrency }}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">
+                  {{ gasto.observaciones || '-' }}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot class="bg-gray-100 sticky bottom-0">
+              <tr>
+                <td colspan="2" class="px-4 py-3 text-sm font-bold text-gray-900">
+                  TOTAL
+                </td>
+                <td class="px-4 py-3 text-sm font-bold text-gray-900 text-right">
+                  {{ calcularTotalCategoria() | safeCurrency }}
+                </td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de Resumen por Categoría -->
+    <div class="mt-8">
+      <h3 class="text-xl font-bold text-gray-800 mb-4">Resumen por Categoría</h3>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Categoría
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Cantidad
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Monto Total
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Porcentaje
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let item of gastosPorCategoria; let i = index"
+                [class.bg-gray-50]="i % 2 === 0">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <div class="flex items-center">
+                  <span class="w-3 h-3 rounded-full mr-2"
+                        [style.background-color]="chartOptions.colors[i % chartOptions.colors.length]"></span>
+                  {{ item.categoria }}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">
+                {{ item.cantidad | safeNumber }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
+                {{ item.monto | safeCurrency }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {{ item.porcentaje | number:'1.1-1' }}%
+                </span>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot class="bg-gray-100">
+            <tr>
+              <td class="px-6 py-4 text-sm font-bold text-gray-900">
+                TOTAL
+              </td>
+              <td class="px-6 py-4 text-sm font-bold text-gray-900 text-right">
+                {{ gastosFiltrados.length | safeNumber }}
+              </td>
+              <td class="px-6 py-4 text-sm font-bold text-gray-900 text-right">
+                {{ totalGastos | safeCurrency }}
+              </td>
+              <td class="px-6 py-4 text-sm font-bold text-gray-900 text-right">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  100%
+                </span>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && gastosFiltrados.length === 0" class="bg-white rounded-lg shadow-lg p-12 text-center">
+    <svg class="mx-auto h-24 w-24 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+    <h3 class="text-xl font-semibold text-gray-700 mb-2">No hay gastos para el período seleccionado</h3>
+    <p class="text-gray-500">Intenta seleccionar otro año o mes</p>
+  </div>
+</div>
+
+<style>
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+</style>
