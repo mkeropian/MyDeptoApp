@@ -22,6 +22,7 @@ export interface Rol{
 
 export interface UserLogin {
   id: number;
+  usuario?: string;
   email: string;
   nombreCompleto: string;
   activo: number;

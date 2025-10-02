@@ -1,11 +1,11 @@
 /* src/app/admin-dashboard/pages/rendiciones-admin-page/rendiciones-admin-page.component.css */
 
 /* =============== ESTILOS EXISTENTES DE TU COMPONENTE =============== */
-/* Aquí van todos los estilos CSS que ya tenías en tu componente */
+/* AquÃ­ van todos los estilos CSS que ya tenÃ­as en tu componente */
 
-/* =============== ESTILOS PARA EL MODAL DE EXPORTACIÓN =============== */
+/* =============== ESTILOS PARA EL MODAL DE EXPORTACIÃ“N =============== */
 
-/* Custom scrollbar para áreas con scroll */
+/* Custom scrollbar para Ã¡reas con scroll */
 .overflow-y-auto::-webkit-scrollbar {
   width: 6px;
 }
@@ -34,7 +34,7 @@
   transform: translateY(-1px);
 }
 
-/* Animación del backdrop */
+/* AnimaciÃ³n del backdrop */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -44,7 +44,7 @@
   animation: fadeIn 0.2s ease-out;
 }
 
-/* Animación del modal */
+/* AnimaciÃ³n del modal */
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -65,7 +65,7 @@
   font-weight: 500;
 }
 
-/* Mejora visual para el área de selección múltiple */
+/* Mejora visual para el Ã¡rea de selecciÃ³n mÃºltiple */
 .checkbox-container:focus-within {
   border-color: hsl(var(--p));
   box-shadow: 0 0 0 2px hsl(var(--p) / 0.2);
@@ -99,7 +99,7 @@
   }
 }
 
-/* Botón de exportar mejorado */
+/* BotÃ³n de exportar mejorado */
 .export-btn {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;

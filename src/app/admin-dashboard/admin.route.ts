@@ -39,10 +39,6 @@ export const adminRoutes: Routes = [
         component: IngresosAdminPageComponent,
       },
       {
-        path:'rendiciones-admin',
-        component: RendicionesAdminPageComponent,
-      },
-      {
         path:'themes-settings',
         component: ThemesSettingsPageComponent,
       },

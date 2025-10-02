@@ -2,16 +2,17 @@
 
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ExportApiService } from '../../../shared/services/export-api.service';
-import { ExportRequest } from '../../../shared/interfaces/export-request.interface';
+
 import { CommonModule } from '@angular/common';
 import { Departamento } from '../../../departamentos/interfaces/departamento.interface';
 import { DepartamentosService } from '../../../departamentos/services/departamentos.service';
 import { Propietario } from '../../../propietarios/interfaces/propietario.interface';
 import { PropietariosService } from '../../../propietarios/services/propietarios.service';
+import { ExportApiService } from '../../../shared/services/export-api.service';
+import { ExportRequest } from '../../../shared/interfaces/export-request.interface';
 
 @Component({
-  selector: 'app-rendiciones-admin-page',
+  selector: 'rendiciones-admin-page',
   templateUrl: './rendiciones-admin-page.component.html',
   styleUrls: ['./rendiciones-admin-page.component.css'],
   providers: [ ExportApiService ],
@@ -57,9 +58,15 @@ export class RendicionesAdminPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadInitialData();
     this.createExportForm();
-    this.openExportModal();
+  }
+
+  // =============== MÃ‰TODO PÃšBLICO PARA ABRIR EL MODAL ===============
+
+  open(): void {
+    this.loadInitialData();
+    this.showExportModal = true;
+    this.resetExportForm();
   }
 
   // =============== CARGA DE DATOS ===============
@@ -83,7 +90,7 @@ export class RendicionesAdminPageComponent implements OnInit {
 
     } catch (error) {
       console.error('Error cargando datos iniciales:', error);
-      alert('Error al cargar departamentos y propietarios. Por favor, recarga la página.');
+      alert('Error al cargar departamentos y propietarios. Por favor, recarga la pÃ¡gina.');
     } finally {
       this.isLoadingData = false;
     }
@@ -140,7 +147,7 @@ export class RendicionesAdminPageComponent implements OnInit {
     deptControl?.clearValidators();
     ownerControl?.clearValidators();
 
-    // Validadores según tipo de reporte
+    // Validadores segÃºn tipo de reporte
     if (reportType === 'daily') {
       dateControl?.setValidators([Validators.required]);
     } else if (reportType === 'monthly') {
@@ -148,7 +155,7 @@ export class RendicionesAdminPageComponent implements OnInit {
       yearControl?.setValidators([Validators.required]);
     }
 
-    // Validadores según tipo de filtro
+    // Validadores segÃºn tipo de filtro
     if (filterType === 'department') {
       deptControl?.setValidators([Validators.required]);
       ownerControl?.setValue(null);
@@ -193,7 +200,7 @@ export class RendicionesAdminPageComponent implements OnInit {
     this.exportForm.markAsUntouched();
   }
 
-  // =============== EXPORTACIÓN ===============
+  // =============== EXPORTACIÃ“N ===============
 
   onExportSubmit(): void {
     if (this.exportForm.valid && !this.isExporting) {
@@ -218,14 +225,14 @@ export class RendicionesAdminPageComponent implements OnInit {
       fileFormat: formValue.fileFormat
     };
 
-    // Agregar ID según el tipo de filtro
+    // Agregar ID segÃºn el tipo de filtro
     if (formValue.filterType === 'department') {
       request.idDepartamento = formValue.selectedDepartmentId;
     } else {
       request.idPropietario = formValue.selectedOwnerId;
     }
 
-    // Agregar fechas según el tipo de reporte
+    // Agregar fechas segÃºn el tipo de reporte
     if (formValue.reportType === 'daily') {
       request.fecha = formValue.selectedDate;
     } else if (formValue.reportType === 'monthly') {
@@ -273,13 +280,13 @@ export class RendicionesAdminPageComponent implements OnInit {
   }
 
   private handleExportSuccess(message: string): void {
-    console.log('✅', message);
+    console.log('âœ…', message);
     this.resetExportForm();
     this.closeExportModal();
   }
 
   private handleExportError(message: string, error: any): void {
-    console.error('❌ Export error:', error);
+    console.error('âŒ Export error:', error);
     alert(`${message}: ${error.error?.message || error.message || 'Error desconocido'}`);
   }
 
@@ -296,7 +303,7 @@ export class RendicionesAdminPageComponent implements OnInit {
     }
   }
 
-  // =============== VALIDACIÓN ===============
+  // =============== VALIDACIÃ“N ===============
 
   private markFormAsTouched(): void {
     Object.keys(this.exportForm.controls).forEach(key => {

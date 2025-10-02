@@ -74,7 +74,7 @@ export class LoginPageComponent {
 
           if (isAuthenticated) {
             // Login exitoso - redirigir al dashboard
-            this.router.navigateByUrl('/dashboard');
+            this.router.navigateByUrl('/home');
           } else {
             // Login falló pero sin error HTTP
             this.loginError.set('Credenciales inválidas');

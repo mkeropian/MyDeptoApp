@@ -1,20 +1,31 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, ViewChild } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../auth/services/auth.service';
 import { CommonModule } from '@angular/common';
+import { UserProfilePageComponent } from "../../../web-front/pages/user-profile-page/user-profile-page.component";
+import { AboutPageComponent } from '../../../web-front/pages/about-page/about-page.component';
+import { RendicionesAdminPageComponent } from '../../../admin-dashboard/pages/rendiciones-admin-page/rendiciones-admin-page.component';
 
 @Component({
   selector: 'app-navbar',
   imports: [
     RouterLink,
     RouterLinkActive,
-    CommonModule
+    CommonModule,
+    UserProfilePageComponent,
+    RendicionesAdminPageComponent,
+    AboutPageComponent
   ],
   templateUrl: './navbar.component.html',
 })
 export class NavbarComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+
+  // Referencias a los modales
+  @ViewChild(UserProfilePageComponent, { static: false }) profileModal!: UserProfilePageComponent;
+  @ViewChild(RendicionesAdminPageComponent, { static: false }) rendicionesModal!: RendicionesAdminPageComponent;
+  @ViewChild(AboutPageComponent, { static: false }) aboutModal!: AboutPageComponent;
 
   isDashboard = false;
   isAdminOpen = false;
@@ -76,13 +87,31 @@ export class NavbarComponent {
   }
 
   onRendicionesClick() {
-    this.onMenuItemClick(); // Cierra dropdowns
-    this.router.navigate(['/admin/rendiciones-admin']); // Navega a la ruta
+    this.onMenuItemClick();
+    if (this.rendicionesModal) {
+      this.rendicionesModal.open();
+    } else {
+      console.error('RendicionesModal no está disponible');
+    }
+  }
+
+  onProfileClick() {
+    this.onMenuItemClick();
+    this.profileModal.open();
+  }
+
+  onAboutClick() {
+    this.onMenuItemClick();
+    if (this.aboutModal) {
+      this.aboutModal.open();
+    } else {
+      console.error('AboutModal no está disponible');
+    }
   }
 
   onLogout() {
-    this.onMenuItemClick();  // Cierra dropdowns
-    this.authService.logout(); // Llama al servicio de logout
+    this.onMenuItemClick();
+    this.authService.logout();
     console.log('Sesión cerrada correctamente');
   }
 }
