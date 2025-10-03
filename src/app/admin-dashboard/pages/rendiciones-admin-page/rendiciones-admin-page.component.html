@@ -19,7 +19,7 @@
         class="btn btn-sm btn-circle btn-ghost"
         [disabled]="isExporting || isLoadingData"
         (click)="closeExportModal()">
-        âœ•
+        ×
       </button>
     </div>
 
@@ -41,7 +41,7 @@
             <!-- Card: Tipo de Filtro -->
             <div class="card bg-base-200 shadow-sm">
               <div class="card-body p-5">
-                <h4 class="text-base font-bold mb-3 text-base-content">Emitir rendiciÃ³n por:</h4>
+                <h4 class="text-base font-bold mb-3 text-base-content">Emitir rendición por:</h4>
 
                 <div class="space-y-2">
                   <div class="form-control">
@@ -139,10 +139,10 @@
 
           </div>
 
-          <!-- Segunda fila: PerÃ­odo (ancho completo) -->
+          <!-- Segunda fila: Período (ancho completo) -->
           <div class="card bg-base-200 shadow-sm">
             <div class="card-body p-5">
-              <h4 class="text-base font-bold mb-3 text-base-content">PerÃ­odo:</h4>
+              <h4 class="text-base font-bold mb-3 text-base-content">Período:</h4>
 
               <div class="flex flex-wrap gap-4 items-end">
                 <div class="form-control">
@@ -174,7 +174,7 @@
                   <!-- Para Diario -->
                   <div *ngIf="isDailyReport()" class="form-control">
                     <label class="label py-1">
-                      <span class="label-text font-semibold text-base-content">Seleccionar DÃ­a *</span>
+                      <span class="label-text font-semibold text-base-content">Seleccionar Día *</span>
                     </label>
                     <input
                       type="date"
@@ -187,13 +187,13 @@
                   <div *ngIf="isMonthlyReport()" class="grid grid-cols-2 gap-3">
                     <div class="form-control">
                       <label class="label py-1">
-                        <span class="label-text font-semibold text-base-content">AÃ±o *</span>
+                        <span class="label-text font-semibold text-base-content">Año *</span>
                       </label>
                       <select
                         class="select select-bordered w-full text-base-content"
                         [class.select-error]="isFieldInvalid('year')"
                         formControlName="year">
-                        <option value="" disabled>AÃ±o</option>
+                        <option value="" disabled>Año</option>
                         <option *ngFor="let year of years" [value]="year">{{ year }}</option>
                       </select>
                     </div>
@@ -220,18 +220,18 @@
 
         </div>
 
-        <!-- Resumen de SelecciÃ³n -->
+        <!-- Resumen de Selección -->
         <div *ngIf="exportForm.valid" class="alert alert-info mt-6 shadow-sm">
           <div class="w-full">
             <div class="flex items-center gap-2 mb-2">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-              <h4 class="font-bold">Resumen de ExportaciÃ³n</h4>
+              <h4 class="font-bold">Resumen de Exportación</h4>
             </div>
             <div class="text-sm space-y-1 ml-8">
               <p><strong>Filtro:</strong> {{ getSelectedFilterLabel() }} - {{ getSelectedEntityName() }}</p>
-              <p><strong>PerÃ­odo:</strong> {{ getSelectedReportLabel() }}
+              <p><strong>Período:</strong> {{ getSelectedReportLabel() }}
                 <span *ngIf="isDailyReport()"> - {{ exportForm.value.selectedDate }}</span>
                 <span *ngIf="isMonthlyReport()"> - {{ getSelectedMonthName() }} {{ exportForm.value.year }}</span>
               </p>

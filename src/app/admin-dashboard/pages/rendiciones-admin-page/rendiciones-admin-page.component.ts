@@ -61,7 +61,7 @@ export class RendicionesAdminPageComponent implements OnInit {
     this.createExportForm();
   }
 
-  // =============== MÃ‰TODO PÃšBLICO PARA ABRIR EL MODAL ===============
+  // =============== MÉTODO PÚBLICO PARA ABRIR EL MODAL ===============
 
   open(): void {
     this.loadInitialData();
@@ -83,17 +83,62 @@ export class RendicionesAdminPageComponent implements OnInit {
       this.departments = departamentos || [];
       this.owners = propietarios || [];
 
-      console.log('Datos cargados:', {
-        departamentos: this.departments.length,
-        propietarios: this.owners.length
-      });
+      // Validar si hay datos disponibles
+      if (this.departments.length === 0 && this.owners.length === 0) {
+        this.showErrorToast('No hay departamentos ni propietarios disponibles para exportar.');
+        this.closeExportModal();
+      }
 
     } catch (error) {
-      console.error('Error cargando datos iniciales:', error);
-      alert('Error al cargar departamentos y propietarios. Por favor, recarga la pÃ¡gina.');
+      this.showErrorToast('Error al cargar departamentos y propietarios. Por favor, intenta nuevamente.');
+      this.closeExportModal();
     } finally {
       this.isLoadingData = false;
     }
+  }
+
+  // =============== TOAST NOTIFICATIONS ===============
+
+  private showSuccessToast(message: string): void {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
+    toast.innerHTML = `
+      <div class="alert alert-success shadow-lg">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">${message}</span>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
+  }
+
+  private showErrorToast(message: string): void {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
+    toast.innerHTML = `
+      <div class="alert alert-error shadow-lg">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">${message}</span>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
   }
 
   // =============== FORMULARIO ===============
@@ -147,7 +192,7 @@ export class RendicionesAdminPageComponent implements OnInit {
     deptControl?.clearValidators();
     ownerControl?.clearValidators();
 
-    // Validadores segÃºn tipo de reporte
+    // Validadores según tipo de reporte
     if (reportType === 'daily') {
       dateControl?.setValidators([Validators.required]);
     } else if (reportType === 'monthly') {
@@ -155,7 +200,7 @@ export class RendicionesAdminPageComponent implements OnInit {
       yearControl?.setValidators([Validators.required]);
     }
 
-    // Validadores segÃºn tipo de filtro
+    // Validadores según tipo de filtro
     if (filterType === 'department') {
       deptControl?.setValidators([Validators.required]);
       ownerControl?.setValue(null);
@@ -182,6 +227,7 @@ export class RendicionesAdminPageComponent implements OnInit {
   closeExportModal(): void {
     if (!this.isExporting) {
       this.showExportModal = false;
+      this.resetExportForm();
     }
   }
 
@@ -198,9 +244,10 @@ export class RendicionesAdminPageComponent implements OnInit {
       fileFormat: 'csv'
     });
     this.exportForm.markAsUntouched();
+    this.exportForm.markAsPristine();
   }
 
-  // =============== EXPORTACIÃ“N ===============
+  // =============== EXPORTACIÓN ===============
 
   onExportSubmit(): void {
     if (this.exportForm.valid && !this.isExporting) {
@@ -225,14 +272,14 @@ export class RendicionesAdminPageComponent implements OnInit {
       fileFormat: formValue.fileFormat
     };
 
-    // Agregar ID segÃºn el tipo de filtro
+    // Agregar ID según el tipo de filtro
     if (formValue.filterType === 'department') {
       request.idDepartamento = formValue.selectedDepartmentId;
     } else {
       request.idPropietario = formValue.selectedOwnerId;
     }
 
-    // Agregar fechas segÃºn el tipo de reporte
+    // Agregar fechas según el tipo de reporte
     if (formValue.reportType === 'daily') {
       request.fecha = formValue.selectedDate;
     } else if (formValue.reportType === 'monthly') {
@@ -280,14 +327,16 @@ export class RendicionesAdminPageComponent implements OnInit {
   }
 
   private handleExportSuccess(message: string): void {
-    console.log('âœ…', message);
+    this.showSuccessToast(message);
     this.resetExportForm();
     this.closeExportModal();
   }
 
   private handleExportError(message: string, error: any): void {
-    console.error('âŒ Export error:', error);
-    alert(`${message}: ${error.error?.message || error.message || 'Error desconocido'}`);
+    const errorDetail = error.error?.message || error.message || 'Error desconocido';
+    this.showErrorToast(`${message}: ${errorDetail}`);
+    this.isExporting = false;
+    this.resetExportForm();
   }
 
   private generateFileName(request: ExportRequest): string {
@@ -303,7 +352,7 @@ export class RendicionesAdminPageComponent implements OnInit {
     }
   }
 
-  // =============== VALIDACIÃ“N ===============
+  // =============== VALIDACIÓN ===============
 
   private markFormAsTouched(): void {
     Object.keys(this.exportForm.controls).forEach(key => {

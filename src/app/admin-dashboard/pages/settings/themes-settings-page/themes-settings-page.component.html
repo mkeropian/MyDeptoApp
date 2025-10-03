@@ -15,6 +15,14 @@
       Seleccionar Tema
     </h2>
 
+    <!-- Mostrar tema actual -->
+    <div class="alert alert-info mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <span class="text-sm">Tema actual: <strong>{{ currentTheme() }}</strong></span>
+    </div>
+
     <!-- Lista de temas en una columna -->
     <div class="flex flex-col gap-1 w-64">
       <!-- Tema Cyberpunk -->
@@ -25,7 +33,14 @@
               <div class="w-3 h-3 rounded-full bg-gradient-to-r from-cyan-400 to-purple-600"></div>
             </div>
             <span class="label-text text-sm font-medium flex-grow text-left">Cyberpunk</span>
-            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="cyberpunk" (change)="onThemeChange($event)" />
+            <input 
+              type="radio" 
+              name="theme-radios" 
+              class="radio radio-primary radio-sm theme-controller" 
+              value="cyberpunk" 
+              [disabled]="isSaving()"
+              (change)="onThemeChange($event)" 
+            />
           </div>
         </label>
       </div>
@@ -38,7 +53,14 @@
               <div class="w-3 h-3 rounded-full bg-gradient-to-r from-slate-800 to-slate-900"></div>
             </div>
             <span class="label-text text-sm font-medium flex-grow text-left">Night</span>
-            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="night" (change)="onThemeChange($event)" />
+            <input 
+              type="radio" 
+              name="theme-radios" 
+              class="radio radio-primary radio-sm theme-controller" 
+              value="night" 
+              [disabled]="isSaving()"
+              (change)="onThemeChange($event)" 
+            />
           </div>
         </label>
       </div>
@@ -51,7 +73,14 @@
               <div class="w-3 h-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-600"></div>
             </div>
             <span class="label-text text-sm font-medium flex-grow text-left">Luxury</span>
-            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="luxury" (change)="onThemeChange($event)" />
+            <input 
+              type="radio" 
+              name="theme-radios" 
+              class="radio radio-primary radio-sm theme-controller" 
+              value="luxury" 
+              [disabled]="isSaving()"
+              (change)="onThemeChange($event)" 
+            />
           </div>
         </label>
       </div>
@@ -64,7 +93,14 @@
               <div class="w-3 h-3 rounded-full bg-gradient-to-r from-yellow-300 to-yellow-500"></div>
             </div>
             <span class="label-text text-sm font-medium flex-grow text-left">Lemonade</span>
-            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="lemonade" (change)="onThemeChange($event)" />
+            <input 
+              type="radio" 
+              name="theme-radios" 
+              class="radio radio-primary radio-sm theme-controller" 
+              value="lemonade" 
+              [disabled]="isSaving()"
+              (change)="onThemeChange($event)" 
+            />
           </div>
         </label>
       </div>
@@ -77,7 +113,14 @@
               <div class="w-3 h-3 rounded-full bg-gradient-to-r from-green-600 to-green-800"></div>
             </div>
             <span class="label-text text-sm font-medium flex-grow text-left">Forest</span>
-            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="forest" (change)="onThemeChange($event)" />
+            <input 
+              type="radio" 
+              name="theme-radios" 
+              class="radio radio-primary radio-sm theme-controller" 
+              value="forest" 
+              [disabled]="isSaving()"
+              (change)="onThemeChange($event)" 
+            />
           </div>
         </label>
       </div>
@@ -90,7 +133,14 @@
               <div class="w-3 h-3 rounded-full bg-gradient-to-r from-pink-400 to-purple-500"></div>
             </div>
             <span class="label-text text-sm font-medium flex-grow text-left">Fantasy</span>
-            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="fantasy" (change)="onThemeChange($event)" />
+            <input 
+              type="radio" 
+              name="theme-radios" 
+              class="radio radio-primary radio-sm theme-controller" 
+              value="fantasy" 
+              [disabled]="isSaving()"
+              (change)="onThemeChange($event)" 
+            />
           </div>
         </label>
       </div>
@@ -103,7 +153,14 @@
               <div class="w-3 h-3 rounded-full bg-gradient-to-r from-lime-400 to-green-400"></div>
             </div>
             <span class="label-text text-sm font-medium flex-grow text-left">Acid</span>
-            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="acid" (change)="onThemeChange($event)" />
+            <input 
+              type="radio" 
+              name="theme-radios" 
+              class="radio radio-primary radio-sm theme-controller" 
+              value="acid" 
+              [disabled]="isSaving()"
+              (change)="onThemeChange($event)" 
+            />
           </div>
         </label>
       </div>
@@ -116,7 +173,14 @@
               <div class="w-3 h-3 rounded-full bg-gradient-to-r from-yellow-400 to-black"></div>
             </div>
             <span class="label-text text-sm font-medium flex-grow text-left">Bumblebee</span>
-            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="bumblebee" (change)="onThemeChange($event)" />
+            <input 
+              type="radio" 
+              name="theme-radios" 
+              class="radio radio-primary radio-sm theme-controller" 
+              value="bumblebee" 
+              [disabled]="isSaving()"
+              (change)="onThemeChange($event)" 
+            />
           </div>
         </label>
       </div>
@@ -129,7 +193,14 @@
               <div class="w-3 h-3 rounded-full bg-gradient-to-r from-pink-500 to-cyan-400"></div>
             </div>
             <span class="label-text text-sm font-medium flex-grow text-left">Synthwave</span>
-            <input type="radio" name="theme-radios" class="radio radio-primary radio-sm theme-controller" value="synthwave" (change)="onThemeChange($event)" />
+            <input 
+              type="radio" 
+              name="theme-radios" 
+              class="radio radio-primary radio-sm theme-controller" 
+              value="synthwave" 
+              [disabled]="isSaving()"
+              (change)="onThemeChange($event)" 
+            />
           </div>
         </label>
       </div>
@@ -139,8 +210,18 @@
 
 <!-- Botón de guardar posicionado para quedar arriba del footer -->
 <div class="fixed bottom-20 right-6 z-[60]">
-  <button type="submit" class="btn btn-primary shadow-lg" (click)="onSaveSettings()">
-    <i class="fas fa-save mr-2"></i>
-    Guardar cambios
+  <button 
+    type="submit" 
+    class="btn btn-primary shadow-lg" 
+    [class.btn-disabled]="isSaving()"
+    [disabled]="isSaving()"
+    (click)="onSaveSettings()"
+  >
+    <span *ngIf="!isSaving()">
+      <i class="fas fa-save mr-2"></i>
+      Guardar cambios
+    </span>
+    <span *ngIf="isSaving()" class="loading loading-spinner loading-sm mr-2"></span>
+    <span *ngIf="isSaving()">Guardando...</span>
   </button>
 </div>

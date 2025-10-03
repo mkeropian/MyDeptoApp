@@ -13,6 +13,7 @@ import {
   ValidateTokenResponse,
   RenewTokenResponse
 } from "../interfaces/auth-response.interface";
+import { ThemeService } from "../../shared/services/theme.service";
 
 type AuthStatus = 'checking' | 'authenticated' | 'not-authenticated';
 const baseUrl = environment.baseUrl;
@@ -26,6 +27,7 @@ export class AuthService {
 
   private http = inject(HttpClient);
   private router = inject(Router);
+  private themeService = inject(ThemeService); // ← NUEVO: Inyectar ThemeService
 
   constructor() {
     // Constructor vacío, las inyecciones ya están arriba
@@ -111,6 +113,11 @@ export class AuthService {
         tap((resp) => {
           if (resp.ok && resp.usuario) {
             this._user.set(resp.usuario);
+
+            // ← NUEVO: Aplicar el tema del usuario
+            if (resp.usuario.tema) {
+              this.themeService.setTheme(resp.usuario.tema);
+            }
           }
         }),
         catchError((error: any) => {
@@ -142,6 +149,9 @@ export class AuthService {
     this._user.set(null);
     this._token.set(null);
     localStorage.removeItem('token');
+
+    // ← NUEVO: Resetear tema al cerrar sesión
+    this.themeService.resetTheme();
 
     // Navegar a la página de login
     this.router.navigate(['/auth/login']);
@@ -181,11 +191,17 @@ export class AuthService {
       email: resp.email!,
       nombreCompleto: resp.name!,
       activo: 1,
-      roles: [] // Se llenará al obtener el perfil completo
+      roles: [], // Se llenará al obtener el perfil completo
+      tema: resp.tema // ← NUEVO: Incluir tema
     };
 
     this._user.set(userLogin);
     this._authStatus.set('authenticated');
+
+    // ← NUEVO: Aplicar tema inmediatamente si viene en la respuesta
+    if (resp.tema) {
+      this.themeService.setTheme(resp.tema);
+    }
 
     // Obtener perfil completo en background para tener roles
     this.getProfile().subscribe();
