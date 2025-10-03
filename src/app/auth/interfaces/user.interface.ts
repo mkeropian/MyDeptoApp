@@ -1,3 +1,5 @@
+// src/app/auth/interfaces/user.interface.ts
+
 export interface User {
   id: number;
   usuario: string;
@@ -14,7 +16,7 @@ export interface UserTema {
   tema: string;
 }
 
-export interface Rol{
+export interface Rol {
   id: number;
   nombre: string;
   descripcion: string;
@@ -27,8 +29,7 @@ export interface UserLogin {
   nombreCompleto: string;
   activo: number;
   roles: string[];
+  permisos: string[];  // NUEVO: Array de permisos del usuario
   avatarUrl?: string;
   tema?: string;
 }
-
-

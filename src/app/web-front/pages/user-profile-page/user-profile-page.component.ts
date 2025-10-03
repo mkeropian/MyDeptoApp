@@ -30,16 +30,16 @@ export class UserProfilePageComponent {
     this.isOpen.set(true);
 
     // Debug: ver qué datos tenemos
-    console.log('👤 Usuario actual al abrir modal:', this.currentUser());
+    // console.log('👤 Usuario actual al abrir modal:', this.currentUser());
 
     // Refrescar el perfil para asegurar que tenemos todos los datos
     this.authService.getProfile().subscribe({
       next: (response) => {
-        console.log('✅ Perfil actualizado:', response);
-        console.log('👤 Usuario después de refresh:', this.currentUser());
+        // console.log('✅ Perfil actualizado:', response);
+        // console.log('👤 Usuario después de refresh:', this.currentUser());
       },
       error: (err) => {
-        console.error('❌ Error al obtener perfil:', err);
+        // console.error('❌ Error al obtener perfil:', err);
       }
     });
   }
@@ -107,14 +107,14 @@ export class UserProfilePageComponent {
         // Actualizar el perfil para reflejar el nuevo avatar
         this.authService.getProfile().subscribe({
           next: () => {
-            console.log('✅ Avatar y perfil actualizados');
+            // console.log('✅ Avatar y perfil actualizados');
           }
         });
       },
       error: (error) => {
         this.isUploadingAvatar.set(false);
         this.uploadError.set('Error al subir el avatar. Intenta nuevamente.');
-        console.error('❌ Error subiendo avatar:', error);
+        // console.error('❌ Error subiendo avatar:', error);
       }
     });
   }

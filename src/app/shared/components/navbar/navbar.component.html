@@ -8,94 +8,125 @@
   <div class="flex-none">
     <ul class="menu menu-horizontal px-1">
 
-      <!-- Dropdown Dashboard -->
-      <li class="dropdown dropdown-hover" [class.dropdown-open]="isDashboard">
-        <div tabindex="0" role="button" (click)="toggleDashboard()">Dashboard</div>
-        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-          <li><a routerLink="/dashboard/estadisticas" (click)="onMenuItemClick()">Estadisticas</a></li>
-          <li><a routerLink="/dashboard/departamentos" (click)="onMenuItemClick()">Departamentos</a></li>
-          <li><a routerLink="/dashboard/propietarios" (click)="onMenuItemClick()">Propietarios</a></li>
-        </ul>
-      </li>
-
-      <li><a routerLink="/calendar" routerLinkActive="active">Calendario</a></li>
-
-      <!-- Dropdown Departamentos -->
-      <li class="dropdown dropdown-hover" [class.dropdown-open]="isParent2Open">
-        <div tabindex="0" role="button" (click)="toggleParent2()">Departamentos</div>
-        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-          <li><a routerLink="/home/fullscreen_map" (click)="onMenuItemClick()" routerLinkActive="active">FullMap</a></li>
-          <li><a routerLink="/home/cards" (click)="onMenuItemClick()" routerLinkActive="active">Cards</a></li>
-        </ul>
-      </li>
-
-      <!-- Dropdown Operación -->
-      <li class="dropdown dropdown-hover" [class.dropdown-open]="isOperacionOpen">
-        <div tabindex="0" role="button" (click)="toggleOperacion()">Operación</div>
-        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-          <li><a routerLink="/admin/admin-gastos" (click)="onMenuItemClick()">Carga de Gastos</a></li>
-          <li><a routerLink="/admin/admin-ingresos" (click)="onMenuItemClick()">Carga de Ingresos</a></li>
-        </ul>
-      </li>
-
-      <!-- Dropdown Administración - Solo visible para admins -->
-      @if (isAdmin()) {
-        <li class="dropdown dropdown-hover" [class.dropdown-open]="isAdminOpen">
-          <div tabindex="0" role="button" (click)="toggleAdmin()">Administración</div>
+      <!-- Dropdown Dashboard - Solo si tiene permisos de dashboard -->
+      @if (tieneAlgunPermisoDashboard()) {
+        <li class="dropdown dropdown-hover" [class.dropdown-open]="isDashboard">
+          <div tabindex="0" role="button" (click)="toggleDashboard()">Dashboard</div>
           <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-            <li><a routerLink="/admin/admin-departamentos" (click)="onMenuItemClick()" routerLinkActive="active">Departamentos</a></li>
-            <li><a routerLink="/admin/admin-propietarios" (click)="onMenuItemClick()" routerLinkActive="active">Propietarios</a></li>
-
-            <li><a (click)="onRendicionesClick()" class="cursor-pointer">Rendiciones</a></li>
-            <!-- <li><a routerLink="/admin/rendiciones-admin" (click)="onMenuItemClick()" routerLinkActive="active">Rendiciones</a></li> -->
+            @if (tieneDashboard()) {
+              <li><a routerLink="/dashboard/estadisticas" (click)="onMenuItemClick()">Estadísticas</a></li>
+            }
+            @if (tieneDepartamentos()) {
+              <li><a routerLink="/dashboard/departamentos" (click)="onMenuItemClick()">Departamentos</a></li>
+            }
+            @if (tienePropietarios()) {
+              <li><a routerLink="/dashboard/propietarios" (click)="onMenuItemClick()">Propietarios</a></li>
+            }
           </ul>
         </li>
       }
 
-      <!-- Dropdown Configuración - Solo visible para admins -->
-      @if (isAdmin()) {
+      <!-- Calendario - Solo si tiene permiso -->
+      @if (tieneCalendario()) {
+        <li><a routerLink="/calendar" routerLinkActive="active">Calendario</a></li>
+      }
+
+      <!-- Dropdown Departamentos - Solo si tiene permisos -->
+      @if (tieneAlgunPermisoDepartamentos()) {
+        <li class="dropdown dropdown-hover" [class.dropdown-open]="isParent2Open">
+          <div tabindex="0" role="button" (click)="toggleParent2()">Departamentos</div>
+          <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
+            @if (tieneDepartamentos()) {
+              <li><a routerLink="/home/fullscreen_map" (click)="onMenuItemClick()" routerLinkActive="active">FullMap</a></li>
+              <li><a routerLink="/home/cards" (click)="onMenuItemClick()" routerLinkActive="active">Cards</a></li>
+            }
+          </ul>
+        </li>
+      }
+
+      <!-- Dropdown Operación - Solo si tiene permisos de gastos o ingresos -->
+      @if (tieneAlgunPermisoOperacion()) {
+        <li class="dropdown dropdown-hover" [class.dropdown-open]="isOperacionOpen">
+          <div tabindex="0" role="button" (click)="toggleOperacion()">Operación</div>
+          <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
+            @if (tieneGastos()) {
+              <li><a routerLink="/admin/admin-gastos" (click)="onMenuItemClick()">Carga de Gastos</a></li>
+            }
+            @if (tieneIngresos()) {
+              <li><a routerLink="/admin/admin-ingresos" (click)="onMenuItemClick()">Carga de Ingresos</a></li>
+            }
+          </ul>
+        </li>
+      }
+
+      <!-- Dropdown Administración - Solo si tiene permisos administrativos -->
+      @if (tieneAlgunPermisoAdmin()) {
+        <li class="dropdown dropdown-hover" [class.dropdown-open]="isAdminOpen">
+          <div tabindex="0" role="button" (click)="toggleAdmin()">Administración</div>
+          <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
+            @if (tieneDepartamentos()) {
+              <li><a routerLink="/admin/admin-departamentos" (click)="onMenuItemClick()" routerLinkActive="active">Departamentos</a></li>
+            }
+            @if (tienePropietarios()) {
+              <li><a routerLink="/admin/admin-propietarios" (click)="onMenuItemClick()" routerLinkActive="active">Propietarios</a></li>
+            }
+            @if (tieneReportes()) {
+              <li><a (click)="onRendicionesClick()" class="cursor-pointer">Rendiciones</a></li>
+            }
+          </ul>
+        </li>
+      }
+
+      <!-- Dropdown Configuración - Solo si tiene permisos de configuración -->
+      @if (tieneAlgunPermisoConfig()) {
         <li class="dropdown dropdown-hover" [class.dropdown-open]="isConfigOpen">
           <div tabindex="0" role="button" (click)="toggleConfig()">Configuración</div>
           <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-            <li>
-              <a
-                routerLink="/admin/themes-settings"
-                (click)="onMenuItemClick()"
-                routerLinkActive="active"
-              >... del Sistema
-              </a>
-            </li>
-            <li>
-              <a
-                routerLink="/admin/roles-settings"
-                (click)="onMenuItemClick()"
-                routerLinkActive="active"
-              >... de Roles
-              </a>
-            </li>
-            <li>
-              <a
-                routerLink="/admin/settings-permisos-roles"
-                (click)="onMenuItemClick()"
-                routerLinkActive="active"
-              >... de Permisos
-              </a>
-            </li>
-            <li>
-              <a
-                routerLink="/admin/admin-usuarios"
-                (click)="onMenuItemClick()"
-                routerLinkActive="active"
-              >Usuarios
-              </a>
-            </li>
+            @if (tieneConfiguracion()) {
+              <li>
+                <a
+                  routerLink="/admin/themes-settings"
+                  (click)="onMenuItemClick()"
+                  routerLinkActive="active"
+                >... del Sistema
+                </a>
+              </li>
+            }
+            @if (tieneRoles()) {
+              <li>
+                <a
+                  routerLink="/admin/roles-settings"
+                  (click)="onMenuItemClick()"
+                  routerLinkActive="active"
+                >... de Roles
+                </a>
+              </li>
+              <li>
+                <a
+                  routerLink="/admin/settings-permisos-roles"
+                  (click)="onMenuItemClick()"
+                  routerLinkActive="active"
+                >... de Permisos
+                </a>
+              </li>
+            }
+            @if (tieneUsuarios()) {
+              <li>
+                <a
+                  routerLink="/admin/admin-usuarios"
+                  (click)="onMenuItemClick()"
+                  routerLinkActive="active"
+                >Usuarios
+                </a>
+              </li>
+            }
           </ul>
         </li>
       }
     </ul>
   </div>
 
-  <!-- Avatar dropdown - REDISEÑADO -->
+  <!-- Avatar dropdown -->
   <div class="flex-none gap-2">
     <div class="dropdown dropdown-end">
       <div
@@ -129,7 +160,6 @@
                   <img
                     [src]="currentUser()?.avatarUrl || 'https://ui-avatars.com/api/?name=' + (currentUser()?.nombreCompleto || 'Usuario') + '&background=random&size=128'"
                     alt="Avatar de usuario"
-                    title=""
                   />
                 </div>
               </div>
@@ -145,7 +175,6 @@
 
           <hr class="my-1 border-base-300">
 
-          <!-- Menu Items - BOTÓN MI PERFIL ACTUALIZADO -->
           <li role="none">
             <a
               (click)="onProfileClick()"
@@ -162,7 +191,6 @@
 
           <hr class="my-1 border-base-300">
 
-          <!-- Acerca de... -->
           <li role="none">
             <a
               (click)="onAboutClick()"
@@ -179,7 +207,6 @@
 
           <hr class="my-1 border-base-300">
 
-          <!-- Logout -->
           <li role="none">
             <a
               (click)="onLogout()"

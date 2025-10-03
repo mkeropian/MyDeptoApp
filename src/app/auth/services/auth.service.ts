@@ -24,14 +24,13 @@ export class AuthService {
   private _authStatus = signal<AuthStatus>('checking');
   private _user = signal<UserLogin | null>(null);
   private _token = signal<string | null>(localStorage.getItem('token'));
+  private _permisos = signal<string[]>([]); // NUEVO: Permisos del usuario
 
   private http = inject(HttpClient);
   private router = inject(Router);
-  private themeService = inject(ThemeService); // ← NUEVO: Inyectar ThemeService
+  private themeService = inject(ThemeService);
 
-  constructor() {
-    // Constructor vacío, las inyecciones ya están arriba
-  }
+  constructor() {}
 
   // Resource para verificar estado al iniciar la app
   checkStatusResource = rxResource({
@@ -47,13 +46,12 @@ export class AuthService {
 
   user = computed(() => this._user());
   token = computed(() => this._token());
+  permisos = computed(() => this._permisos()); // NUEVO: Exponer permisos
   isAdmin = computed(() => this._user()?.roles?.includes('admin') ?? false);
   isAuthenticated = computed(() => this.authStatus() === 'authenticated');
 
   /**
    * Login con usuario o email
-   * @param usuarioOrEmail - Puede ser el username o el email
-   * @param password - Contraseña del usuario
    */
   login(usuarioOrEmail: string, password: string): Observable<boolean> {
     return this.http.post<AuthResponse>(`${baseUrl}/auth/login`, {
@@ -105,7 +103,7 @@ export class AuthService {
   }
 
   /**
-   * Obtiene el perfil completo del usuario con roles
+   * MODIFICADO: Obtiene el perfil completo del usuario con roles Y permisos
    */
   getProfile(): Observable<ProfileResponse> {
     return this.http.get<ProfileResponse>(`${baseUrl}/auth/profile`)
@@ -114,7 +112,10 @@ export class AuthService {
           if (resp.ok && resp.usuario) {
             this._user.set(resp.usuario);
 
-            // ← NUEVO: Aplicar el tema del usuario
+            // NUEVO: Guardar permisos
+            this._permisos.set(resp.usuario.permisos || []);
+
+            // Aplicar el tema del usuario
             if (resp.usuario.tema) {
               this.themeService.setTheme(resp.usuario.tema);
             }
@@ -148,12 +149,10 @@ export class AuthService {
     this._authStatus.set('not-authenticated');
     this._user.set(null);
     this._token.set(null);
+    this._permisos.set([]); // NUEVO: Limpiar permisos
     localStorage.removeItem('token');
 
-    // ← NUEVO: Resetear tema al cerrar sesión
     this.themeService.resetTheme();
-
-    // Navegar a la página de login
     this.router.navigate(['/auth/login']);
   }
 
@@ -174,6 +173,32 @@ export class AuthService {
   }
 
   /**
+   * NUEVO: Verifica si el usuario tiene un permiso específico
+   * @param permiso Nombre del permiso (ej: 'departamentos', 'departamentos.crear')
+   */
+  tienePermiso(permiso: string): boolean {
+    return this._permisos().includes(permiso);
+  }
+
+  /**
+   * NUEVO: Verifica si el usuario tiene TODOS los permisos especificados
+   * @param permisos Array de permisos requeridos
+   */
+  tienePermisos(permisos: string[]): boolean {
+    const permisosUsuario = this._permisos();
+    return permisos.every(p => permisosUsuario.includes(p));
+  }
+
+  /**
+   * NUEVO: Verifica si el usuario tiene AL MENOS UNO de los permisos especificados
+   * @param permisos Array de permisos
+   */
+  tieneAlgunPermiso(permisos: string[]): boolean {
+    const permisosUsuario = this._permisos();
+    return permisos.some(p => permisosUsuario.includes(p));
+  }
+
+  /**
    * Maneja el éxito de la autenticación
    */
   private handleAuthSuccess(resp: AuthResponse): boolean {
@@ -191,19 +216,19 @@ export class AuthService {
       email: resp.email!,
       nombreCompleto: resp.name!,
       activo: 1,
-      roles: [], // Se llenará al obtener el perfil completo
-      tema: resp.tema // ← NUEVO: Incluir tema
+      roles: [],
+      permisos: [], // NUEVO: Inicializar permisos vacíos
+      tema: resp.tema
     };
 
     this._user.set(userLogin);
     this._authStatus.set('authenticated');
 
-    // ← NUEVO: Aplicar tema inmediatamente si viene en la respuesta
     if (resp.tema) {
       this.themeService.setTheme(resp.tema);
     }
 
-    // Obtener perfil completo en background para tener roles
+    // Obtener perfil completo en background para tener roles y permisos
     this.getProfile().subscribe();
 
     return true;
@@ -215,16 +240,6 @@ export class AuthService {
   private handleAuthError(error: any): Observable<boolean> {
     console.error('Auth error:', error);
     this.logout();
-    return of(false);
-  }
-
-  /**
-   * LEGACY - Mantener para compatibilidad con código existente
-   * @deprecated Use login() instead
-   */
-  regUser(email: string, password: string, fullName: string): Observable<boolean> {
-    // Este método puede mantenerse si tienes un endpoint de registro
-    // O eliminarlo si no lo usas
     return of(false);
   }
 }

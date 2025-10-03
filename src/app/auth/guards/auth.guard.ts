@@ -13,18 +13,14 @@ export const authGuard: CanActivateFn = (route, state) => {
 
   const authStatus = authService.authStatus();
 
-  // Si está autenticado, permitir acceso
   if (authStatus === 'authenticated') {
     return true;
   }
 
-  // Si aún está verificando, esperar (esto debería ser rápido)
   if (authStatus === 'checking') {
-    // En producción podrías manejar esto de forma más elegante
     return true;
   }
 
-  // No autenticado, redirigir al login
   router.navigate(['/auth/login'], {
     queryParams: { returnUrl: state.url }
   });
@@ -34,7 +30,6 @@ export const authGuard: CanActivateFn = (route, state) => {
 
 /**
  * Guard inverso - solo permite acceso si NO está autenticado
- * Útil para la página de login
  */
 export const guestGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
@@ -42,18 +37,15 @@ export const guestGuard: CanActivateFn = (route, state) => {
 
   const authStatus = authService.authStatus();
 
-  // Si NO está autenticado, permitir acceso
   if (authStatus === 'not-authenticated') {
     return true;
   }
 
-  // Si ya está autenticado, redirigir al dashboard
   if (authStatus === 'authenticated') {
-    router.navigate(['/dashboard']);
+    router.navigate(['/home']);
     return false;
   }
 
-  // Mientras verifica, permitir
   return true;
 };
 
@@ -67,25 +59,118 @@ export const roleGuard: CanActivateFn = (route, state) => {
   const authStatus = authService.authStatus();
   const requiredRoles = route.data['roles'] as string[] | undefined;
 
-  // Verificar autenticación primero
   if (authStatus !== 'authenticated') {
     router.navigate(['/auth/login']);
     return false;
   }
 
-  // Si no se especificaron roles, solo requiere autenticación
   if (!requiredRoles || requiredRoles.length === 0) {
     return true;
   }
 
-  // Verificar si tiene alguno de los roles requeridos
   const hasRequiredRole = authService.hasAnyRole(requiredRoles);
 
   if (!hasRequiredRole) {
-    // Redirigir a página de acceso denegado
-    router.navigate(['/access-denied']);
+    router.navigate(['/unauthorized']);
     return false;
   }
 
   return true;
+};
+
+/**
+ * NUEVO: Guard para verificar permisos específicos
+ * Uso en rutas:
+ * {
+ *   path: 'departamentos',
+ *   component: DepartamentosComponent,
+ *   canActivate: [authGuard, permissionGuard],
+ *   data: { permisos: ['departamentos'] }
+ * }
+ */
+export const permissionGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  const authStatus = authService.authStatus();
+
+  // Verificar autenticación primero
+  if (authStatus !== 'authenticated') {
+    router.navigate(['/auth/login'], {
+      queryParams: { returnUrl: state.url }
+    });
+    return false;
+  }
+
+  // Obtener permisos requeridos de la ruta
+  const requiredPermisos = route.data['permisos'] as string[] | undefined;
+  const requireAll = route.data['requireAllPermisos'] as boolean | undefined;
+
+  // Si no se especificaron permisos, solo requiere autenticación
+  if (!requiredPermisos || requiredPermisos.length === 0) {
+    return true;
+  }
+
+  // Verificar permisos
+  let hasPermission = false;
+
+  if (requireAll) {
+    // Requiere TODOS los permisos (AND)
+    hasPermission = authService.tienePermisos(requiredPermisos);
+  } else {
+    // Requiere AL MENOS UNO de los permisos (OR) - comportamiento por defecto
+    hasPermission = authService.tieneAlgunPermiso(requiredPermisos);
+  }
+
+  if (!hasPermission) {
+    router.navigate(['/unauthorized']);
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * NUEVO: Guard combinado - verifica roles O permisos
+ * Más flexible para casos donde un admin puede ver todo
+ * pero otros roles necesitan permisos específicos
+ *
+ * Uso:
+ * {
+ *   path: 'configuracion',
+ *   component: ConfiguracionComponent,
+ *   canActivate: [authGuard, roleOrPermissionGuard],
+ *   data: {
+ *     roles: ['admin'],  // Admins siempre pueden entrar
+ *     permisos: ['configuracion']  // O tener el permiso específico
+ *   }
+ * }
+ */
+export const roleOrPermissionGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  const authStatus = authService.authStatus();
+
+  if (authStatus !== 'authenticated') {
+    router.navigate(['/auth/login']);
+    return false;
+  }
+
+  const requiredRoles = route.data['roles'] as string[] | undefined;
+  const requiredPermisos = route.data['permisos'] as string[] | undefined;
+
+  // Si es admin, permitir acceso
+  if (requiredRoles && authService.hasAnyRole(requiredRoles)) {
+    return true;
+  }
+
+  // Si no es admin, verificar permisos
+  if (requiredPermisos && authService.tieneAlgunPermiso(requiredPermisos)) {
+    return true;
+  }
+
+  // No tiene ni rol ni permiso
+  router.navigate(['/unauthorized']);
+  return false;
 };

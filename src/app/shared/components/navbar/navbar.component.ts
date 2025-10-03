@@ -1,3 +1,4 @@
+// src/app/shared/components/navbar/navbar.component.ts
 import { Component, computed, inject, ViewChild } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../auth/services/auth.service';
@@ -22,7 +23,6 @@ export class NavbarComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  // Referencias a los modales
   @ViewChild(UserProfilePageComponent, { static: false }) profileModal!: UserProfilePageComponent;
   @ViewChild(RendicionesAdminPageComponent, { static: false }) rendicionesModal!: RendicionesAdminPageComponent;
   @ViewChild(AboutPageComponent, { static: false }) aboutModal!: AboutPageComponent;
@@ -34,8 +34,43 @@ export class NavbarComponent {
   isProfileOpen = false;
   isOperacionOpen = false;
 
+  // Datos del usuario
   currentUser = computed(() => this.authService.user());
   isAdmin = computed(() => this.authService.isAdmin());
+
+  // NUEVO: Permisos específicos para el navbar
+  // Estos se evalúan reactivamente cuando cambien los permisos
+  tieneDashboard = computed(() => this.authService.tienePermiso('dashboard'));
+  tieneDepartamentos = computed(() => this.authService.tienePermiso('departamentos'));
+  tienePropietarios = computed(() => this.authService.tienePermiso('propietarios'));
+  tieneCalendario = computed(() => this.authService.tienePermiso('calendario'));
+  tieneGastos = computed(() => this.authService.tienePermiso('gastos'));
+  tieneIngresos = computed(() => this.authService.tienePermiso('ingresos'));
+  tieneReportes = computed(() => this.authService.tienePermiso('reportes'));
+  tieneConfiguracion = computed(() => this.authService.tienePermiso('configuracion'));
+  tieneUsuarios = computed(() => this.authService.tienePermiso('usuarios'));
+  tieneRoles = computed(() => this.authService.tienePermiso('roles'));
+
+  // Permisos compuestos - mostrar dropdown si tiene al menos uno de estos permisos
+  tieneAlgunPermisoDashboard = computed(() =>
+    this.authService.tieneAlgunPermiso(['dashboard', 'estadisticas', 'departamentos', 'propietarios'])
+  );
+
+  tieneAlgunPermisoDepartamentos = computed(() =>
+    this.authService.tieneAlgunPermiso(['departamentos', 'departamentos.ver'])
+  );
+
+  tieneAlgunPermisoOperacion = computed(() =>
+    this.authService.tieneAlgunPermiso(['gastos', 'ingresos'])
+  );
+
+  tieneAlgunPermisoAdmin = computed(() =>
+    this.authService.tieneAlgunPermiso(['departamentos', 'propietarios', 'reportes'])
+  );
+
+  tieneAlgunPermisoConfig = computed(() =>
+    this.authService.tieneAlgunPermiso(['configuracion', 'usuarios', 'roles'])
+  );
 
   // Métodos para toggle de cada dropdown
   toggleAdmin() {
@@ -67,7 +102,6 @@ export class NavbarComponent {
     this.isProfileOpen = !this.isProfileOpen;
   }
 
-  // Cerrar otros dropdowns cuando se abre uno
   closeOtherDropdowns(except: string) {
     if (except !== 'admin') this.isAdminOpen = false;
     if (except !== 'parent2') this.isParent2Open = false;
@@ -76,7 +110,6 @@ export class NavbarComponent {
     if (except !== 'dashboard') this.isDashboard = false;
   }
 
-  // Cerrar dropdown al hacer clic en una opción
   onMenuItemClick() {
     this.isAdminOpen = false;
     this.isParent2Open = false;
@@ -90,8 +123,6 @@ export class NavbarComponent {
     this.onMenuItemClick();
     if (this.rendicionesModal) {
       this.rendicionesModal.open();
-    } else {
-      console.error('RendicionesModal no está disponible');
     }
   }
 
@@ -104,14 +135,11 @@ export class NavbarComponent {
     this.onMenuItemClick();
     if (this.aboutModal) {
       this.aboutModal.open();
-    } else {
-      console.error('AboutModal no está disponible');
     }
   }
 
   onLogout() {
     this.onMenuItemClick();
     this.authService.logout();
-    console.log('Sesión cerrada correctamente');
   }
 }
