@@ -92,16 +92,15 @@
           <span>{{ loginError() }}</span>
         </div>
 
-        <!-- Botón de Login -->
+        <!-- Botón de Login MEJORADO -->
         <div class="form-control mt-6">
           <button
             type="submit"
             class="btn btn-primary w-full"
-            [class.loading]="isLoading()"
             [disabled]="loginForm.invalid || isLoading()"
           >
-            <span *ngIf="!isLoading()">Iniciar Sesión</span>
-            <span *ngIf="isLoading()" class="loading loading-spinner loading-sm"></span>
+            <span *ngIf="isLoading()" class="loading loading-spinner loading-md"></span>
+            <span>{{ isLoading() ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
           </button>
         </div>
 

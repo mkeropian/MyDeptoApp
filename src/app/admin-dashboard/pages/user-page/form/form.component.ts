@@ -128,7 +128,7 @@ export class FormComponent {
       const userData  = {
         ...this.userForm.value,
         avatarUrl: selectedFile ? this.generateAvatarUrl(selectedFile.name) : '',
-        tema: 'night'
+        tema: 'light'
       };
 
     console.log('Datos del formulario:', userData);

@@ -5,7 +5,6 @@ import { AuthService } from '../../../../auth/services/auth.service';
 import { UsuariosService } from '../../../../auth/services/users.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
 
-
 @Component({
   selector: 'app-settings-page',
   standalone: true,
@@ -98,20 +97,14 @@ export class ThemesSettingsPageComponent {
     this.usuariosService
       .updateTemaUsuario(user.id, { tema: themeToSave })
       .subscribe({
-        next: (response) => {
-          console.log('Tema guardado en el servidor:', response);
+        next: () => {
           this.isSaving.set(false);
-
-          // Mostrar mensaje de éxito
           this.showSuccessToast(
             `Tema "${themeToSave}" guardado correctamente`
           );
         },
-        error: (error) => {
-          console.error('Error al guardar el tema en el servidor:', error);
+        error: () => {
           this.isSaving.set(false);
-
-          // Mostrar mensaje de error
           this.showErrorToast(
             'Error al guardar la configuración. Inténtalo nuevamente.'
           );
