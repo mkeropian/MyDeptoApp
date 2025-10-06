@@ -1,324 +1,245 @@
 <div class="calendario-empleados p-6">
-  <!-- Encabezado del calendario -->
+
+  <!-- FILTROS -->
+  <div class="bg-white shadow-sm rounded-lg p-4 mb-6">
+    <form [formGroup]="filtrosForm">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label for="filtroUsuario" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Empleado</label>
+          <select id="filtroUsuario" formControlName="idUsuario" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            <option value="">Todos los empleados</option>
+            <option *ngFor="let usuario of usuarios" [value]="usuario.id">{{ usuario.nombreCompleto }}</option>
+          </select>
+        </div>
+        <div>
+          <label for="filtroDepartamento" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Departamento</label>
+          <select id="filtroDepartamento" formControlName="idDepartamento" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            <option value="">Todos los departamentos</option>
+            <option *ngFor="let depto of departamentos" [value]="depto.id">{{ depto.nombre }}</option>
+          </select>
+        </div>
+        <div class="flex items-end">
+          <button type="button" (click)="limpiarFiltros()" class="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50" aria-label="Limpiar filtros de búsqueda">Limpiar Filtros</button>
+        </div>
+      </div>
+      <div class="mt-3 text-sm text-gray-600">
+        Mostrando <span class="font-semibold">{{ eventosFiltrados.length }}</span> de <span class="font-semibold">{{ eventos.length }}</span> eventos
+      </div>
+    </form>
+  </div>
+
+  <!-- ENCABEZADO -->
   <div class="lg:flex lg:h-full lg:flex-col">
-    <header class="flex items-center justify-between border-b border-gray-200 px-6 py-4 lg:flex-none">
-      <h1 class="text-base font-semibold leading-6 text-gray-900">
-        {{ tituloCalendario }}
-      </h1>
-
+    <header class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 lg:flex-none rounded-t-lg">
+      <h1 class="text-xl font-bold leading-6 text-gray-900">{{ tituloCalendario }}</h1>
       <div class="flex items-center">
-        <!-- Navegación anterior/siguiente -->
         <div class="relative flex items-center rounded-md bg-white shadow-sm md:items-stretch">
-          <button
-            type="button"
-            (click)="mesAnterior()"
-            class="flex h-9 w-12 items-center justify-center rounded-l-md border-y border-l border-gray-300 pr-1 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:pr-0 md:hover:bg-gray-50">
+          <button type="button" (click)="anteriorPeriodo()" class="flex h-9 w-12 items-center justify-center rounded-l-md border-y border-l border-gray-300 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:hover:bg-gray-50" aria-label="Período anterior" title="Ir al período anterior">
             <span class="sr-only">Período anterior</span>
-            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
-            </svg>
+            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" /></svg>
           </button>
-
-          <button
-            type="button"
-            (click)="irAHoy()"
-            class="hidden border-y border-gray-300 px-3.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 focus:relative md:block">
-            Hoy
-          </button>
-
-          <button
-            type="button"
-            (click)="mesSiguiente()"
-            class="flex h-9 w-12 items-center justify-center rounded-r-md border-y border-r border-gray-300 pl-1 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:pl-0 md:hover:bg-gray-50">
+          <button type="button" (click)="irAHoy()" class="hidden border-y border-gray-300 px-3.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 focus:relative md:block" aria-label="Ir a hoy" title="Ir a la fecha de hoy">Hoy</button>
+          <button type="button" (click)="siguientePeriodo()" class="flex h-9 w-12 items-center justify-center rounded-r-md border-y border-r border-gray-300 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:hover:bg-gray-50" aria-label="Período siguiente" title="Ir al período siguiente">
             <span class="sr-only">Período siguiente</span>
-            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
-            </svg>
+            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" /></svg>
           </button>
         </div>
-
-        <!-- Selector de vista y botón nuevo evento -->
         <div class="hidden md:ml-4 md:flex md:items-center">
-          <!-- Selector de vista -->
           <div class="relative">
-            <select
-              [(ngModel)]="vistaActualString"
-              title="vista"
-              class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <select [(ngModel)]="vistaActual" (change)="cambiarVista(vistaActual)" title="Seleccionar vista del calendario" aria-label="Seleccionar vista del calendario" class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
               <option value="dia">Vista Diaria</option>
               <option value="semana">Vista Semanal</option>
               <option value="mes">Vista Mensual</option>
-              <option value="año">Vista Anual</option>
             </select>
           </div>
-
           <div class="ml-6 h-6 w-px bg-gray-300"></div>
-
-          <!-- Botón nuevo evento -->
-          <button
-            type="button"
-            (click)="abrirModalEvento()"
-            class="ml-6 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
-            Nuevo Evento
-          </button>
-        </div>
-
-        <!-- Menú móvil -->
-        <div class="relative ml-6 md:hidden">
-          <button type="button" class="-mx-2 flex items-center rounded-full border border-transparent p-2 text-gray-400 hover:text-gray-500">
-            <span class="sr-only">Abrir menú</span>
-            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M3 10a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM8.5 10a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM15.5 8.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" />
-            </svg>
-          </button>
+          <button type="button" (click)="abrirModalEvento()" class="ml-6 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" aria-label="Crear nuevo evento">Nuevo Evento</button>
         </div>
       </div>
     </header>
 
-    <!-- Contenido del calendario -->
-    <div class="shadow ring-1 ring-black ring-opacity-5 lg:flex lg:flex-auto lg:flex-col">
+    <!-- CONTENIDO -->
+    <div class="shadow ring-1 ring-black ring-opacity-5 lg:flex lg:flex-auto lg:flex-col bg-white rounded-b-lg">
 
-      <!-- Vista Mensual -->
-      <div *ngIf="vistaActual === 'mes'" class="calendar-view">
-        <!-- Encabezados de días -->
+      <!-- VISTA DIARIA -->
+      <div *ngIf="vistaActual === 'dia'" class="p-6">
+        <div class="space-y-4">
+          <div *ngFor="let evento of obtenerEventosPorFecha(fechaSeleccionada)" class="bg-white border-l-4 border-indigo-500 p-4 rounded-r-lg shadow-sm hover:shadow-md hover:bg-gray-50 transition-all cursor-pointer" (click)="abrirModalDetalles(evento)">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">{{ evento.descripcionTipoEventoCalendario }}</span>
+                  <span class="text-sm text-gray-500">{{ evento.descripcionTipoCalendario }}</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ evento.nombreCompletoUsuario }}</h3>
+                <p class="text-sm text-gray-600 mb-2">{{ evento.nombreDepartamento }}</p>
+                <p *ngIf="evento.observaciones" class="text-sm text-gray-700">{{ evento.observaciones }}</p>
+              </div>
+              <button type="button" (click)="$event.stopPropagation(); editarEvento(evento)" class="text-indigo-600 hover:text-indigo-900" aria-label="Editar evento" title="Editar este evento">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              </button>
+            </div>
+          </div>
+          <div *ngIf="obtenerEventosPorFecha(fechaSeleccionada).length === 0" class="text-center py-12 text-gray-500">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <p class="mt-2">No hay eventos programados para este día</p>
+            <button type="button" (click)="abrirModalEvento(fechaSeleccionada)" class="mt-4 text-indigo-600 hover:text-indigo-500 text-sm font-medium" aria-label="Agregar evento para este día">Agregar evento</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA SEMANAL -->
+      <div *ngIf="vistaActual === 'semana'" class="overflow-x-auto">
+        <div class="min-w-full">
+          <div class="grid grid-cols-7 gap-px bg-gray-200 border-b border-gray-300">
+            <div *ngFor="let dia of diasDeLaSemana" class="bg-white py-3 text-center">
+              <div class="text-sm font-semibold text-gray-900">{{ diasSemana[dia.getDay() === 0 ? 6 : dia.getDay() - 1] }}</div>
+              <div [class]="esHoy(dia) ? 'mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white mx-auto' : 'mt-1 text-gray-900 mx-auto'">{{ dia.getDate() }}</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-7 gap-px bg-gray-200">
+            <div *ngFor="let dia of diasDeLaSemana" class="bg-white min-h-[200px] p-2">
+              <div *ngFor="let evento of obtenerEventosPorFecha(dia)" class="mb-2 p-2 rounded text-xs cursor-pointer hover:shadow-md hover:bg-gray-100 transition-all border-l-4" [ngClass]="obtenerColorEvento(evento.descripcionTipoEventoCalendario)" (click)="abrirModalDetalles(evento)" [attr.aria-label]="'Evento: ' + evento.nombreCompletoUsuario + ' - ' + evento.descripcionTipoEventoCalendario">
+                <div class="font-semibold truncate">{{ evento.nombreCompletoUsuario }}</div>
+                <div class="text-gray-600 truncate">{{ evento.descripcionTipoEventoCalendario }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA MENSUAL -->
+      <div *ngIf="vistaActual === 'mes'">
         <div class="grid grid-cols-7 gap-px border-b border-gray-300 bg-gray-200 text-center text-xs font-semibold leading-6 text-gray-700 lg:flex-none">
           <div *ngFor="let dia of diasSemana" class="flex justify-center bg-white py-2">
             <span>{{ dia.charAt(0) }}</span>
             <span class="sr-only sm:not-sr-only">{{ dia.slice(1) }}</span>
           </div>
         </div>
-
-        <!-- Días del calendario -->
         <div class="flex bg-gray-200 text-xs leading-6 text-gray-700 lg:flex-auto">
-          <div class="hidden w-full lg:grid lg:grid-cols-7 lg:grid-rows-6 lg:gap-px">
-            <div
-              *ngFor="let dia of diasDelMes"
-              [class]="'relative px-3 py-2 cursor-pointer hover:bg-gray-100 ' +
-                       (esMesActual(dia) ? 'bg-white' : 'bg-gray-50 text-gray-500')"
-              (click)="abrirModalEvento(dia)">
-
-              <time
-                [attr.datetime]="dia.toISOString().split('T')[0]"
-                [class]="esHoy(dia) ? 'flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white' : ''">
-                {{ dia.getDate() }}
-              </time>
-
-              <!-- Eventos del día -->
-              <ol class="mt-2" *ngIf="obtenerEventosPorFecha(dia).length > 0">
-                <li
-                  *ngFor="let evento of obtenerEventosPorFecha(dia)"
-                  class="group flex mb-1">
-                  <button
-                    (click)="$event.stopPropagation(); abrirModalDetalles(evento)"
-                    (mouseenter)="mostrarTooltip(evento, $event)"
-                    (mouseleave)="ocultarTooltip()"
-                    class="flex-auto truncate font-medium text-gray-900 group-hover:text-indigo-600 text-left text-xs p-1 rounded hover:bg-indigo-50">
-                    {{ evento.empleado }} - {{ evento.tipoEvento }}
+          <div class="hidden w-full lg:grid lg:grid-cols-7 lg:auto-rows-min lg:gap-px">
+            <div *ngFor="let dia of diasDelMes" [class]="'relative px-2 py-2 cursor-pointer ' + (obtenerEventosPorFecha(dia).length === 0 ? 'min-h-[70px]' : 'min-h-[100px]') + ' ' + (esMesActual(dia) ? 'bg-white' : 'bg-gray-50 text-gray-500')" (click)="abrirModalEvento(dia)" (mouseleave)="ocultarTooltip()" [attr.aria-label]="'Agregar evento para el día ' + dia.getDate()">
+              <time [attr.datetime]="calendarioService.formatearFechaParaBackend(dia)" [class]="esHoy(dia) ? 'flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white' : ''">{{ dia.getDate() }}</time>
+              <ol class="mt-1 space-y-1" *ngIf="obtenerEventosPorFecha(dia).length > 0">
+                <li *ngFor="let evento of obtenerEventosPorFecha(dia); let i = index" [hidden]="i >= 4">
+                  <button type="button" (click)="$event.stopPropagation(); abrirModalDetalles(evento)" (mouseenter)="mostrarTooltip(evento, $event)" class="w-full text-left text-xs p-1.5 rounded cursor-pointer hover:shadow-md hover:bg-gray-100 transition-all border-l-4" [ngClass]="obtenerColorEvento(evento.descripcionTipoEventoCalendario)" [attr.aria-label]="'Ver detalles: ' + evento.nombreCompletoUsuario + ' - ' + evento.descripcionTipoEventoCalendario" [attr.title]="evento.nombreCompletoUsuario + ' - ' + evento.descripcionTipoEventoCalendario">
+                    <div class="truncate text-gray-900 leading-tight">{{ evento.nombreCompletoUsuario }}</div>
+                    <div class="text-gray-600 truncate leading-tight">{{ evento.descripcionTipoEventoCalendario }}</div>
                   </button>
-                  <time class="ml-1 hidden flex-none text-gray-500 group-hover:text-indigo-600 xl:block text-xs">
-                    {{ evento.hora }}
-                  </time>
                 </li>
+                <li *ngIf="obtenerEventosPorFecha(dia).length > 4" class="text-gray-500 text-xs ml-1">+{{ obtenerEventosPorFecha(dia).length - 4 }} más</li>
               </ol>
             </div>
           </div>
-
-          <!-- Vista móvil del calendario -->
           <div class="isolate grid w-full grid-cols-7 grid-rows-6 gap-px lg:hidden">
-            <button
-              *ngFor="let dia of diasDelMes"
-              type="button"
-              [class]="'flex h-14 flex-col px-3 py-2 hover:bg-gray-100 focus:z-10 ' +
-                       (esMesActual(dia) ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-500') +
-                       (esHoy(dia) ? ' font-semibold text-indigo-600' : '')"
-              (click)="abrirModalEvento(dia)">
-
-              <time [attr.datetime]="dia.toISOString().split('T')[0]" class="ml-auto">
-                {{ dia.getDate() }}
-              </time>
-
+            <button *ngFor="let dia of diasDelMes" type="button" [class]="'flex h-14 flex-col px-3 py-2 hover:bg-gray-100 focus:z-10 transition-colors ' + (esMesActual(dia) ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-500') + (esHoy(dia) ? ' font-semibold text-indigo-600' : '')" (click)="abrirModalEvento(dia)" [attr.aria-label]="'Día ' + dia.getDate() + (obtenerEventosPorFecha(dia).length > 0 ? ', ' + obtenerEventosPorFecha(dia).length + ' eventos' : '')">
+              <time [attr.datetime]="calendarioService.formatearFechaParaBackend(dia)" class="ml-auto">{{ dia.getDate() }}</time>
               <span class="sr-only">{{ obtenerEventosPorFecha(dia).length }} eventos</span>
-              <span
-                *ngIf="obtenerEventosPorFecha(dia).length > 0"
-                class="-mx-0.5 mt-auto flex flex-wrap-reverse">
-                <span
-                  *ngFor="let _ of obtenerEventosPorFecha(dia); let i = index"
-                  [class]="'mx-0.5 mb-1 h-1.5 w-1.5 rounded-full ' + (i < 3 ? 'bg-gray-400' : 'bg-red-400')">
-                </span>
+              <span *ngIf="obtenerEventosPorFecha(dia).length > 0" class="-mx-0.5 mt-auto flex flex-wrap-reverse">
+                <span *ngFor="let _ of obtenerEventosPorFecha(dia); let i = index" [class]="'mx-0.5 mb-1 h-1.5 w-1.5 rounded-full ' + (i < 3 ? 'bg-gray-400' : 'bg-red-400')"></span>
               </span>
             </button>
           </div>
         </div>
       </div>
-
-      <!-- Otras vistas (simplificadas para el ejemplo) -->
-      <div *ngIf="vistaActual !== 'mes'" class="p-8 text-center">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Vista {{ vistaActual | titlecase }}</h3>
-        <p class="text-gray-500">Esta vista está en desarrollo. Por ahora, usa la vista mensual.</p>
-        <button
-          (click)="cambiarVista('mes')"
-          class="mt-4 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
-          Volver a Vista Mensual
-        </button>
-      </div>
     </div>
   </div>
 
-  <!-- Modal para crear/editar evento -->
-  <div
-    *ngIf="mostrarModalEvento"
-    class="fixed inset-0 z-50 overflow-y-auto"
-    aria-labelledby="modal-title"
-    role="dialog"
-    aria-modal="true">
-
+  <!-- MODAL CREAR/EDITAR -->
+  <div *ngIf="mostrarModalEvento" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModal()"></div>
-
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModal()" aria-label="Cerrar modal"></div>
       <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
         <form [formGroup]="eventoForm" (ngSubmit)="guardarEvento()">
           <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div class="sm:flex sm:items-start">
               <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
-                  {{ eventoEditando ? 'Editar Evento' : 'Nuevo Evento' }}
-                </h3>
-
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">{{ eventoEditando ? 'Editar Evento' : 'Nuevo Evento' }}</h3>
                 <div class="space-y-4">
-                  <!-- Empleado -->
                   <div>
-                    <label for="empleado" class="block text-sm font-medium text-gray-700">Empleado</label>
-                    <select
-                      id="empleado"
-                      formControlName="empleado"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                      <option value="">Seleccionar empleado</option>
-                      <option *ngFor="let empleado of empleados" [value]="empleado">{{ empleado }}</option>
-                    </select>
-                    <div *ngIf="eventoForm.get('empleado')?.invalid && eventoForm.get('empleado')?.touched"
-                         class="text-red-600 text-sm mt-1">
-                      El empleado es requerido
-                    </div>
-                  </div>
-
-                  <!-- Fecha -->
-                  <div>
-                    <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha</label>
-                    <input
-                      type="date"
-                      id="fecha"
-                      formControlName="fecha"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <div *ngIf="eventoForm.get('fecha')?.invalid && eventoForm.get('fecha')?.touched"
-                         class="text-red-600 text-sm mt-1">
-                      La fecha es requerida
-                    </div>
-                  </div>
-
-                  <!-- Hora -->
-                  <div>
-                    <label for="hora" class="block text-sm font-medium text-gray-700">Hora</label>
-                    <input
-                      type="time"
-                      id="hora"
-                      formControlName="hora"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <div *ngIf="eventoForm.get('hora')?.invalid && eventoForm.get('hora')?.touched"
-                         class="text-red-600 text-sm mt-1">
-                      La hora es requerida
-                    </div>
-                  </div>
-
-                  <!-- Tipo de evento -->
-                  <div>
-                    <label for="tipoEvento" class="block text-sm font-medium text-gray-700">Tipo de Evento</label>
-                    <select
-                      id="tipoEvento"
-                      formControlName="tipoEvento"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <label for="tipoCalendario" class="block text-sm font-medium text-gray-700">Tipo de Calendario *</label>
+                    <select id="tipoCalendario" formControlName="idTipoCalendario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" aria-required="true">
                       <option value="">Seleccionar tipo</option>
-                      <option *ngFor="let tipo of tiposEvento" [value]="tipo">{{ tipo }}</option>
+                      <option *ngFor="let tipo of tiposCalendario" [value]="tipo.id">{{ tipo.descripcion }}</option>
                     </select>
-                    <div *ngIf="eventoForm.get('tipoEvento')?.invalid && eventoForm.get('tipoEvento')?.touched"
-                         class="text-red-600 text-sm mt-1">
-                      El tipo de evento es requerido
-                    </div>
+                    <div *ngIf="eventoForm.get('idTipoCalendario')?.invalid && eventoForm.get('idTipoCalendario')?.touched" class="text-red-600 text-sm mt-1" role="alert">El tipo de calendario es requerido</div>
                   </div>
-
-                  <!-- Observaciones -->
+                  <div>
+                    <label for="tipoEvento" class="block text-sm font-medium text-gray-700">Tipo de Evento *</label>
+                    <select id="tipoEvento" formControlName="idTipoEventoCalendario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" aria-required="true">
+                      <option value="">Seleccionar tipo</option>
+                      <option *ngFor="let tipo of tiposEvento" [value]="tipo.id">{{ tipo.descripcion }}</option>
+                    </select>
+                    <div *ngIf="eventoForm.get('idTipoEventoCalendario')?.invalid && eventoForm.get('idTipoEventoCalendario')?.touched" class="text-red-600 text-sm mt-1" role="alert">El tipo de evento es requerido</div>
+                  </div>
+                  <div>
+                    <label for="usuario" class="block text-sm font-medium text-gray-700">Empleado *</label>
+                    <select id="usuario" formControlName="idUser" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" aria-required="true">
+                      <option value="">Seleccionar empleado</option>
+                      <option *ngFor="let usuario of usuarios" [value]="usuario.id">{{ usuario.nombreCompleto }}</option>
+                    </select>
+                    <div *ngIf="eventoForm.get('idUser')?.invalid && eventoForm.get('idUser')?.touched" class="text-red-600 text-sm mt-1" role="alert">El empleado es requerido</div>
+                  </div>
+                  <div>
+                    <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento *</label>
+                    <select id="departamento" formControlName="idDep" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" aria-required="true">
+                      <option value="">Seleccionar departamento</option>
+                      <option *ngFor="let depto of departamentos" [value]="depto.id">{{ depto.nombre }}</option>
+                    </select>
+                    <div *ngIf="eventoForm.get('idDep')?.invalid && eventoForm.get('idDep')?.touched" class="text-red-600 text-sm mt-1" role="alert">El departamento es requerido</div>
+                  </div>
+                  <div>
+                    <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha *</label>
+                    <input type="date" id="fecha" formControlName="fecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" aria-required="true">
+                    <div *ngIf="eventoForm.get('fecha')?.invalid && eventoForm.get('fecha')?.touched" class="text-red-600 text-sm mt-1" role="alert">La fecha es requerida</div>
+                  </div>
                   <div>
                     <label for="observaciones" class="block text-sm font-medium text-gray-700">Observaciones</label>
-                    <textarea
-                      id="observaciones"
-                      formControlName="observaciones"
-                      rows="3"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="Información adicional sobre el evento..."></textarea>
+                    <textarea id="observaciones" formControlName="observaciones" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Información adicional sobre el evento..."></textarea>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
           <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              type="submit"
-              [disabled]="eventoForm.invalid"
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
-              {{ eventoEditando ? 'Actualizar' : 'Guardar' }}
-            </button>
-            <button
-              type="button"
-              (click)="cerrarModal()"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-              Cancelar
-            </button>
+            <button type="submit" [disabled]="eventoForm.invalid" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-400 disabled:cursor-not-allowed" [attr.aria-label]="eventoEditando ? 'Actualizar evento' : 'Guardar evento'">{{ eventoEditando ? 'Actualizar' : 'Guardar' }}</button>
+            <button type="button" (click)="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Cancelar y cerrar modal">Cancelar</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- Modal para ver detalles del evento -->
-  <div
-    *ngIf="mostrarModalDetalles"
-    class="fixed inset-0 z-50 overflow-y-auto"
-    aria-labelledby="modal-detalles-title"
-    role="dialog"
-    aria-modal="true">
-
+  <!-- MODAL DETALLES -->
+  <div *ngIf="mostrarModalDetalles && eventoEditando" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-detalles-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModal()"></div>
-
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModal()" aria-label="Cerrar modal"></div>
       <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4" *ngIf="eventoEditando">
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
           <div class="sm:flex sm:items-start">
             <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-detalles-title">
-                Detalles del Evento
-              </h3>
-
+              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-detalles-title">Detalles del Evento</h3>
               <div class="space-y-3">
                 <div class="bg-gray-50 px-4 py-3 rounded-md">
-                  <div class="text-sm font-medium text-gray-500">Empleado</div>
-                  <div class="text-base text-gray-900">{{ eventoEditando.empleado }}</div>
+                  <div class="text-sm font-medium text-gray-500">Tipo de Calendario</div>
+                  <div class="text-base text-gray-900">{{ eventoEditando.descripcionTipoCalendario }}</div>
                 </div>
-
-                <div class="bg-gray-50 px-4 py-3 rounded-md">
-                  <div class="text-sm font-medium text-gray-500">Fecha</div>
-                  <div class="text-base text-gray-900">{{ eventoEditando.fecha | date:'fullDate':'':'es-ES' }}</div>
-                </div>
-
-                <div class="bg-gray-50 px-4 py-3 rounded-md">
-                  <div class="text-sm font-medium text-gray-500">Hora</div>
-                  <div class="text-base text-gray-900">{{ eventoEditando.hora }}</div>
-                </div>
-
                 <div class="bg-gray-50 px-4 py-3 rounded-md">
                   <div class="text-sm font-medium text-gray-500">Tipo de Evento</div>
-                  <div class="text-base text-gray-900">{{ eventoEditando.tipoEvento }}</div>
+                  <div class="text-base text-gray-900">{{ eventoEditando.descripcionTipoEventoCalendario }}</div>
                 </div>
-
+                <div class="bg-gray-50 px-4 py-3 rounded-md">
+                  <div class="text-sm font-medium text-gray-500">Empleado</div>
+                  <div class="text-base text-gray-900">{{ eventoEditando.nombreCompletoUsuario }}</div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 rounded-md">
+                  <div class="text-sm font-medium text-gray-500">Departamento</div>
+                  <div class="text-base text-gray-900">{{ eventoEditando.nombreDepartamento }}</div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 rounded-md">
+                  <div class="text-sm font-medium text-gray-500">Fecha</div>
+                  <div class="text-base text-gray-900">{{ formatearFecha(eventoEditando.fecha) }}</div>
+                </div>
                 <div class="bg-gray-50 px-4 py-3 rounded-md" *ngIf="eventoEditando.observaciones">
                   <div class="text-sm font-medium text-gray-500">Observaciones</div>
                   <div class="text-base text-gray-900">{{ eventoEditando.observaciones }}</div>
@@ -327,48 +248,29 @@
             </div>
           </div>
         </div>
-
         <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button
-            type="button"
-            (click)="editarEvento(eventoEditando!)"
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-            Editar
-          </button>
-          <button
-            type="button"
-            (click)="eliminarEvento(eventoEditando!.id)"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-            Eliminar
-          </button>
-          <button
-            type="button"
-            (click)="cerrarModal()"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-            Cerrar
-          </button>
+          <button type="button" (click)="editarEvento(eventoEditando)" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Editar este evento">Editar</button>
+          <button type="button" (click)="eliminarEvento(eventoEditando.id)" class="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Eliminar este evento">Eliminar</button>
+          <button type="button" (click)="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Cerrar detalles del evento">Cerrar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Tooltip para eventos -->
-  <div
-    *ngIf="tooltipVisible && tooltipEvento"
-    class="fixed z-50 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg max-w-xs"
-    [style.left.px]="tooltipPosicion.x"
-    [style.top.px]="tooltipPosicion.y">
+  <!-- TOOLTIP -->
+  <div *ngIf="tooltipVisible && tooltipEvento" class="fixed z-50 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg max-w-xs pointer-events-none" [style.left.px]="tooltipPosicion.x" [style.top.px]="tooltipPosicion.y">
+    <div class="font-semibold mb-1">{{ tooltipEvento.nombreCompletoUsuario }}</div>
+    <div class="text-gray-300 mb-1">{{ formatearFecha(tooltipEvento.fecha) }}</div>
+    <div class="mb-1">{{ tooltipEvento.descripcionTipoEventoCalendario }}</div>
+    <div class="text-gray-400 text-xs mb-1">{{ tooltipEvento.nombreDepartamento }}</div>
+    <div *ngIf="tooltipEvento.observaciones" class="text-gray-300 text-xs">{{ tooltipEvento.observaciones }}</div>
+  </div>
 
-    <div class="font-semibold mb-1">{{ tooltipEvento.empleado }}</div>
-    <div class="text-gray-300 mb-1">{{ tooltipEvento.fecha | date:'shortDate':'':'es-ES' }} - {{ tooltipEvento.hora }}</div>
-    <div class="mb-1">{{ tooltipEvento.tipoEvento }}</div>
-    <div *ngIf="tooltipEvento.observaciones" class="text-gray-300 text-xs">
-      {{ tooltipEvento.observaciones }}
-    </div>
-
-    <!-- Flecha del tooltip -->
-    <div class="absolute top-0 left-2 transform -translate-y-1">
-      <div class="w-2 h-2 bg-gray-900 rotate-45"></div>
+  <!-- LOADING -->
+  <div *ngIf="cargando" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-500 bg-opacity-75" role="status" aria-live="polite">
+    <div class="bg-white rounded-lg p-6 flex flex-col items-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" aria-hidden="true"></div>
+      <p class="mt-4 text-gray-700">Cargando eventos...</p>
     </div>
   </div>
 </div>

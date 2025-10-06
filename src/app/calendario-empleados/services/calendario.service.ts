@@ -1,379 +1,428 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
-export interface Evento {
-  id: string;
-  empleado: string;
-  fecha: Date;
-  hora: string;
-  tipoEvento: string;
-  observaciones: string;
-  fechaCompleta: Date;
-  color?: string;
+// Interfaces alineadas con el backend
+export interface EventoCalendario {
+  id?: number;
+  idTipoCalendario: number;
+  idTipoEventoCalendario: number;
+  idDep: number;
+  idUser: number;
+  fecha: string; // formato YYYY-MM-DD
+  observaciones?: string;
 }
-
-export interface Empleado {
-  id: string;
-  nombre: string;
-  departamento: string;
+export interface EventoCalendarioExtendido {
+  id: number;
+  idTipoCalendario: number;
+  descripcionTipoCalendario: string;
+  idTipoEventoCalendario: number;
+  descripcionTipoEventoCalendario: string;
+  idDepartamento: number;
+  nombreDepartamento: string;
+  idUsuario: number;
+  codUsuario: string;
+  nombreCompletoUsuario: string;
+  fecha: string;
+  observaciones: string;
+}
+export interface TipoCalendario {
+  id: number;
+  descripcion: string;
   activo: boolean;
 }
 
-export interface TipoEvento {
-  id: string;
-  nombre: string;
-  color: string;
-  descripcion?: string;
+export interface TipoEventoCalendario {
+  id: number;
+  descripcion: string;
+  activo: boolean;
 }
+
+export interface Departamento {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  activo: boolean;
+}
+
+export interface Usuario {
+  id: number;
+  usuario: string;
+  nombreCompleto: string;
+  email: string;
+  activo: boolean;
+  roles?: string[];  // AGREGAR ESTO
+}
+
+export interface FiltrosCalendario {
+  idUsuario?: number;
+  idDepartamento?: number;
+  fechaInicio?: string;
+  fechaFin?: string;
+}
+
+export interface UsuarioRol {
+  id: number;
+  idrol: number;
+  nombre: string;  // nombre del rol
+  idUsuario: number;
+  usuario: string;
+  nombreCompleto: string;
+}
+
+export type VistaCalendario = 'dia' | 'semana' | 'mes';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CalendarioService {
-  private eventosSubject = new BehaviorSubject<Evento[]>([]);
-  private empleadosSubject = new BehaviorSubject<Empleado[]>([]);
-  private tiposEventoSubject = new BehaviorSubject<TipoEvento[]>([]);
+  private apiUrl = `${environment.baseUrl}/calendar`;
+  private usuariosUrl = `${environment.baseUrl}/usuarios`;
+  private departamentosUrl = `${environment.baseUrl}/departamentos`;
+
+  // BehaviorSubjects para manejo de estado
+  private eventosSubject = new BehaviorSubject<EventoCalendarioExtendido[]>([]);
+  private cargandoSubject = new BehaviorSubject<boolean>(false);
 
   public eventos$ = this.eventosSubject.asObservable();
-  public empleados$ = this.empleadosSubject.asObservable();
-  public tiposEvento$ = this.tiposEventoSubject.asObservable();
+  public cargando$ = this.cargandoSubject.asObservable();
 
-  constructor() {
-    this.inicializarDatos();
-  }
+  constructor(private http: HttpClient) {}
 
-  // Métodos para eventos
-  obtenerEventos(): Observable<Evento[]> {
-    return this.eventos$;
-  }
-
-  obtenerEventoPorId(id: string): Evento | undefined {
-    return this.eventosSubject.value.find(evento => evento.id === id);
-  }
-
-  obtenerEventosPorFecha(fecha: Date): Evento[] {
-    return this.eventosSubject.value.filter(evento => {
-      const fechaEvento = new Date(evento.fecha);
-      return fechaEvento.toDateString() === fecha.toDateString();
+  // Headers con autenticación
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'x-token': token || ''
     });
   }
 
-  obtenerEventosPorEmpleado(empleadoId: string): Evento[] {
-    return this.eventosSubject.value.filter(evento => evento.empleado === empleadoId);
+  // ==================== EVENTOS ====================
+
+  /**
+   * Obtiene todos los eventos extendidos
+   */
+  obtenerEventosExtendidos(): Observable<EventoCalendarioExtendido[]> {
+    this.cargandoSubject.next(true);
+
+    return this.http.get<EventoCalendarioExtendido[]>(
+      `${this.apiUrl}/allextendido`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      tap(eventos => {
+        this.eventosSubject.next(eventos);
+        this.cargandoSubject.next(false);
+      }),
+      catchError(error => {
+        this.cargandoSubject.next(false);
+        console.error('Error al obtener eventos:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
-  obtenerEventosPorRango(fechaInicio: Date, fechaFin: Date): Evento[] {
-    return this.eventosSubject.value.filter(evento => {
-      const fechaEvento = new Date(evento.fecha);
-      return fechaEvento >= fechaInicio && fechaEvento <= fechaFin;
+  /**
+   * Obtiene eventos por usuario
+   */
+  obtenerEventosPorUsuario(idUsuario: number): Observable<EventoCalendarioExtendido[]> {
+    return this.http.get<EventoCalendarioExtendido[]>(
+      `${this.apiUrl}/byUser/${idUsuario}`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener eventos por usuario:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene un evento por ID
+   */
+  obtenerEventoPorId(id: number): Observable<EventoCalendarioExtendido> {
+    return this.http.get<EventoCalendarioExtendido[]>(
+      `${this.apiUrl}/${id}`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      map(eventos => eventos[0]),
+      catchError(error => {
+        console.error('Error al obtener evento:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Crea un nuevo evento
+   */
+  crearEvento(evento: EventoCalendario): Observable<{ id: number }> {
+    return this.http.put<{ id: number }>(
+      this.apiUrl,
+      evento,
+      { headers: this.getHeaders() }
+    ).pipe(
+      tap(() => {
+        // Recargar eventos después de crear
+        this.obtenerEventosExtendidos().subscribe();
+      }),
+      catchError(error => {
+        console.error('Error al crear evento:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Actualiza un evento existente
+   */
+  actualizarEvento(id: number, evento: EventoCalendario): Observable<{ id: number }> {
+    return this.http.post<{ id: number }>(
+      `${this.apiUrl}/${id}`,
+      evento,
+      { headers: this.getHeaders() }
+    ).pipe(
+      tap(() => {
+        // Recargar eventos después de actualizar
+        this.obtenerEventosExtendidos().subscribe();
+      }),
+      catchError(error => {
+        console.error('Error al actualizar evento:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Elimina un evento
+   */
+  eliminarEvento(id: number): Observable<{ id: number }> {
+    return this.http.delete<{ id: number }>(
+      `${this.apiUrl}/${id}`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      tap(() => {
+        // Recargar eventos después de eliminar
+        this.obtenerEventosExtendidos().subscribe();
+      }),
+      catchError(error => {
+        console.error('Error al eliminar evento:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // ==================== USUARIOS ====================
+
+  /**
+   * Obtiene todos los usuarios activos
+   */
+  obtenerUsuariosActivos(): Observable<Usuario[]> {
+    return this.http.get<Usuario[]>(
+      `${this.usuariosUrl}/allActives`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener usuarios:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene todos los roles de todos los usuarios
+   */
+  obtenerRolesUsuarios(): Observable<UsuarioRol[]> {
+    return this.http.get<UsuarioRol[]>(
+      `${environment.baseUrl}/roles/getRolUser`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener roles de usuarios:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // ==================== DEPARTAMENTOS ====================
+
+  /**
+   * Obtiene todos los departamentos activos
+   */
+  obtenerDepartamentosActivos(): Observable<Departamento[]> {
+    return this.http.get<Departamento[]>(
+      `${this.departamentosUrl}/allActives`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener departamentos:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // ==================== FILTROS ====================
+
+  /**
+   * Filtra eventos según criterios
+   */
+  filtrarEventos(
+    eventos: EventoCalendarioExtendido[],
+    filtros: FiltrosCalendario
+  ): EventoCalendarioExtendido[] {
+    let eventosFiltrados = [...eventos];
+
+    // Filtrar por usuario
+    if (filtros.idUsuario) {
+      eventosFiltrados = eventosFiltrados.filter(
+        evento => Number(evento.idUsuario) === Number(filtros.idUsuario)
+      );
+    }
+
+    // Filtrar por departamento
+    if (filtros.idDepartamento) {
+      eventosFiltrados = eventosFiltrados.filter(
+        evento => Number(evento.idDepartamento) === Number(filtros.idDepartamento)
+      );
+    }
+
+    // Filtrar por rango de fechas
+    if (filtros.fechaInicio) {
+      eventosFiltrados = eventosFiltrados.filter(evento => {
+        const fechaEvento = evento.fecha.split('T')[0];
+        return fechaEvento >= filtros.fechaInicio!;
+      });
+    }
+
+    if (filtros.fechaFin) {
+      eventosFiltrados = eventosFiltrados.filter(evento => {
+        const fechaEvento = evento.fecha.split('T')[0];
+        return fechaEvento <= filtros.fechaFin!;
+      });
+    }
+
+    return eventosFiltrados;
+  }
+
+  /**
+   * Obtiene eventos para una fecha específica
+   */
+  obtenerEventosPorFecha(
+    eventos: EventoCalendarioExtendido[],
+    fecha: Date
+  ): EventoCalendarioExtendido[] {
+    const fechaStr = this.formatearFechaParaBackend(fecha);
+    return eventos.filter(evento => {
+      // Extraer solo la parte de fecha (YYYY-MM-DD) del timestamp del backend
+      const fechaEvento = evento.fecha.split('T')[0];
+      return fechaEvento === fechaStr;
     });
   }
 
-  crearEvento(evento: Omit<Evento, 'id'>): string {
-    const nuevoEvento: Evento = {
-      ...evento,
-      id: this.generarId(),
-      color: this.obtenerColorPorTipo(evento.tipoEvento)
-    };
+  /**
+   * Obtiene eventos para un rango de fechas
+   */
+  obtenerEventosPorRango(
+    eventos: EventoCalendarioExtendido[],
+    fechaInicio: Date,
+    fechaFin: Date
+  ): EventoCalendarioExtendido[] {
+    const fechaInicioStr = this.formatearFechaParaBackend(fechaInicio);
+    const fechaFinStr = this.formatearFechaParaBackend(fechaFin);
 
-    const eventosActuales = this.eventosSubject.value;
-    this.eventosSubject.next([...eventosActuales, nuevoEvento]);
-
-    return nuevoEvento.id;
+    return eventos.filter(evento => {
+      const fechaEvento = evento.fecha.split('T')[0];
+      return fechaEvento >= fechaInicioStr && fechaEvento <= fechaFinStr;
+    });
   }
 
-  actualizarEvento(id: string, datosEvento: Partial<Evento>): boolean {
-    const eventosActuales = this.eventosSubject.value;
-    const indice = eventosActuales.findIndex(evento => evento.id === id);
+  // ==================== UTILIDADES ====================
 
-    if (indice === -1) {
-      return false;
-    }
-
-    const eventoActualizado = {
-      ...eventosActuales[indice],
-      ...datosEvento,
-      color: datosEvento.tipoEvento ? this.obtenerColorPorTipo(datosEvento.tipoEvento) : eventosActuales[indice].color
-    };
-
-    eventosActuales[indice] = eventoActualizado;
-    this.eventosSubject.next([...eventosActuales]);
-
-    return true;
+  /**
+   * Formatea fecha para el backend (YYYY-MM-DD)
+   */
+  formatearFechaParaBackend(fecha: Date): string {
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
-  eliminarEvento(id: string): boolean {
-    const eventosActuales = this.eventosSubject.value;
-    const eventosFiltrados = eventosActuales.filter(evento => evento.id !== id);
-
-    if (eventosFiltrados.length === eventosActuales.length) {
-      return false; // No se encontró el evento
-    }
-
-    this.eventosSubject.next(eventosFiltrados);
-    return true;
+  /**
+   * Convierte string de fecha del backend a Date
+   */
+  convertirFechaDesdeBackend(fechaStr: string): Date {
+    return new Date(fechaStr + 'T00:00:00');
   }
 
-  // Métodos para empleados
-  obtenerEmpleados(): Observable<Empleado[]> {
-    return this.empleados$;
-  }
-
-  obtenerEmpleadoActivos(): Empleado[] {
-    return this.empleadosSubject.value.filter(empleado => empleado.activo);
-  }
-
-  crearEmpleado(empleado: Omit<Empleado, 'id'>): string {
-    const nuevoEmpleado: Empleado = {
-      ...empleado,
-      id: this.generarId()
-    };
-
-    const empleadosActuales = this.empleadosSubject.value;
-    this.empleadosSubject.next([...empleadosActuales, nuevoEmpleado]);
-
-    return nuevoEmpleado.id;
-  }
-
-  // Métodos para tipos de evento
-  obtenerTiposEvento(): Observable<TipoEvento[]> {
-    return this.tiposEvento$;
-  }
-
-  obtenerColorPorTipo(tipoEvento: string): string {
-    const tipo = this.tiposEventoSubject.value.find(t => t.nombre === tipoEvento);
-    return tipo?.color || '#6366f1'; // Color por defecto (indigo)
-  }
-
-  // Métodos de utilidad
-  validarEvento(evento: Partial<Evento>): string[] {
+  /**
+   * Valida que un evento tenga todos los campos requeridos
+   */
+  validarEvento(evento: Partial<EventoCalendario>): string[] {
     const errores: string[] = [];
 
-    if (!evento.empleado) {
-      errores.push('El empleado es requerido');
+    if (!evento.idTipoCalendario) {
+      errores.push('El tipo de calendario es requerido');
+    }
+
+    if (!evento.idTipoEventoCalendario) {
+      errores.push('El tipo de evento es requerido');
+    }
+
+    if (!evento.idDep) {
+      errores.push('El departamento es requerido');
+    }
+
+    if (!evento.idUser) {
+      errores.push('El usuario es requerido');
     }
 
     if (!evento.fecha) {
       errores.push('La fecha es requerida');
     }
 
-    if (!evento.hora) {
-      errores.push('La hora es requerida');
-    }
-
-    if (!evento.tipoEvento) {
-      errores.push('El tipo de evento es requerido');
-    }
-
-    // Validar que la fecha no sea en el pasado (opcional)
-    if (evento.fecha && new Date(evento.fecha) < new Date()) {
-      // errores.push('La fecha no puede ser en el pasado');
-    }
-
-    // Validar conflictos de horario para el mismo empleado
-    if (evento.empleado && evento.fecha && evento.hora) {
-      const eventosConflicto = this.verificarConflictoHorario(
-        evento.empleado,
-        new Date(evento.fecha),
-        evento.hora,
-        evento.id
-      );
-
-      if (eventosConflicto.length > 0) {
-        errores.push('El empleado ya tiene un evento programado en esta fecha y hora');
-      }
-    }
-
     return errores;
   }
 
-  verificarConflictoHorario(
-    empleado: string,
-    fecha: Date,
-    hora: string,
-    eventoIdExcluir?: string
-  ): Evento[] {
-    return this.eventosSubject.value.filter(evento => {
-      if (eventoIdExcluir && evento.id === eventoIdExcluir) {
-        return false;
-      }
+  /**
+   * Obtiene estadísticas de eventos
+   */
+  obtenerEstadisticas(eventos: EventoCalendarioExtendido[]): {
+    totalEventos: number;
+    eventosPorTipo: { [tipo: string]: number };
+    eventosPorUsuario: { [usuario: string]: number };
+    eventosPorDepartamento: { [departamento: string]: number };
+  } {
+    const stats = {
+      totalEventos: eventos.length,
+      eventosPorTipo: {} as { [tipo: string]: number },
+      eventosPorUsuario: {} as { [usuario: string]: number },
+      eventosPorDepartamento: {} as { [departamento: string]: number }
+    };
 
-      const fechaEvento = new Date(evento.fecha);
-      return evento.empleado === empleado &&
-             fechaEvento.toDateString() === fecha.toDateString() &&
-             evento.hora === hora;
-    });
-  }
+    eventos.forEach(evento => {
+      // Por tipo
+      const tipo = evento.descripcionTipoEventoCalendario;
+      stats.eventosPorTipo[tipo] = (stats.eventosPorTipo[tipo] || 0) + 1;
 
-  // Exportar/Importar datos
-  exportarEventos(): string {
-    return JSON.stringify(this.eventosSubject.value, null, 2);
-  }
+      // Por usuario
+      const usuario = evento.nombreCompletoUsuario;
+      stats.eventosPorUsuario[usuario] = (stats.eventosPorUsuario[usuario] || 0) + 1;
 
-  importarEventos(datosJson: string): boolean {
-    try {
-      const eventos = JSON.parse(datosJson) as Evento[];
-
-      // Validar estructura básica
-      const eventosValidos = eventos.filter(evento =>
-        evento.id && evento.empleado && evento.fecha && evento.hora && evento.tipoEvento
-      );
-
-      this.eventosSubject.next(eventosValidos);
-      return true;
-    } catch (error) {
-      console.error('Error al importar eventos:', error);
-      return false;
-    }
-  }
-
-  // Métodos privados
-  private generarId(): string {
-    return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
-  }
-
-  private inicializarDatos(): void {
-    // Empleados de ejemplo
-    const empleadosIniciales: Empleado[] = [
-      {
-        id: '1',
-        nombre: 'Juan Pérez',
-        departamento: 'Desarrollo',
-        activo: true
-      },
-      {
-        id: '2',
-        nombre: 'María García',
-        departamento: 'Recursos Humanos',
-        activo: true
-      },
-      {
-        id: '3',
-        nombre: 'Carlos López',
-        departamento: 'Ventas',
-        activo: true
-      },
-      {
-        id: '4',
-        nombre: 'Ana Martínez',
-        departamento: 'Marketing',
-        activo: true
-      },
-      {
-        id: '5',
-        nombre: 'Luis Rodríguez',
-        departamento: 'Soporte',
-        activo: true
-      },
-      {
-        id: '6',
-        nombre: 'Sofia Fernández',
-        departamento: 'Finanzas',
-        activo: true
-      }
-    ];
-
-    // Tipos de evento
-    const tiposEventoIniciales: TipoEvento[] = [
-      {
-        id: '1',
-        nombre: 'Reunión',
-        color: '#3b82f6',
-        descripcion: 'Reuniones de trabajo y coordinación'
-      },
-      {
-        id: '2',
-        nombre: 'Capacitación',
-        color: '#10b981',
-        descripcion: 'Sesiones de entrenamiento y desarrollo'
-      },
-      {
-        id: '3',
-        nombre: 'Entrevista',
-        color: '#8b5cf6',
-        descripcion: 'Entrevistas de trabajo'
-      },
-      {
-        id: '4',
-        nombre: 'Evento de Equipo',
-        color: '#f59e0b',
-        descripcion: 'Actividades de integración del equipo'
-      },
-      {
-        id: '5',
-        nombre: 'Vacaciones',
-        color: '#eab308',
-        descripcion: 'Períodos de descanso'
-      },
-      {
-        id: '6',
-        nombre: 'Licencia Médica',
-        color: '#ef4444',
-        descripcion: 'Ausencias por motivos de salud'
-      },
-      {
-        id: '7',
-        nombre: 'Otro',
-        color: '#6b7280',
-        descripcion: 'Otros tipos de eventos'
-      }
-    ];
-
-    // Eventos de ejemplo
-    const eventosIniciales: Evento[] = [
-      {
-        id: '1',
-        empleado: 'Juan Pérez',
-        fecha: new Date(),
-        hora: '10:00',
-        tipoEvento: 'Reunión',
-        observaciones: 'Reunión de planificación del sprint',
-        fechaCompleta: new Date(),
-        color: '#3b82f6'
-      },
-      {
-        id: '2',
-        empleado: 'María García',
-        fecha: new Date(Date.now() + 86400000), // Mañana
-        hora: '14:00',
-        tipoEvento: 'Capacitación',
-        observaciones: 'Curso de nuevas políticas de RRHH',
-        fechaCompleta: new Date(Date.now() + 86400000),
-        color: '#10b981'
-      }
-    ];
-
-    this.empleadosSubject.next(empleadosIniciales);
-    this.tiposEventoSubject.next(tiposEventoIniciales);
-    this.eventosSubject.next(eventosIniciales);
-  }
-
-  // Métodos para estadísticas y reportes
-  obtenerEstadisticasPorEmpleado(): { [empleado: string]: number } {
-    const estadisticas: { [empleado: string]: number } = {};
-
-    this.eventosSubject.value.forEach(evento => {
-      if (estadisticas[evento.empleado]) {
-        estadisticas[evento.empleado]++;
-      } else {
-        estadisticas[evento.empleado] = 1;
-      }
+      // Por departamento
+      const depto = evento.nombreDepartamento;
+      stats.eventosPorDepartamento[depto] = (stats.eventosPorDepartamento[depto] || 0) + 1;
     });
 
-    return estadisticas;
+    return stats;
   }
 
-  obtenerEstadisticasPorTipo(): { [tipo: string]: number } {
-    const estadisticas: { [tipo: string]: number } = {};
-
-    this.eventosSubject.value.forEach(evento => {
-      if (estadisticas[evento.tipoEvento]) {
-        estadisticas[evento.tipoEvento]++;
-      } else {
-        estadisticas[evento.tipoEvento] = 1;
-      }
-    });
-
-    return estadisticas;
+  /**
+   * Limpia el cache de eventos
+   */
+  limpiarCache(): void {
+    this.eventosSubject.next([]);
   }
 }

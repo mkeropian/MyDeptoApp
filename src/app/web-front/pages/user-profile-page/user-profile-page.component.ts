@@ -29,17 +29,13 @@ export class UserProfilePageComponent {
   open(): void {
     this.isOpen.set(true);
 
-    // Debug: ver qué datos tenemos
-    // console.log('👤 Usuario actual al abrir modal:', this.currentUser());
-
     // Refrescar el perfil para asegurar que tenemos todos los datos
     this.authService.getProfile().subscribe({
       next: (response) => {
-        // console.log('✅ Perfil actualizado:', response);
-        // console.log('👤 Usuario después de refresh:', this.currentUser());
+        // Perfil actualizado correctamente
       },
       error: (err) => {
-        // console.error('❌ Error al obtener perfil:', err);
+        console.error('Error al obtener perfil:', err);
       }
     });
   }

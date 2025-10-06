@@ -25,6 +25,7 @@ export interface LoginCredentials {
 // Respuesta de perfil completo
 export interface ProfileResponse {
   ok: boolean;
+  // activo?: number;
   usuario?: UserLogin;
   msg?: string;
 }

@@ -104,13 +104,23 @@ export class AuthService {
 
   /**
    * MODIFICADO: Obtiene el perfil completo del usuario con roles Y permisos
+   * PRESERVA el valor de 'activo' si no viene en la respuesta
    */
   getProfile(): Observable<ProfileResponse> {
     return this.http.get<ProfileResponse>(`${baseUrl}/auth/profile`)
       .pipe(
         tap((resp) => {
           if (resp.ok && resp.usuario) {
-            this._user.set(resp.usuario);
+            // Obtener el usuario actual para preservar 'activo'
+            const currentUser = this._user();
+
+            // Crear el usuario actualizado, preservando 'activo' si no viene del backend
+            const updatedUser: UserLogin = {
+              ...resp.usuario,
+              activo: resp.usuario.activo !== undefined ? resp.usuario.activo : (currentUser?.activo ?? 1)
+            };
+
+            this._user.set(updatedUser);
 
             // NUEVO: Guardar permisos
             this._permisos.set(resp.usuario.permisos || []);
