@@ -40,35 +40,6 @@
   @apply bg-indigo-200 shadow-sm;
 }
 
-/* Estilos para diferentes tipos de eventos */
-.evento-reunion {
-  @apply bg-blue-100 border-blue-500;
-}
-
-.evento-capacitacion {
-  @apply bg-green-100 border-green-500;
-}
-
-.evento-entrevista {
-  @apply bg-purple-100 border-purple-500;
-}
-
-.evento-equipo {
-  @apply bg-orange-100 border-orange-500;
-}
-
-.evento-vacaciones {
-  @apply bg-yellow-100 border-yellow-500;
-}
-
-.evento-licencia {
-  @apply bg-red-100 border-red-500;
-}
-
-.evento-otro {
-  @apply bg-gray-100 border-gray-500;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .calendario-empleados {
@@ -197,4 +168,229 @@
 
 .eventos-multiple::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* Estilos específicos para la vista diaria con horarios */
+.vista-diaria-grid {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 0;
+}
+
+.horarios-columna {
+  border-right: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.hora-marca {
+  height: 60px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding-right: 8px;
+  padding-top: 4px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.eventos-columna {
+  position: relative;
+  background-color: #ffffff;
+}
+
+.evento-card-diaria {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  background: white;
+  border-left: 4px solid;
+  border-radius: 0 4px 4px 0;
+  padding: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.evento-card-diaria:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  transform: translateX(-2px);
+}
+
+.evento-card-diaria.limpieza {
+  border-left-color: #6366f1;
+}
+
+.evento-card-diaria.mantenimiento {
+  border-left-color: #8b5cf6;
+}
+
+/* Línea de hora actual en vista diaria */
+.hora-actual-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #ef4444;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.hora-actual-line::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  background-color: #ef4444;
+  border-radius: 50%;
+}
+
+/* Estilos para tarjetas de eventos en vistas semanal y mensual */
+.evento-card {
+  @apply border-l-4 bg-indigo-50;
+  transition: all 0.2s ease;
+}
+
+.evento-card:hover {
+  @apply shadow-md bg-indigo-100;
+  transform: translateY(-1px);
+}
+
+.evento-horario {
+  @apply text-indigo-600 font-medium;
+  font-size: 0.7rem;
+}
+
+/* Texto truncado con elipsis */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Estilos para inputs de hora */
+input[type="time"] {
+  @apply px-3 py-2;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(46%) sepia(91%) saturate(2347%) hue-rotate(224deg) brightness(94%) contrast(93%);
+  cursor: pointer;
+}
+
+/* Mejoras para el scroll en vista diaria */
+.vista-diaria-scroll {
+  overflow-y: auto;
+  max-height: calc(100vh - 300px);
+}
+
+.vista-diaria-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.vista-diaria-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.vista-diaria-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.vista-diaria-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animación suave para cambios de vista */
+.fade-enter {
+  opacity: 0;
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.fade-leave {
+  opacity: 1;
+}
+
+.fade-leave-active {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Estilos para overlay de eventos superpuestos en vista diaria */
+.evento-overlay {
+  position: relative;
+}
+
+.evento-overlay::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.3));
+  pointer-events: none;
+}
+
+/* Indicador visual para eventos que se salen del horario visible */
+.evento-overflow-indicator {
+  position: absolute;
+  right: 8px;
+  top: 4px;
+  width: 8px;
+  height: 8px;
+  background-color: #f59e0b;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Mejoras para dispositivos táctiles */
+@media (hover: none) {
+  .evento-card-diaria:hover {
+    transform: none;
+  }
+
+  .evento-card:hover {
+    transform: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .calendario-empleados {
+    padding: 0;
+  }
+
+  .modal-enter,
+  .modal-leave,
+  button {
+    display: none !important;
+  }
+
+  .evento-card-diaria,
+  .evento-card {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+  }
 }

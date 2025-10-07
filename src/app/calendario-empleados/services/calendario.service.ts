@@ -12,22 +12,30 @@ export interface EventoCalendario {
   idDep: number;
   idUser: number;
   fecha: string; // formato YYYY-MM-DD
+  horaInicio: string; // formato HH:MM:SS o HH:MM
+  horaFin: string; // formato HH:MM:SS o HH:MM
   observaciones?: string;
 }
+
 export interface EventoCalendarioExtendido {
   id: number;
   idTipoCalendario: number;
   descripcionTipoCalendario: string;
   idTipoEventoCalendario: number;
   descripcionTipoEventoCalendario: string;
+  duracionMinutos: number;
+  colorTipoEvento: string;
   idDepartamento: number;
   nombreDepartamento: string;
   idUsuario: number;
   codUsuario: string;
   nombreCompletoUsuario: string;
   fecha: string;
+  horaInicio: string;
+  horaFin: string;
   observaciones: string;
 }
+
 export interface TipoCalendario {
   id: number;
   descripcion: string;
@@ -37,6 +45,8 @@ export interface TipoCalendario {
 export interface TipoEventoCalendario {
   id: number;
   descripcion: string;
+  duracionMinutos: number;
+  color: string;
   activo: boolean;
 }
 
@@ -53,7 +63,7 @@ export interface Usuario {
   nombreCompleto: string;
   email: string;
   activo: boolean;
-  roles?: string[];  // AGREGAR ESTO
+  roles?: string[];
 }
 
 export interface FiltrosCalendario {
@@ -66,7 +76,7 @@ export interface FiltrosCalendario {
 export interface UsuarioRol {
   id: number;
   idrol: number;
-  nombre: string;  // nombre del rol
+  nombre: string;
   idUsuario: number;
   usuario: string;
   nombreCompleto: string;
@@ -82,7 +92,6 @@ export class CalendarioService {
   private usuariosUrl = `${environment.baseUrl}/usuarios`;
   private departamentosUrl = `${environment.baseUrl}/departamentos`;
 
-  // BehaviorSubjects para manejo de estado
   private eventosSubject = new BehaviorSubject<EventoCalendarioExtendido[]>([]);
   private cargandoSubject = new BehaviorSubject<boolean>(false);
 
@@ -91,7 +100,6 @@ export class CalendarioService {
 
   constructor(private http: HttpClient) {}
 
-  // Headers con autenticación
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
     return new HttpHeaders({
@@ -102,9 +110,6 @@ export class CalendarioService {
 
   // ==================== EVENTOS ====================
 
-  /**
-   * Obtiene todos los eventos extendidos
-   */
   obtenerEventosExtendidos(): Observable<EventoCalendarioExtendido[]> {
     this.cargandoSubject.next(true);
 
@@ -124,9 +129,6 @@ export class CalendarioService {
     );
   }
 
-  /**
-   * Obtiene eventos por usuario
-   */
   obtenerEventosPorUsuario(idUsuario: number): Observable<EventoCalendarioExtendido[]> {
     return this.http.get<EventoCalendarioExtendido[]>(
       `${this.apiUrl}/byUser/${idUsuario}`,
@@ -139,9 +141,6 @@ export class CalendarioService {
     );
   }
 
-  /**
-   * Obtiene un evento por ID
-   */
   obtenerEventoPorId(id: number): Observable<EventoCalendarioExtendido> {
     return this.http.get<EventoCalendarioExtendido[]>(
       `${this.apiUrl}/${id}`,
@@ -155,9 +154,6 @@ export class CalendarioService {
     );
   }
 
-  /**
-   * Crea un nuevo evento
-   */
   crearEvento(evento: EventoCalendario): Observable<{ id: number }> {
     return this.http.put<{ id: number }>(
       this.apiUrl,
@@ -165,7 +161,6 @@ export class CalendarioService {
       { headers: this.getHeaders() }
     ).pipe(
       tap(() => {
-        // Recargar eventos después de crear
         this.obtenerEventosExtendidos().subscribe();
       }),
       catchError(error => {
@@ -175,9 +170,6 @@ export class CalendarioService {
     );
   }
 
-  /**
-   * Actualiza un evento existente
-   */
   actualizarEvento(id: number, evento: EventoCalendario): Observable<{ id: number }> {
     return this.http.post<{ id: number }>(
       `${this.apiUrl}/${id}`,
@@ -185,7 +177,6 @@ export class CalendarioService {
       { headers: this.getHeaders() }
     ).pipe(
       tap(() => {
-        // Recargar eventos después de actualizar
         this.obtenerEventosExtendidos().subscribe();
       }),
       catchError(error => {
@@ -195,16 +186,12 @@ export class CalendarioService {
     );
   }
 
-  /**
-   * Elimina un evento
-   */
   eliminarEvento(id: number): Observable<{ id: number }> {
     return this.http.delete<{ id: number }>(
       `${this.apiUrl}/${id}`,
       { headers: this.getHeaders() }
     ).pipe(
       tap(() => {
-        // Recargar eventos después de eliminar
         this.obtenerEventosExtendidos().subscribe();
       }),
       catchError(error => {
@@ -214,11 +201,20 @@ export class CalendarioService {
     );
   }
 
+  obtenerTiposEventoCalendario(): Observable<TipoEventoCalendario[]> {
+    return this.http.get<TipoEventoCalendario[]>(
+      `${this.apiUrl}/tipos-evento`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener tipos de evento:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
   // ==================== USUARIOS ====================
 
-  /**
-   * Obtiene todos los usuarios activos
-   */
   obtenerUsuariosActivos(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(
       `${this.usuariosUrl}/allActives`,
@@ -231,9 +227,6 @@ export class CalendarioService {
     );
   }
 
-  /**
-   * Obtiene todos los roles de todos los usuarios
-   */
   obtenerRolesUsuarios(): Observable<UsuarioRol[]> {
     return this.http.get<UsuarioRol[]>(
       `${environment.baseUrl}/roles/getRolUser`,
@@ -248,9 +241,6 @@ export class CalendarioService {
 
   // ==================== DEPARTAMENTOS ====================
 
-  /**
-   * Obtiene todos los departamentos activos
-   */
   obtenerDepartamentosActivos(): Observable<Departamento[]> {
     return this.http.get<Departamento[]>(
       `${this.departamentosUrl}/allActives`,
@@ -265,30 +255,24 @@ export class CalendarioService {
 
   // ==================== FILTROS ====================
 
-  /**
-   * Filtra eventos según criterios
-   */
   filtrarEventos(
     eventos: EventoCalendarioExtendido[],
     filtros: FiltrosCalendario
   ): EventoCalendarioExtendido[] {
     let eventosFiltrados = [...eventos];
 
-    // Filtrar por usuario
     if (filtros.idUsuario) {
       eventosFiltrados = eventosFiltrados.filter(
         evento => Number(evento.idUsuario) === Number(filtros.idUsuario)
       );
     }
 
-    // Filtrar por departamento
     if (filtros.idDepartamento) {
       eventosFiltrados = eventosFiltrados.filter(
         evento => Number(evento.idDepartamento) === Number(filtros.idDepartamento)
       );
     }
 
-    // Filtrar por rango de fechas
     if (filtros.fechaInicio) {
       eventosFiltrados = eventosFiltrados.filter(evento => {
         const fechaEvento = evento.fecha.split('T')[0];
@@ -306,24 +290,22 @@ export class CalendarioService {
     return eventosFiltrados;
   }
 
-  /**
-   * Obtiene eventos para una fecha específica
-   */
   obtenerEventosPorFecha(
     eventos: EventoCalendarioExtendido[],
     fecha: Date
   ): EventoCalendarioExtendido[] {
     const fechaStr = this.formatearFechaParaBackend(fecha);
-    return eventos.filter(evento => {
-      // Extraer solo la parte de fecha (YYYY-MM-DD) del timestamp del backend
+    const eventosDia = eventos.filter(evento => {
       const fechaEvento = evento.fecha.split('T')[0];
       return fechaEvento === fechaStr;
     });
+
+    // Ordenar por hora de inicio
+    return eventosDia.sort((a, b) => {
+      return a.horaInicio.localeCompare(b.horaInicio);
+    });
   }
 
-  /**
-   * Obtiene eventos para un rango de fechas
-   */
   obtenerEventosPorRango(
     eventos: EventoCalendarioExtendido[],
     fechaInicio: Date,
@@ -340,9 +322,6 @@ export class CalendarioService {
 
   // ==================== UTILIDADES ====================
 
-  /**
-   * Formatea fecha para el backend (YYYY-MM-DD)
-   */
   formatearFechaParaBackend(fecha: Date): string {
     const year = fecha.getFullYear();
     const month = String(fecha.getMonth() + 1).padStart(2, '0');
@@ -350,16 +329,18 @@ export class CalendarioService {
     return `${year}-${month}-${day}`;
   }
 
-  /**
-   * Convierte string de fecha del backend a Date
-   */
   convertirFechaDesdeBackend(fechaStr: string): Date {
     return new Date(fechaStr + 'T00:00:00');
   }
 
-  /**
-   * Valida que un evento tenga todos los campos requeridos
-   */
+  formatearHora(hora: string): string {
+    // Convertir HH:MM:SS a HH:MM
+    if (hora && hora.length >= 5) {
+      return hora.substring(0, 5);
+    }
+    return hora;
+  }
+
   validarEvento(evento: Partial<EventoCalendario>): string[] {
     const errores: string[] = [];
 
@@ -383,12 +364,21 @@ export class CalendarioService {
       errores.push('La fecha es requerida');
     }
 
+    if (!evento.horaInicio) {
+      errores.push('La hora de inicio es requerida');
+    }
+
+    if (!evento.horaFin) {
+      errores.push('La hora de fin es requerida');
+    }
+
+    if (evento.horaInicio && evento.horaFin && evento.horaInicio >= evento.horaFin) {
+      errores.push('La hora de fin debe ser posterior a la hora de inicio');
+    }
+
     return errores;
   }
 
-  /**
-   * Obtiene estadísticas de eventos
-   */
   obtenerEstadisticas(eventos: EventoCalendarioExtendido[]): {
     totalEventos: number;
     eventosPorTipo: { [tipo: string]: number };
@@ -403,15 +393,12 @@ export class CalendarioService {
     };
 
     eventos.forEach(evento => {
-      // Por tipo
       const tipo = evento.descripcionTipoEventoCalendario;
       stats.eventosPorTipo[tipo] = (stats.eventosPorTipo[tipo] || 0) + 1;
 
-      // Por usuario
       const usuario = evento.nombreCompletoUsuario;
       stats.eventosPorUsuario[usuario] = (stats.eventosPorUsuario[usuario] || 0) + 1;
 
-      // Por departamento
       const depto = evento.nombreDepartamento;
       stats.eventosPorDepartamento[depto] = (stats.eventosPorDepartamento[depto] || 0) + 1;
     });
@@ -419,9 +406,6 @@ export class CalendarioService {
     return stats;
   }
 
-  /**
-   * Limpia el cache de eventos
-   */
   limpiarCache(): void {
     this.eventosSubject.next([]);
   }

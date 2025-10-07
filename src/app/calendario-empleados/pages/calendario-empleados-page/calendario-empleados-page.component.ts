@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +10,8 @@ import {
   Usuario,
   Departamento,
   FiltrosCalendario,
-  VistaCalendario
+  VistaCalendario,
+  TipoEventoCalendario
 } from '../../services/calendario.service';
 
 @Component({
@@ -23,58 +24,45 @@ import {
 export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  // Datos
   eventos: EventoCalendarioExtendido[] = [];
   eventosFiltrados: EventoCalendarioExtendido[] = [];
   usuarios: Usuario[] = [];
   departamentos: Departamento[] = [];
 
-  // Estados
   cargando = false;
   vistaActual: VistaCalendario = 'mes';
   fechaSeleccionada = new Date();
 
-  // Formularios
   eventoForm: FormGroup;
   filtrosForm: FormGroup;
 
-  // Modales
   mostrarModalEvento = false;
   mostrarModalDetalles = false;
   eventoEditando: EventoCalendarioExtendido | null = null;
 
-  // Tooltip
   tooltipVisible = false;
   tooltipEvento: EventoCalendarioExtendido | null = null;
   tooltipPosicion = { x: 0, y: 0 };
 
-  // Configuración
   diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   meses = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ];
 
-  // Datos para selects
+  // Horarios para vista diaria
+  horasDia: string[] = [];
+
   tiposCalendario = [
-    { id: 1, descripcion: 'Administrativo' },
-    { id: 2, descripcion: 'Operativo' },
-    { id: 3, descripcion: 'Mantenimiento' }
+    { id: 6, descripcion: 'General' }
   ];
 
-  tiposEvento = [
-    { id: 1, descripcion: 'Reunión' },
-    { id: 2, descripcion: 'Capacitación' },
-    { id: 3, descripcion: 'Entrevista' },
-    { id: 4, descripcion: 'Evento de Equipo' },
-    { id: 5, descripcion: 'Vacaciones' },
-    { id: 6, descripcion: 'Licencia Médica' },
-    { id: 7, descripcion: 'Otro' }
-  ];
+  tiposEvento: TipoEventoCalendario[] = [];
 
   constructor(
     private fb: FormBuilder,
-    public calendarioService: CalendarioService  // IMPORTANTE: public para usar en template
+    public calendarioService: CalendarioService,
+    private cdr: ChangeDetectorRef
   ) {
     this.eventoForm = this.fb.group({
       idTipoCalendario: ['', Validators.required],
@@ -82,6 +70,8 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       idDep: ['', Validators.required],
       idUser: ['', Validators.required],
       fecha: ['', Validators.required],
+      horaInicio: ['', Validators.required],
+      horaFin: ['', Validators.required],
       observaciones: ['']
     });
 
@@ -89,6 +79,11 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       idUsuario: [''],
       idDepartamento: ['']
     });
+
+    // Generar horas del día (00:00 a 23:00)
+    for (let i = 0; i < 24; i++) {
+      this.horasDia.push(`${String(i).padStart(2, '0')}:00`);
+    }
   }
 
   ngOnInit(): void {
@@ -105,48 +100,44 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   // ==================== CARGA DE DATOS ====================
 
   cargarDatos(): void {
-  this.cargando = true;
+    this.cargando = true;
 
-  // Cargar eventos
-  this.calendarioService.obtenerEventosExtendidos()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: () => {
-        this.cargando = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar eventos:', error);
-        this.cargando = false;
-        this.mostrarNotificacion('Error al cargar eventos', 'error');
-      }
-    });
+    this.calendarioService.obtenerEventosExtendidos()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.cargando = false;
+        },
+        error: (error) => {
+          console.error('Error al cargar eventos:', error);
+          this.cargando = false;
+          this.mostrarNotificacion('Error al cargar eventos', 'error');
+        }
+      });
 
-  // Cargar usuarios y roles en paralelo
-  forkJoin({
-    usuarios: this.calendarioService.obtenerUsuariosActivos(),
-    rolesUsuarios: this.calendarioService.obtenerRolesUsuarios(),
-    departamentos: this.calendarioService.obtenerDepartamentosActivos()
-  })
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: ({ usuarios, rolesUsuarios, departamentos }) => {
-        // Obtener IDs de usuarios con rol "emp"
-        const empleadosIds = rolesUsuarios
-          .filter(ur => ur.nombre === 'emp')
-          .map(ur => ur.idUsuario);
+    forkJoin({
+      usuarios: this.calendarioService.obtenerUsuariosActivos(),
+      rolesUsuarios: this.calendarioService.obtenerRolesUsuarios(),
+      departamentos: this.calendarioService.obtenerDepartamentosActivos(),
+      tiposEvento: this.calendarioService.obtenerTiposEventoCalendario()
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ usuarios, rolesUsuarios, departamentos, tiposEvento }) => {
+          const empleadosIds = rolesUsuarios
+            .filter(ur => ur.nombre === 'emp')
+            .map(ur => ur.idUsuario);
 
-        // Filtrar usuarios que sean empleados
-        this.usuarios = usuarios.filter(u => empleadosIds.includes(u.id));
-        this.departamentos = departamentos;
-
-        // console.log('Usuarios empleados cargados:', this.usuarios.length);
-      },
-      error: (error) => {
-        console.error('Error al cargar datos:', error);
-        this.mostrarNotificacion('Error al cargar datos', 'error');
-      }
-    });
-}
+          this.usuarios = usuarios.filter(u => empleadosIds.includes(u.id));
+          this.departamentos = departamentos;
+          this.tiposEvento = tiposEvento;
+        },
+        error: (error) => {
+          console.error('Error al cargar datos:', error);
+          this.mostrarNotificacion('Error al cargar datos', 'error');
+        }
+      });
+  }
 
   suscribirAEventos(): void {
     this.calendarioService.eventos$
@@ -181,7 +172,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         : undefined
     };
 
-    // Filtrar eventos según vista actual
     const rangoFechas = this.obtenerRangoFechasVista();
     filtros.fechaInicio = this.calendarioService.formatearFechaParaBackend(rangoFechas.inicio);
     filtros.fechaFin = this.calendarioService.formatearFechaParaBackend(rangoFechas.fin);
@@ -231,7 +221,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     }
 
     this.fechaSeleccionada = nuevaFecha;
-    this.ocultarTooltip(); // ✅ AGREGAR ESTA LÍNEA
+    this.ocultarTooltip();
     this.aplicarFiltros();
   }
 
@@ -251,19 +241,19 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     }
 
     this.fechaSeleccionada = nuevaFecha;
-    this.ocultarTooltip(); // ✅ AGREGAR ESTA LÍNEA
+    this.ocultarTooltip();
     this.aplicarFiltros();
   }
 
   irAHoy(): void {
     this.fechaSeleccionada = new Date();
-    this.ocultarTooltip(); // ✅ AGREGAR ESTA LÍNEA
+    this.ocultarTooltip();
     this.aplicarFiltros();
   }
 
   cambiarVista(vista: VistaCalendario): void {
     this.vistaActual = vista;
-    this.ocultarTooltip(); // ✅ AGREGAR ESTA LÍNEA
+    this.ocultarTooltip();
     this.aplicarFiltros();
   }
 
@@ -276,19 +266,16 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     const primerDiaSemana = (primerDia.getDay() === 0) ? 6 : primerDia.getDay() - 1;
     const dias: Date[] = [];
 
-    // Días del mes anterior
     for (let i = primerDiaSemana - 1; i >= 0; i--) {
       const dia = new Date(primerDia);
       dia.setDate(dia.getDate() - (i + 1));
       dias.push(dia);
     }
 
-    // Días del mes actual
     for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
       dias.push(new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth(), dia));
     }
 
-    // Días del mes siguiente
     const diasRestantes = 42 - dias.length;
     for (let dia = 1; dia <= diasRestantes; dia++) {
       dias.push(new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth() + 1, dia));
@@ -352,21 +339,58 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ==================== VISTA DIARIA - POSICIONAMIENTO ====================
+
+  obtenerPosicionEvento(evento: EventoCalendarioExtendido): { top: number; height: number } {
+    const horaInicio = this.convertirHoraAMinutos(evento.horaInicio);
+    const horaFin = this.convertirHoraAMinutos(evento.horaFin);
+
+    // Cada hora tiene 60px de altura
+    const pixelesPorMinuto = 60 / 60; // 1px por minuto
+
+    return {
+      top: horaInicio * pixelesPorMinuto,
+      height: (horaFin - horaInicio) * pixelesPorMinuto
+    };
+  }
+
+  convertirHoraAMinutos(hora: string): number {
+    const [h, m] = hora.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  obtenerEventosEnHora(hora: string): EventoCalendarioExtendido[] {
+    const eventosDelDia = this.obtenerEventosPorFecha(this.fechaSeleccionada);
+    const horaNum = parseInt(hora.split(':')[0]);
+
+    return eventosDelDia.filter(evento => {
+      const horaInicioNum = parseInt(evento.horaInicio.split(':')[0]);
+      const horaFinNum = parseInt(evento.horaFin.split(':')[0]);
+      return horaInicioNum <= horaNum && horaFinNum > horaNum;
+    });
+  }
+
   // ==================== CRUD EVENTOS ====================
 
   abrirModalEvento(fecha?: Date): void {
+    this.ocultarTooltip(); // ✅ Ocultar tooltip antes de abrir modal
     this.eventoEditando = null;
     this.eventoForm.reset();
 
     if (fecha) {
       const fechaStr = this.calendarioService.formatearFechaParaBackend(fecha);
-      this.eventoForm.patchValue({ fecha: fechaStr });
+      this.eventoForm.patchValue({
+        fecha: fechaStr,
+        horaInicio: '09:00',
+        horaFin: '10:00'
+      });
     }
 
     this.mostrarModalEvento = true;
   }
 
   editarEvento(evento: EventoCalendarioExtendido): void {
+    this.ocultarTooltip(); // ✅ Ocultar tooltip antes de editar
     this.eventoEditando = evento;
 
     this.eventoForm.patchValue({
@@ -375,6 +399,8 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       idDep: evento.idDepartamento,
       idUser: evento.idUsuario,
       fecha: evento.fecha,
+      horaInicio: this.calendarioService.formatearHora(evento.horaInicio),
+      horaFin: this.calendarioService.formatearHora(evento.horaFin),
       observaciones: evento.observaciones
     });
 
@@ -388,10 +414,13 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const eventoData: EventoCalendario = this.eventoForm.value;
+    const eventoData: EventoCalendario = {
+      ...this.eventoForm.value,
+      horaInicio: this.eventoForm.value.horaInicio + ':00',
+      horaFin: this.eventoForm.value.horaFin + ':00'
+    };
 
     if (this.eventoEditando) {
-      // Actualizar
       this.calendarioService.actualizarEvento(this.eventoEditando.id, eventoData)
         .subscribe({
           next: () => {
@@ -404,7 +433,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
           }
         });
     } else {
-      // Crear
       this.calendarioService.crearEvento(eventoData)
         .subscribe({
           next: () => {
@@ -438,8 +466,11 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   abrirModalDetalles(evento: EventoCalendarioExtendido): void {
+    this.ocultarTooltip();
     this.eventoEditando = evento;
     this.mostrarModalDetalles = true;
+    this.cdr.detectChanges();
+    console.log('Modal detalles:', this.mostrarModalDetalles, this.eventoEditando);
   }
 
   cerrarModal(): void {
@@ -457,19 +488,19 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
   // ==================== TOOLTIP ====================
 
-mostrarTooltip(evento: EventoCalendarioExtendido, event: MouseEvent): void {
-  this.tooltipEvento = evento;
-  this.tooltipPosicion = {
-    x: event.clientX + 10,
-    y: event.clientY + 10
-  };
-  this.tooltipVisible = true;
-}
+  mostrarTooltip(evento: EventoCalendarioExtendido, event: MouseEvent): void {
+    this.tooltipEvento = evento;
+    this.tooltipPosicion = {
+      x: event.clientX + 10,
+      y: event.clientY + 10
+    };
+    this.tooltipVisible = true;
+  }
 
-ocultarTooltip(): void {
-  this.tooltipVisible = false;
-  this.tooltipEvento = null;
-}
+  ocultarTooltip(): void {
+    this.tooltipVisible = false;
+    this.tooltipEvento = null;
+  }
 
   // ==================== UTILIDADES ====================
 
@@ -485,19 +516,21 @@ ocultarTooltip(): void {
 
   obtenerColorEvento(tipoEvento: string): string {
     const colores: { [key: string]: string } = {
-      'Reunión': 'bg-blue-100 border-blue-500',
-      'Capacitación': 'bg-green-100 border-green-500',
-      'Entrevista': 'bg-purple-100 border-purple-500',
-      'Evento de Equipo': 'bg-orange-100 border-orange-500',
-      'Vacaciones': 'bg-yellow-100 border-yellow-500',
-      'Licencia Médica': 'bg-red-100 border-red-500',
-      'Otro': 'bg-gray-100 border-gray-500'
+      'Limpieza': 'border-indigo-500',
+      'Mantenimiento': 'border-indigo-500'
     };
-    return colores[tipoEvento] || 'bg-indigo-100 border-indigo-500';
+    return colores[tipoEvento] || 'border-indigo-500';
   }
 
   formatearFecha(fecha: string): string {
-    const fechaObj = new Date(fecha + 'T00:00:00');
+    // El backend puede enviar la fecha en formato 'YYYY-MM-DD' o 'YYYY-MM-DDTHH:mm:ss'
+    // Extraemos solo la parte de la fecha
+    const fechaSolo = fecha.split('T')[0];
+    const [year, month, day] = fechaSolo.split('-').map(Number);
+
+    // Crear fecha con año, mes (0-indexed), día
+    const fechaObj = new Date(year, month - 1, day);
+
     return fechaObj.toLocaleDateString('es-ES', {
       weekday: 'long',
       year: 'numeric',
@@ -506,8 +539,11 @@ ocultarTooltip(): void {
     });
   }
 
+  formatearHora(hora: string): string {
+    return this.calendarioService.formatearHora(hora);
+  }
+
   mostrarNotificacion(mensaje: string, tipo: 'success' | 'error' | 'warning' = 'success'): void {
     console.log(`[${tipo.toUpperCase()}] ${mensaje}`);
-    // Aquí podrías integrar ngx-toastr o tu sistema de notificaciones
   }
 }

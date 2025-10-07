@@ -11,6 +11,7 @@ import { UserPageComponent } from "./pages/user-page/user-page.component";
 import { GastosAdminPageComponent } from "./pages/gastos-admin-page/gastos-admin-page.component";
 import { IngresosAdminPageComponent } from "./pages/ingresos-admin-page/ingresos-admin-page.component";
 import { RendicionesAdminPageComponent } from "./pages/rendiciones-admin-page/rendiciones-admin-page.component";
+import { CalendarSettingsPageComponent } from "./pages/settings/calendar-settings-page/calendar-settings-page.component";
 
 
 export const adminRoutes: Routes = [
@@ -49,6 +50,10 @@ export const adminRoutes: Routes = [
       {
         path:'settings-permisos-roles',
         component: PermisosRolesSettingsPageComponent,
+      },
+      {
+        path:'calendar-settings',
+        component: CalendarSettingsPageComponent,
       },
       {
         path: '**',

@@ -109,6 +109,14 @@
                 >... de Permisos
                 </a>
               </li>
+              <li>
+                <a
+                  routerLink="/admin/calendar-settings"
+                  (click)="onMenuItemClick()"
+                  routerLinkActive="active"
+                >... de Calendarios
+                </a>
+              </li>
             }
             @if (tieneUsuarios()) {
               <li>
@@ -152,6 +160,7 @@
           class="mt-1 z-[1] shadow-xl menu dropdown-content bg-base-100 rounded-box w-80"
           role="menu"
         >
+
           <!-- User Info Card -->
           <li role="none" class="p-4 hover:bg-transparent cursor-default">
             <span class="flex items-center gap-3 active:bg-transparent focus:bg-transparent">
@@ -220,10 +229,12 @@
               <span class="font-medium">Cerrar Sesión</span>
             </a>
           </li>
+
         </ul>
       }
     </div>
   </div>
+
 </div>
 
 <!-- Modal de Perfil -->
