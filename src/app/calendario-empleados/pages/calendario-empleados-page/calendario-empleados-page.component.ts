@@ -11,8 +11,10 @@ import {
   Departamento,
   FiltrosCalendario,
   VistaCalendario,
-  TipoEventoCalendario
+  TipoEventoCalendario,
+  TipoCalendario
 } from '../../services/calendario.service';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-calendario-empleados-page',
@@ -50,19 +52,22 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ];
 
-  // Horarios para vista diaria
   horasDia: string[] = [];
 
-  tiposCalendario = [
-    { id: 6, descripcion: 'General' }
-  ];
+  tiposCalendario: TipoCalendario[] = [];
 
   tiposEvento: TipoEventoCalendario[] = [];
+
+  // ✅ NUEVAS PROPIEDADES PARA CONTROL DE PERMISOS
+  esEmpleado = false;
+  usuarioLogueadoId: number | null = null;
+  tiposCalendarioPermitidos: number[] = [];
 
   constructor(
     private fb: FormBuilder,
     public calendarioService: CalendarioService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService  // ✅ Inyectar AuthService
   ) {
     this.eventoForm = this.fb.group({
       idTipoCalendario: ['', Validators.required],
@@ -77,16 +82,17 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
     this.filtrosForm = this.fb.group({
       idUsuario: [''],
-      idDepartamento: ['']
+      idDepartamento: [''],
+      idTipoCalendario: ['']
     });
 
-    // Generar horas del día (00:00 a 23:00)
     for (let i = 0; i < 24; i++) {
       this.horasDia.push(`${String(i).padStart(2, '0')}:00`);
     }
   }
 
   ngOnInit(): void {
+    this.verificarRolUsuario();  // ✅ NUEVO
     this.cargarDatos();
     this.suscribirAEventos();
     this.suscribirAFiltros();
@@ -97,7 +103,60 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ==================== CARGA DE DATOS ====================
+  // ==================== ✅ VERIFICACIÓN DE ROL Y CALENDARIOS ====================
+
+  verificarRolUsuario(): void {
+    const user = this.authService.user();
+
+    if (user) {
+      this.usuarioLogueadoId = user.id;
+
+      // Verificar si tiene rol "emp"
+      this.esEmpleado = user.roles?.includes('emp') ?? false;
+
+      // ✅ Obtener los tipos de calendario permitidos
+      this.calendarioService.obtenerCalendariosPorUsuario(user.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (calendarios) => {
+            // Extraer los IDs de tipo de calendario
+            this.tiposCalendarioPermitidos = calendarios.map(cal => cal.idCalendar);
+
+            // ✅ Mapear a la estructura que espera el select
+            this.tiposCalendario = calendarios.map(cal => ({
+              id: cal.idCalendar,
+              descripcion: cal.descCalendar,
+              activo: true
+            }));
+
+            console.log('Tipos de calendario permitidos:', this.tiposCalendarioPermitidos);
+            console.log('Tipos de calendario para select:', this.tiposCalendario);
+
+            // Si es empleado, preseleccionar y bloquear su usuario en el filtro
+            if (this.esEmpleado && this.usuarioLogueadoId !== null) { // ✅ AGREGAR VALIDACIÓN
+              this.filtrosForm.patchValue({
+                idUsuario: this.usuarioLogueadoId.toString()
+              });
+
+              // Deshabilitar el campo de usuario para empleados
+              this.filtrosForm.get('idUsuario')?.disable();
+            }
+
+            // Aplicar filtros iniciales con los calendarios permitidos
+            this.aplicarFiltros();
+          },
+          error: (error) => {
+            console.error('Error al obtener calendarios del usuario:', error);
+            this.tiposCalendarioPermitidos = [];
+            this.tiposCalendario = [];
+            this.aplicarFiltros();
+          }
+        });
+    }
+  }
+
+
+// ==================== CARGA DE DATOS ====================
 
   cargarDatos(): void {
     this.cargando = true;
@@ -144,7 +203,10 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(eventos => {
         this.eventos = eventos;
-        this.aplicarFiltros();
+        // Solo aplicar filtros si ya se cargaron los tipos de calendario
+        if (this.tiposCalendarioPermitidos.length > 0 || !this.usuarioLogueadoId) {
+          this.aplicarFiltros();
+        }
       });
 
     this.calendarioService.cargando$
@@ -163,10 +225,27 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   aplicarFiltros(): void {
+    // Obtener el filtro de tipo de calendario seleccionado por el usuario
+    const tipoCalendarioSeleccionado = this.filtrosForm.get('idTipoCalendario')?.value
+      ? Number(this.filtrosForm.get('idTipoCalendario')?.value)
+      : null;
+
     const filtros: FiltrosCalendario = {
-      idUsuario: this.filtrosForm.get('idUsuario')?.value
-        ? Number(this.filtrosForm.get('idUsuario')?.value)
-        : undefined,
+      // ✅ MODIFICADO - Si el usuario seleccionó un tipo específico, usar ese
+      // Si no, usar todos los permitidos
+      idsTipoCalendario: tipoCalendarioSeleccionado
+        ? [tipoCalendarioSeleccionado]  // Solo el seleccionado
+        : (this.tiposCalendarioPermitidos.length > 0
+            ? this.tiposCalendarioPermitidos  // Todos los permitidos
+            : undefined),
+
+      // Si es empleado, forzar su ID incluso si el campo está deshabilitado
+      idUsuario: this.esEmpleado && this.usuarioLogueadoId
+        ? this.usuarioLogueadoId
+        : (this.filtrosForm.get('idUsuario')?.value
+          ? Number(this.filtrosForm.get('idUsuario')?.value)
+          : undefined),
+
       idDepartamento: this.filtrosForm.get('idDepartamento')?.value
         ? Number(this.filtrosForm.get('idDepartamento')?.value)
         : undefined
@@ -177,13 +256,25 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     filtros.fechaFin = this.calendarioService.formatearFechaParaBackend(rangoFechas.fin);
 
     this.eventosFiltrados = this.calendarioService.filtrarEventos(this.eventos, filtros);
+
+    console.log('Eventos después de filtrar:', this.eventosFiltrados.length);
   }
 
   limpiarFiltros(): void {
-    this.filtrosForm.reset({
-      idUsuario: '',
-      idDepartamento: ''
-    });
+    if (this.esEmpleado) {
+      // Para empleados, solo limpiar el departamento y tipo de calendario
+      this.filtrosForm.patchValue({
+        idDepartamento: '',
+        idTipoCalendario: ''  // ✅ AGREGAR
+      });
+    } else {
+      // Para otros roles, limpiar todo
+      this.filtrosForm.reset({
+        idUsuario: '',
+        idDepartamento: '',
+        idTipoCalendario: ''  // ✅ AGREGAR
+      });
+    }
   }
 
   // ==================== NAVEGACIÓN DEL CALENDARIO ====================
@@ -345,11 +436,10 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     const horaInicio = this.convertirHoraAMinutos(evento.horaInicio);
     const horaFin = this.convertirHoraAMinutos(evento.horaFin);
 
-    // Cada hora tiene 60px de altura, y empezamos desde el padding-top (48px)
-    const pixelesPorMinuto = 60 / 60; // 1px por minuto
+    const pixelesPorMinuto = 60 / 60;
 
     return {
-      top: 48 + (horaInicio * pixelesPorMinuto), // Agregamos 48px del padding-top
+      top: 48 + (horaInicio * pixelesPorMinuto),
       height: (horaFin - horaInicio) * pixelesPorMinuto
     };
   }
@@ -370,10 +460,18 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ==================== CRUD EVENTOS ====================
 
+// ==================== ✅ CRUD EVENTOS - MODIFICADOS CON RESTRICCIONES ====================
+
+  // ✅ MODIFICADO - Bloquea creación para empleados
   abrirModalEvento(fecha?: Date): void {
-    this.ocultarTooltip(); // ✅ Ocultar tooltip antes de abrir modal
+    // ✅ Si es empleado, NO permitir abrir el modal de creación
+    if (this.esEmpleado) {
+      this.mostrarNotificacion('No tienes permisos para crear eventos', 'warning');
+      return;
+    }
+
+    this.ocultarTooltip();
     this.eventoEditando = null;
     this.eventoForm.reset();
 
@@ -389,8 +487,15 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.mostrarModalEvento = true;
   }
 
+  // ✅ MODIFICADO - Bloquea edición para empleados
   editarEvento(evento: EventoCalendarioExtendido): void {
-    this.ocultarTooltip(); // ✅ Ocultar tooltip antes de editar
+    // ✅ Si es empleado, NO permitir editar eventos
+    if (this.esEmpleado) {
+      this.mostrarNotificacion('No tienes permisos para editar eventos', 'warning');
+      return;
+    }
+
+    this.ocultarTooltip();
     this.eventoEditando = evento;
 
     this.eventoForm.patchValue({
@@ -447,7 +552,14 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ✅ MODIFICADO - Bloquea eliminación para empleados
   eliminarEvento(id: number): void {
+    // ✅ Si es empleado, NO permitir eliminar eventos
+    if (this.esEmpleado) {
+      this.mostrarNotificacion('No tienes permisos para eliminar eventos', 'warning');
+      return;
+    }
+
     if (!confirm('¿Estás seguro de que deseas eliminar este evento?')) {
       return;
     }
@@ -474,7 +586,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   cerrarModal(): void {
-    this.ocultarTooltip(); // Agregar esta línea
+    this.ocultarTooltip();
     this.mostrarModalEvento = false;
     this.mostrarModalDetalles = false;
     this.eventoEditando = null;
@@ -524,12 +636,8 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   formatearFecha(fecha: string): string {
-    // El backend puede enviar la fecha en formato 'YYYY-MM-DD' o 'YYYY-MM-DDTHH:mm:ss'
-    // Extraemos solo la parte de la fecha
     const fechaSolo = fecha.split('T')[0];
     const [year, month, day] = fechaSolo.split('-').map(Number);
-
-    // Crear fecha con año, mes (0-indexed), día
     const fechaObj = new Date(year, month - 1, day);
 
     return fechaObj.toLocaleDateString('es-ES', {

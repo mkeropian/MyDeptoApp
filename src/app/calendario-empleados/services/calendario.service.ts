@@ -71,6 +71,7 @@ export interface FiltrosCalendario {
   idDepartamento?: number;
   fechaInicio?: string;
   fechaFin?: string;
+  idsTipoCalendario?: number[];
 }
 
 export interface UsuarioRol {
@@ -80,6 +81,15 @@ export interface UsuarioRol {
   idUsuario: number;
   usuario: string;
   nombreCompleto: string;
+}
+
+export interface CalendarioUsuario {
+  id: number;
+  idCalendar: number;
+  descCalendar: string;
+  idUser: number;
+  codUser: string;
+  nameUser: string;
 }
 
 export type VistaCalendario = 'dia' | 'semana' | 'mes';
@@ -239,6 +249,20 @@ export class CalendarioService {
     );
   }
 
+  // ==================== CALENDARIOS POR USUARIO ====================
+
+  obtenerCalendariosPorUsuario(idUsuario: number): Observable<CalendarioUsuario[]> {
+    return this.http.get<CalendarioUsuario[]>(
+      `${this.apiUrl}/calendariobyUser/${idUsuario}`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener calendarios por usuario:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
   // ==================== DEPARTAMENTOS ====================
 
   obtenerDepartamentosActivos(): Observable<Departamento[]> {
@@ -253,13 +277,21 @@ export class CalendarioService {
     );
   }
 
-  // ==================== FILTROS ====================
+
+// ==================== FILTROS ====================
 
   filtrarEventos(
     eventos: EventoCalendarioExtendido[],
     filtros: FiltrosCalendario
   ): EventoCalendarioExtendido[] {
     let eventosFiltrados = [...eventos];
+
+    // ✅ NUEVO - Filtrar por tipos de calendario permitidos
+    if (filtros.idsTipoCalendario && filtros.idsTipoCalendario.length > 0) {
+      eventosFiltrados = eventosFiltrados.filter(
+        evento => filtros.idsTipoCalendario!.includes(evento.idTipoCalendario)
+      );
+    }
 
     if (filtros.idUsuario) {
       eventosFiltrados = eventosFiltrados.filter(
