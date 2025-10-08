@@ -345,11 +345,11 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     const horaInicio = this.convertirHoraAMinutos(evento.horaInicio);
     const horaFin = this.convertirHoraAMinutos(evento.horaFin);
 
-    // Cada hora tiene 60px de altura
+    // Cada hora tiene 60px de altura, y empezamos desde el padding-top (48px)
     const pixelesPorMinuto = 60 / 60; // 1px por minuto
 
     return {
-      top: horaInicio * pixelesPorMinuto,
+      top: 48 + (horaInicio * pixelesPorMinuto), // Agregamos 48px del padding-top
       height: (horaFin - horaInicio) * pixelesPorMinuto
     };
   }
@@ -467,13 +467,14 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
   abrirModalDetalles(evento: EventoCalendarioExtendido): void {
     this.ocultarTooltip();
+    this.mostrarModalEvento = false;
     this.eventoEditando = evento;
     this.mostrarModalDetalles = true;
     this.cdr.detectChanges();
-    console.log('Modal detalles:', this.mostrarModalDetalles, this.eventoEditando);
   }
 
   cerrarModal(): void {
+    this.ocultarTooltip(); // Agregar esta línea
     this.mostrarModalEvento = false;
     this.mostrarModalDetalles = false;
     this.eventoEditando = null;

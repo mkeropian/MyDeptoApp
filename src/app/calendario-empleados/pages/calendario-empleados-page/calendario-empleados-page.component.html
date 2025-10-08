@@ -61,89 +61,103 @@
 
     <!-- CONTENIDO -->
     <div class="shadow ring-1 ring-black ring-opacity-5 lg:flex lg:flex-auto lg:flex-col bg-white rounded-b-lg">
-<!-- VISTA DIARIA -->
+
+      <!-- VISTA DIARIA -->
       <div *ngIf="vistaActual === 'dia'" class="p-6">
         <div class="flex gap-4">
+          <!-- Columna de horas -->
           <div class="w-20 flex-shrink-0">
-            <div class="sticky top-0 bg-white z-10 pb-2">
-              <div class="h-12"></div>
-            </div>
-            <div *ngFor="let hora of horasDia" class="h-[60px] border-b border-gray-200 text-right pr-2 text-xs text-gray-500 font-medium">
+            <div class="h-12"></div>
+            <div *ngFor="let hora of horasDia" class="h-[60px] border-b border-gray-200 text-right pr-2 text-xs text-gray-500 font-medium flex items-start pt-0">
               {{ hora }}
             </div>
           </div>
 
-          <div class="flex-1 relative">
-            <div class="absolute inset-0">
+          <!-- Área de eventos -->
+          <div class="flex-1 relative cursor-pointer" (click)="abrirModalEvento(fechaSeleccionada)">
+            <!-- Líneas de fondo -->
+            <div class="absolute inset-0 top-12">
               <div *ngFor="let hora of horasDia" class="h-[60px] border-b border-gray-200"></div>
             </div>
 
-            <div class="relative" style="height: 1440px;">
-              <div *ngFor="let evento of obtenerEventosPorFecha(fechaSeleccionada)"
+            <!-- Contenedor de eventos -->
+            <div class="relative" style="height: 1452px; padding-top: 48px;">
+            <div *ngFor="let evento of obtenerEventosPorFecha(fechaSeleccionada)"
                    class="absolute left-0 right-0 mx-1 bg-white border-l-4 p-2 rounded-r shadow-sm hover:shadow-md hover:z-10 transition-all cursor-pointer overflow-hidden"
                    [style.top.px]="obtenerPosicionEvento(evento).top"
                    [style.height.px]="obtenerPosicionEvento(evento).height"
                    [style.min-height.px]="30"
                    [class.border-indigo-500]="evento.descripcionTipoEventoCalendario === 'Limpieza'"
-                   (click)="abrirModalDetalles(evento)">
-                <div class="flex flex-col h-full">
+                   (click)="$event.stopPropagation(); abrirModalDetalles(evento)">
+                <div class="flex flex-col h-full justify-between">
                   <div class="flex items-start justify-between gap-2">
                     <div class="flex-1 min-w-0">
-                      <div class="font-semibold text-sm text-gray-900 truncate">{{ evento.nombreCompletoUsuario }}</div>
-                      <div class="text-xs text-gray-600 truncate">{{ evento.nombreDepartamento }}</div>
-                      <div class="text-xs font-medium text-indigo-600 mt-1">
-                        {{ formatearHora(evento.horaInicio) }} - {{ formatearHora(evento.horaFin) }}
-                      </div>
+                      <div class="font-semibold text-xs text-gray-900 truncate leading-tight">{{ evento.nombreCompletoUsuario }}</div>
+                      <div class="text-[10px] text-gray-600 truncate leading-tight mt-0.5">{{ evento.nombreDepartamento }}</div>
                     </div>
-                    <button type="button" (click)="$event.stopPropagation(); editarEvento(evento)" class="text-indigo-600 hover:text-indigo-900 flex-shrink-0" aria-label="Editar evento" title="Editar este evento">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    <button type="button" (click)="$event.stopPropagation(); editarEvento(evento)" class="text-indigo-600 hover:text-indigo-900 flex-shrink-0 -mt-0.5" aria-label="Editar evento" title="Editar este evento">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     </button>
                   </div>
-                  <div class="text-xs text-gray-500 mt-1 truncate">{{ evento.descripcionTipoEventoCalendario }}</div>
-                  <div *ngIf="evento.observaciones && obtenerPosicionEvento(evento).height > 80" class="text-xs text-gray-700 mt-1 line-clamp-2">{{ evento.observaciones }}</div>
+                  <div class="text-[10px] font-medium text-indigo-600 leading-tight">
+                    {{ formatearHora(evento.horaInicio) }} - {{ formatearHora(evento.horaFin) }}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div *ngIf="obtenerEventosPorFecha(fechaSeleccionada).length === 0" class="absolute inset-0 flex items-center justify-center">
+            <!-- Mensaje sin eventos -->
+            <div *ngIf="obtenerEventosPorFecha(fechaSeleccionada).length === 0" class="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div class="text-center text-gray-500">
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 <p class="mt-2">No hay eventos programados</p>
-                <button type="button" (click)="abrirModalEvento(fechaSeleccionada)" class="mt-4 text-indigo-600 hover:text-indigo-500 text-sm font-medium" aria-label="Agregar evento para este día" title="Agregar nuevo evento">Agregar evento</button>
+                <button type="button" (click)="$event.stopPropagation(); abrirModalEvento(fechaSeleccionada)" class="mt-4 text-indigo-600 hover:text-indigo-500 text-sm font-medium pointer-events-auto" aria-label="Agregar evento para este día" title="Agregar nuevo evento">Agregar evento</button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-<!-- VISTA SEMANAL -->
-      <div *ngIf="vistaActual === 'semana'" class="overflow-x-auto">
+      <!-- VISTA SEMANAL -->
+      <div *ngIf="vistaActual === 'semana'" class="overflow-x-auto p-4">
         <div class="min-w-full">
+          <!-- Encabezado de días -->
           <div class="grid grid-cols-7 gap-px bg-gray-200 border-b border-gray-300">
             <div *ngFor="let dia of diasDeLaSemana" class="bg-white py-3 text-center">
               <div class="text-sm font-semibold text-gray-900">{{ diasSemana[dia.getDay() === 0 ? 6 : dia.getDay() - 1] }}</div>
               <div [class]="esHoy(dia) ? 'mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white mx-auto' : 'mt-1 text-gray-900 mx-auto'">{{ dia.getDate() }}</div>
             </div>
           </div>
+
+          <!-- Grid de eventos -->
           <div class="grid grid-cols-7 gap-px bg-gray-200">
-            <div *ngFor="let dia of diasDeLaSemana" class="bg-white min-h-[200px] p-2" (mouseleave)="ocultarTooltip()">
-              <div *ngFor="let evento of obtenerEventosPorFecha(dia)"
-                   class="mb-2 p-2 rounded text-xs cursor-pointer hover:shadow-md hover:bg-gray-100 transition-all border-l-4 bg-indigo-50"
-                   [ngClass]="obtenerColorEvento(evento.descripcionTipoEventoCalendario)"
-                   (click)="abrirModalDetalles(evento)"
-                   (mouseenter)="mostrarTooltip(evento, $event)">
-                <div class="font-semibold text-gray-900 truncate">{{ evento.nombreCompletoUsuario }}</div>
-                <div class="text-indigo-600 font-medium mt-1">{{ formatearHora(evento.horaInicio) }} - {{ formatearHora(evento.horaFin) }}</div>
-                <div class="text-gray-600 truncate mt-1">{{ evento.descripcionTipoEventoCalendario }}</div>
-                <div class="text-gray-500 truncate">{{ evento.nombreDepartamento }}</div>
+            <div *ngFor="let dia of diasDeLaSemana"
+                 class="bg-white min-h-[200px] p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                 (click)="abrirModalEvento(dia)">
+              <!-- Eventos del día -->
+              <ng-container *ngFor="let evento of obtenerEventosPorFecha(dia)">
+                <div class="mb-2 p-2 rounded text-xs cursor-pointer hover:shadow-md hover:bg-indigo-100 transition-all border-l-4 bg-indigo-50 border-indigo-500"
+                     (click)="$event.stopPropagation(); abrirModalDetalles(evento)">
+                  <div class="font-semibold text-gray-900 truncate">{{ evento.nombreCompletoUsuario }}</div>
+                  <div class="text-indigo-600 font-medium mt-1">{{ formatearHora(evento.horaInicio) }} - {{ formatearHora(evento.horaFin) }}</div>
+                  <div class="text-gray-600 truncate mt-1">{{ evento.descripcionTipoEventoCalendario }}</div>
+                  <div class="text-gray-500 truncate">{{ evento.nombreDepartamento }}</div>
+                </div>
+              </ng-container>
+
+              <!-- Mensaje si no hay eventos -->
+              <div *ngIf="obtenerEventosPorFecha(dia).length === 0" class="text-gray-400 text-xs text-center mt-4 pointer-events-none">
+                <div class="text-gray-500 mb-2">{{ dia.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) }}</div>
+                <div>Sin eventos</div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-<!-- VISTA MENSUAL -->
+      <!-- VISTA MENSUAL -->
       <div *ngIf="vistaActual === 'mes'">
+
         <div class="grid grid-cols-7 gap-px border-b border-gray-300 bg-gray-200 text-center text-xs font-semibold leading-6 text-gray-700 lg:flex-none">
           <div *ngFor="let dia of diasSemana" class="flex justify-center bg-white py-2">
             <span>{{ dia.charAt(0) }}</span>
@@ -161,14 +175,11 @@
                 <li *ngFor="let evento of obtenerEventosPorFecha(dia); let i = index" [hidden]="i >= 3">
                   <button type="button"
                           (click)="$event.stopPropagation(); abrirModalDetalles(evento)"
-                          (mouseenter)="mostrarTooltip(evento, $event)"
-                          class="w-full text-left text-xs p-1.5 rounded cursor-pointer hover:shadow-md transition-all border-l-4 bg-indigo-50"
-                          [ngClass]="obtenerColorEvento(evento.descripcionTipoEventoCalendario)"
-                          [attr.aria-label]="'Ver detalles del evento de ' + evento.nombreCompletoUsuario + ' a las ' + formatearHora(evento.horaInicio)"
-                          [attr.title]="evento.nombreCompletoUsuario + ' - ' + evento.descripcionTipoEventoCalendario + ' - ' + formatearHora(evento.horaInicio)">
-                    <div class="font-medium text-indigo-600 text-[10px]">{{ formatearHora(evento.horaInicio) }} - {{ formatearHora(evento.horaFin) }}</div>
-                    <div class="truncate text-gray-900 leading-tight font-medium">{{ evento.nombreCompletoUsuario }}</div>
-                    <div class="text-gray-600 truncate leading-tight">{{ evento.descripcionTipoEventoCalendario }}</div>
+                          class="w-full text-left text-xs p-1.5 rounded cursor-pointer hover:shadow-md transition-all border-l-4 bg-indigo-50 hover:bg-indigo-100"
+                          [ngClass]="obtenerColorEvento(evento.descripcionTipoEventoCalendario)">
+                    <div class="font-medium text-indigo-600 text-[10px] mb-0.5">{{ formatearHora(evento.horaInicio) }} - {{ formatearHora(evento.horaFin) }}</div>
+                    <div class="truncate text-gray-900 leading-tight font-medium text-[11px]">{{ evento.nombreCompletoUsuario }} - Tarea: {{ evento.descripcionTipoEventoCalendario }}</div>
+                    <div class="text-gray-600 truncate leading-tight text-[10px] mt-0.5">{{ evento.nombreDepartamento }}</div>
                   </button>
                 </li>
                 <li *ngIf="obtenerEventosPorFecha(dia).length > 3" class="text-gray-500 text-xs ml-1">+{{ obtenerEventosPorFecha(dia).length - 3 }} más</li>
@@ -177,7 +188,7 @@
           </div>
 
 
-<div class="isolate grid w-full grid-cols-7 grid-rows-6 gap-px lg:hidden">
+          <div class="isolate grid w-full grid-cols-7 grid-rows-6 gap-px lg:hidden">
             <button *ngFor="let dia of diasDelMes"
                     type="button"
                     [class]="'flex h-14 flex-col px-3 py-2 hover:bg-gray-100 transition-colors ' + (esMesActual(dia) ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-500') + (esHoy(dia) ? ' font-semibold text-indigo-600' : '')"
@@ -193,6 +204,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -274,8 +286,9 @@
     </div>
   </div>
 
+
 <!-- MODAL DETALLES -->
-  <div *ngIf="mostrarModalDetalles && eventoEditando" class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true">
+  <div *ngIf="mostrarModalDetalles && eventoEditando" class="fixed inset-0 z-[80] overflow-y-auto" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModal()" aria-label="Cerrar detalles del evento" role="button" tabindex="0" (keydown.enter)="cerrarModal()" (keydown.space)="cerrarModal()"></div>
       <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
@@ -322,8 +335,12 @@
     </div>
   </div>
 
-<!-- TOOLTIP -->
-  <div *ngIf="tooltipVisible && tooltipEvento" class="fixed z-50 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg max-w-xs pointer-events-none" [style.left.px]="tooltipPosicion.x" [style.top.px]="tooltipPosicion.y">
+  <!-- TOOLTIP -->
+  <div *ngIf="tooltipVisible && tooltipEvento"
+       class="fixed z-50 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg max-w-xs"
+       style="pointer-events: none;"
+       [style.left.px]="tooltipPosicion.x"
+       [style.top.px]="tooltipPosicion.y">
     <div class="font-semibold mb-1">{{ tooltipEvento.nombreCompletoUsuario }}</div>
     <div class="text-gray-300 mb-1">{{ formatearFecha(tooltipEvento.fecha) }}</div>
     <div class="text-indigo-300 font-medium mb-1">{{ formatearHora(tooltipEvento.horaInicio) }} - {{ formatearHora(tooltipEvento.horaFin) }}</div>
