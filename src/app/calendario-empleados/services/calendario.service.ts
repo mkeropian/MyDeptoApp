@@ -441,4 +441,122 @@ export class CalendarioService {
   limpiarCache(): void {
     this.eventosSubject.next([]);
   }
+
+
+
+  // ==================== GESTIÓN DE TIPOS DE CALENDARIO ====================
+
+  obtenerTiposCalendario(): Observable<TipoCalendario[]> {
+    return this.http.get<TipoCalendario[]>(
+      `${this.apiUrl}/tipos-calendario`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener tipos de calendario:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  crearTipoCalendario(tipoCalendario: Partial<TipoCalendario>): Observable<{ id: number }> {
+    return this.http.put<{ id: number }>(
+      `${this.apiUrl}/tipo-calendario`,
+      tipoCalendario,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al crear tipo de calendario:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  actualizarTipoCalendario(id: number, tipoCalendario: TipoCalendario): Observable<{ id: number }> {
+    return this.http.post<{ id: number }>(
+      `${this.apiUrl}/tipo-calendario/${id}`,
+      tipoCalendario,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al actualizar tipo de calendario:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  eliminarTipoCalendario(id: number): Observable<{ id: number }> {
+    return this.http.delete<{ id: number }>(
+      `${this.apiUrl}/tipo-calendario/${id}`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al eliminar tipo de calendario:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  crearTipoEvento(tipoEvento: Partial<TipoEventoCalendario>): Observable<{ id: number }> {
+    return this.http.put<{ id: number }>(
+      `${this.apiUrl}/tipo-evento`,
+      tipoEvento,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al crear tipo de evento:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  actualizarTipoEvento(id: number, tipoEvento: TipoEventoCalendario): Observable<{ id: number }> {
+    return this.http.post<{ id: number }>(
+      `${this.apiUrl}/tipo-evento/${id}`,
+      tipoEvento,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al actualizar tipo de evento:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  eliminarTipoEvento(id: number): Observable<{ id: number }> {
+    return this.http.delete<{ id: number }>(
+      `${this.apiUrl}/tipo-evento/${id}`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al eliminar tipo de evento:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  asignarCalendarioAUsuario(idUsuario: number, idCalendario: number): Observable<{ id: number }> {
+    return this.http.put<{ id: number }>(
+      `${this.apiUrl}/asignar-usuario-calendario`,
+      { idUsuario, idCalendario },
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al asignar calendario a usuario:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  revocarCalendarioDeUsuario(id: number): Observable<{ id: number }> {
+    return this.http.delete<{ id: number }>(
+      `${this.apiUrl}/revocar-usuario-calendario/${id}`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al revocar calendario de usuario:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
 }

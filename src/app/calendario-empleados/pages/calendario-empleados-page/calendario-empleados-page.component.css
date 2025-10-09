@@ -221,14 +221,6 @@
   transform: translateX(-2px);
 }
 
-.evento-card-diaria.limpieza {
-  border-left-color: #6366f1;
-}
-
-.evento-card-diaria.mantenimiento {
-  border-left-color: #8b5cf6;
-}
-
 /* Línea de hora actual en vista diaria */
 .hora-actual-line {
   position: absolute;

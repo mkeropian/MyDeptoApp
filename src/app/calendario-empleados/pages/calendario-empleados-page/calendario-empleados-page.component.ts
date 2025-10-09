@@ -89,6 +89,15 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     for (let i = 0; i < 24; i++) {
       this.horasDia.push(`${String(i).padStart(2, '0')}:00`);
     }
+
+    // ✅ NUEVO - Agregar estas líneas
+    this.eventoForm.get('idTipoEventoCalendario')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.calcularHoraFin());
+
+    this.eventoForm.get('horaInicio')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.calcularHoraFin());
   }
 
   ngOnInit(): void {
@@ -628,11 +637,39 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   obtenerColorEvento(tipoEvento: string): string {
-    const colores: { [key: string]: string } = {
-      'Limpieza': 'border-indigo-500',
-      'Mantenimiento': 'border-indigo-500'
-    };
-    return colores[tipoEvento] || 'border-indigo-500';
+    // ✅ Ya no usamos colores fijos, vienen del backend
+    return 'border-indigo-500';
+  }
+
+  calcularHoraFin(): void {
+    const idTipoEvento = this.eventoForm.get('idTipoEventoCalendario')?.value;
+    const horaInicio = this.eventoForm.get('horaInicio')?.value;
+
+    if (!idTipoEvento || !horaInicio) {
+      return;
+    }
+
+    // Buscar el tipo de evento seleccionado
+    const tipoEvento = this.tiposEvento.find(te => te.id === Number(idTipoEvento));
+
+    if (!tipoEvento || !tipoEvento.duracionMinutos) {
+      return;
+    }
+
+    // Convertir hora inicio a minutos
+    const [horas, minutos] = horaInicio.split(':').map(Number);
+    const minutosInicio = horas * 60 + minutos;
+
+    // Sumar la duración
+    const minutosFin = minutosInicio + tipoEvento.duracionMinutos;
+
+    // Convertir de vuelta a formato HH:MM
+    const horasFin = Math.floor(minutosFin / 60) % 24;
+    const minutosFinales = minutosFin % 60;
+    const horaFin = `${String(horasFin).padStart(2, '0')}:${String(minutosFinales).padStart(2, '0')}`;
+
+    // Actualizar el campo horaFin
+    this.eventoForm.patchValue({ horaFin }, { emitEvent: false });
   }
 
   formatearFecha(fecha: string): string {

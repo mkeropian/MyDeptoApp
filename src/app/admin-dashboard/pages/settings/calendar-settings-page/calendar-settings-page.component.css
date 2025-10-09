@@ -1,0 +1,184 @@
+/* Estilos personalizados para la página de configuración de calendarios */
+
+/* Animaciones para las alertas */
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.alert {
+  animation: slideInDown 0.3s ease-out;
+}
+
+/* Transiciones suaves para tabs */
+.tabs .tab {
+  transition: all 0.2s ease;
+}
+
+.tabs .tab:hover:not(.tab-active) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Estilos para el input de color */
+input[type="color"] {
+  cursor: pointer;
+  min-height: 2.5rem;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
+/* Hover effects para las filas de la tabla */
+.table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+/* Animación para los badges */
+.badge {
+  transition: all 0.2s ease;
+}
+
+/* Estilo para el avatar placeholder */
+.avatar.placeholder > div {
+  transition: transform 0.2s ease;
+}
+
+.avatar.placeholder:hover > div {
+  transform: scale(1.05);
+}
+
+/* Sombras mejoradas para las cards */
+.card {
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Estilos para estados de carga */
+.loading {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mejora visual para los botones en hover */
+.btn {
+  transition: all 0.2s ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Estilos para los stats */
+.stats {
+  transition: all 0.3s ease;
+}
+
+.stats:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.stat-figure svg {
+  transition: transform 0.3s ease;
+}
+
+.stats:hover .stat-figure svg {
+  transform: scale(1.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+
+  .table {
+    font-size: 0.875rem;
+  }
+
+  .btn-circle {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .btn-circle svg {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+/* Estilos para mejorar la accesibilidad */
+.btn:focus-visible,
+.input:focus-visible,
+.select:focus-visible,
+.checkbox:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Animación para elementos que aparecen */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-body > * {
+  animation: fadeIn 0.3s ease-out backwards;
+}
+
+.card-body > *:nth-child(1) { animation-delay: 0.05s; }
+.card-body > *:nth-child(2) { animation-delay: 0.1s; }
+.card-body > *:nth-child(3) { animation-delay: 0.15s; }
+
+/* Estilos para el resumen de usuarios */
+.divider {
+  margin: 0.5rem 0;
+}
+
+/* Mejora visual para checkboxes */
+.checkbox:checked {
+  animation: checkBounce 0.3s ease;
+}
+
+@keyframes checkBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
