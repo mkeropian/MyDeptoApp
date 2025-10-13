@@ -316,13 +316,17 @@ export class CalendarSettingsPageComponent implements OnInit {
   }
 
   handleSavePermission(): void {
-    if (!this.newPermission.idUsuario || !this.newPermission.idCalendario) {
+    // ✅ Convertir a números PRIMERO
+    const idUsuario = Number(this.newPermission.idUsuario);
+    const idCalendario = Number(this.newPermission.idCalendario);
+
+    if (!idUsuario || !idCalendario) {
       this.showError('Por favor seleccione un usuario y un calendario');
       return;
     }
 
-    const usuario = this.users.find(u => u.id === this.newPermission.idUsuario);
-    const calendario = this.calendarTypes.find(c => c.id === this.newPermission.idCalendario);
+    const usuario = this.users.find(u => u.id === idUsuario);
+    const calendario = this.calendarTypes.find(c => c.id === idCalendario);
 
     if (!usuario || !calendario) {
       this.showError('Usuario o calendario no encontrado');
@@ -331,7 +335,7 @@ export class CalendarSettingsPageComponent implements OnInit {
 
     // Verificar si ya existe el permiso
     const exists = this.userPermissions.some(p =>
-      p.idUsuario === usuario.id && p.idCalendario === calendario.id
+      p.idUsuario === idUsuario && p.idCalendario === idCalendario
     );
 
     if (exists) {
@@ -339,7 +343,8 @@ export class CalendarSettingsPageComponent implements OnInit {
       return;
     }
 
-    this.calendarioService.asignarCalendarioAUsuario(this.newPermission.idUsuario, this.newPermission.idCalendario).subscribe({
+    // ✅ Usar los valores convertidos
+    this.calendarioService.asignarCalendarioAUsuario(idUsuario, idCalendario).subscribe({
       next: (response) => {
         this.userPermissions.push({
           id: response.id,
