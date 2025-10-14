@@ -65,7 +65,17 @@ export class SmartGridComponent {
 
   formatDate(dateString: string): string {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString();
+
+    const date = new Date(dateString);
+
+    // Formato personalizado: "05 Ago 2025" o "05/08/2025"
+    const options: Intl.DateTimeFormatOptions = {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    };
+
+    return date.toLocaleDateString('es-AR', options);
   }
 
   getColspan(): number {

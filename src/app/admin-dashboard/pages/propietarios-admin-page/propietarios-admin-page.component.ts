@@ -15,15 +15,17 @@ import { TableAction, TableColumn } from '../../../shared/components/smart-grid/
 export class PropietariosAdminPageComponent {
 
   propietariosService = inject(PropietariosService);
-  propietariosResource = rxResource({
-    request: () => ({}),
-    loader: () => this.propietariosService.getPropietarios()
-  });
 
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   refreshTrigger = signal(0);
   selectedPropietarios = signal<Propietario[]>([]);
+
+  // MODIFICADO: Ahora el resource depende del refreshTrigger
+  propietariosResource = rxResource({
+    request: () => ({ refresh: this.refreshTrigger() }),
+    loader: () => this.propietariosService.getPropietarios()
+  });
 
   propietarios = computed(() => {
     const data = this.propietariosResource.value() || [];
@@ -122,7 +124,6 @@ export class PropietariosAdminPageComponent {
     }
   ];
 
-
   editar(propietario: any) {
     console.log('Editando Propietario:', propietario);
   }
@@ -134,14 +135,17 @@ export class PropietariosAdminPageComponent {
   onSort(event: {column: string, direction: 'asc' | 'desc'}): void {
     this.sortColumn.set(event.column);
     this.sortDirection.set(event.direction);
-    // El computed se recalcula automáticamente
+  }
+
+  // NUEVO: Método para refrescar la lista de propietarios
+  onPropietarioCreado(): void {
+    this.refreshTrigger.update(v => v + 1);
   }
 
   private getValue(obj: any, path: string): any {
     return path.split('.').reduce((o, p) => o && o[p], obj);
   }
 
-  // Resto de métodos...
   isLoading = computed(() => this.propietariosResource.isLoading());
   error = computed(() => this.propietariosResource.error());
 
@@ -167,6 +171,4 @@ export class PropietariosAdminPageComponent {
   //     }
   //   );
   // }
-
 }
-

@@ -82,10 +82,14 @@
                   {{ getValue(item, column.key) }}
                 </span>
 
-                <!-- Fecha formateada -->
+                <!-- Fecha como badge con fondo primario -->
                 <span *ngIf="column.type === 'date'">
-                  {{ formatDate(getValue(item, column.key)) }}
+                  <span class="badge bg-gray-500 text-white gap-2 font-bold">
+                    <i class="fas fa-calendar-alt"></i>
+                    {{ formatDate(getValue(item, column.key)) }}
+                  </span>
                 </span>
+
               </ng-template>
             </td>
 

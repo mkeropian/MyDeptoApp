@@ -14,8 +14,11 @@ import { CommonModule } from '@angular/common'
   templateUrl: './form.component.html',
 })
 export class FormComponent implements OnInit {
-  // 🔥 NUEVA FUNCIONALIDAD: EventEmitter para coordenadas
+  // 🔥 EventEmitter para coordenadas
   @Output() coordinatesChange = new EventEmitter<string>();
+
+  // NUEVO: EventEmitter para notificar cuando se crea un departamento
+  @Output() departamentoCreado = new EventEmitter<void>();
 
   departamento: DepartamentoBackend = {
     id: 0,
@@ -71,7 +74,7 @@ export class FormComponent implements OnInit {
     this.setFormValue(this.departamento);
   }
 
-  // 🔥 NUEVA FUNCIONALIDAD: Validador inteligente que acepta lat,lng o lng,lat
+  // 🔥 Validador inteligente que acepta lat,lng o lng,lat
   coordinatesValidator(control: AbstractControl): ValidationErrors | null {
     const value = control.value;
     if (!value || (typeof value === 'string' && value.trim() === '')) {
@@ -117,7 +120,7 @@ export class FormComponent implements OnInit {
     }
   }
 
-  // 🔥 NUEVA FUNCIONALIDAD: Parsear coordenadas inteligentemente
+  // 🔥 Parsear coordenadas inteligentemente
   private parseCoordinates(coordinatesString: string): { lng: number; lat: number } | null {
     if (!coordinatesString || coordinatesString.trim() === '') {
       return null;
@@ -146,7 +149,7 @@ export class FormComponent implements OnInit {
       const isSecondLng = Math.abs(second) > 90;
 
       if (isFirstLat && isSecondLng && first >= -90 && first <= 90 && second >= -180 && second <= 180) {
-        console.log(`🔄 Coordenadas convertidas automáticamente de lat,lng a lng,lat: ${first},${second} -> ${second},${first}`);
+        // console.log(`🔄 Coordenadas convertidas automáticamente de lat,lng a lng,lat: ${first},${second} -> ${second},${first}`);
         return { lng: second, lat: first };
       }
 
@@ -161,7 +164,7 @@ export class FormComponent implements OnInit {
     }
   }
 
-  // 🔥 NUEVA FUNCIONALIDAD: Manejador de cambios en coordenadas
+  // 🔥 Manejador de cambios en coordenadas
   onCoordinatesInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     const coordinates = input.value;
@@ -170,7 +173,7 @@ export class FormComponent implements OnInit {
     this.coordinatesChange.emit(coordinates);
   }
 
-  // 🔥 NUEVA FUNCIONALIDAD: Mensaje de error específico para coordenadas
+  // 🔥 Mensaje de error específico para coordenadas
   getCoordinatesErrorMessage(): string {
     const control = this.departamentoForm.get('lngLat');
     if (!control || !control.errors) return '';
@@ -234,19 +237,55 @@ export class FormComponent implements OnInit {
       activo: formValue.activo || 1
     };
 
-    this.departamentosService.createDepartamento(departamentoData).subscribe(
-      departamento => {
-        console.log('Departamento creado:', departamento);
-        this.departamentoForm.reset();
+    this.departamentosService.createDepartamento(departamentoData).subscribe({
+      next: (departamento) => {
+        // console.log('Departamento creado:', departamento);
+
+        // Resetear el formulario
+        this.departamentoForm.reset({
+          idProp: 0,
+          activo: 0
+        });
         this.departamentoForm.markAsUntouched();
         this.departamentoForm.markAsPristine();
 
-        // 🔥 NUEVA FUNCIONALIDAD: Resetear mapa al limpiar formulario
+        // 🔥 Resetear mapa al limpiar formulario
         this.coordinatesChange.emit('');
 
-        this.router.navigate(['/admin/admin-departamentos']);
+        // NUEVO: Emitir evento para refrescar la lista
+        this.departamentoCreado.emit();
+      },
+      error: (error) => {
+        console.error('Error al crear departamento:', error);
+        this.showErrorToast('Error al crear el departamento');
       }
-    );
+    });
+  }
+
+  /**
+   * Muestra un toast de error
+   */
+  private showErrorToast(message: string): void {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
+    toast.innerHTML = `
+      <div class="alert alert-error shadow-lg">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">${message}</span>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
   }
 
   getPropietarioNombre(id: number): string {

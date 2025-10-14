@@ -29,7 +29,7 @@ export class NavbarComponent {
 
   isDashboard = false;
   isAdminOpen = false;
-  isParent2Open = false;
+  isDepartamentoOpen = false;
   isConfigOpen = false;
   isProfileOpen = false;
   isOperacionOpen = false;
@@ -88,9 +88,9 @@ export class NavbarComponent {
     this.closeOtherDropdowns('operacion');
   }
 
-  toggleParent2() {
-    this.isParent2Open = !this.isParent2Open;
-    this.closeOtherDropdowns('parent2');
+  toggleDepartamento() {
+    this.isDepartamentoOpen = !this.isDepartamentoOpen;
+    this.closeOtherDropdowns('departamentos');
   }
 
   toggleConfig() {
@@ -104,7 +104,7 @@ export class NavbarComponent {
 
   closeOtherDropdowns(except: string) {
     if (except !== 'admin') this.isAdminOpen = false;
-    if (except !== 'parent2') this.isParent2Open = false;
+    if (except !== 'departamentos') this.isDepartamentoOpen = false;
     if (except !== 'config') this.isConfigOpen = false;
     if (except !== 'operacion') this.isOperacionOpen = false;
     if (except !== 'dashboard') this.isDashboard = false;
@@ -112,7 +112,7 @@ export class NavbarComponent {
 
   onMenuItemClick() {
     this.isAdminOpen = false;
-    this.isParent2Open = false;
+    this.isDepartamentoOpen = false;
     this.isConfigOpen = false;
     this.isProfileOpen = false;
     this.isOperacionOpen = false;

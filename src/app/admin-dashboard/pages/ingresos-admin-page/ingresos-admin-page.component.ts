@@ -14,15 +14,17 @@ import { TableAction, TableColumn } from '../../../shared/components/smart-grid/
 export class IngresosAdminPageComponent {
 
   pagosService = inject(PagosService);
-  pagosResource = rxResource({
-    request: () => ({}),
-    loader: () => this.pagosService.getPagos()
-  });
 
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   refreshTrigger = signal(0);
   selectedPagos = signal<Pago[]>([]);
+
+  // MODIFICADO: Ahora el resource depende del refreshTrigger
+  pagosResource = rxResource({
+    request: () => ({ refresh: this.refreshTrigger() }),
+    loader: () => this.pagosService.getPagos()
+  });
 
   pagos = computed(() => {
     const data = this.pagosResource.value() || [];
@@ -95,7 +97,7 @@ export class IngresosAdminPageComponent {
       label: 'fecha',
       sortable: true,
       width: '260px',
-      type: 'text'
+      type: 'date'
     },
     {
       key: 'observaciones',
@@ -111,30 +113,32 @@ export class IngresosAdminPageComponent {
       label: 'Editar',
       icon: 'fas fa-edit',
       class: 'btn-primary btn-xs',
-      action: (gasto) => this.editar(gasto)
+      action: (pago) => this.editar(pago)
     }
   ];
 
-  editar(propietario: any) {
-    console.log('Editando Propietario:', propietario);
+  editar(pago: any) {
+    console.log('Editando Pago:', pago);
   }
 
   onSort(event: {column: string, direction: 'asc' | 'desc'}): void {
     this.sortColumn.set(event.column);
     this.sortDirection.set(event.direction);
-    // El computed se recalcula automáticamente
+  }
+
+  // NUEVO: Método para refrescar la lista de pagos
+  onPagoCreado(): void {
+    this.refreshTrigger.update(v => v + 1);
   }
 
   private getValue(obj: any, path: string): any {
     return path.split('.').reduce((o, p) => o && o[p], obj);
   }
 
-  // Resto de métodos...
   isLoading = computed(() => this.pagosResource.isLoading());
   error = computed(() => this.pagosResource.error());
 
   onSelectionChange(selectedItems: any[]) {
     console.log('Pagos seleccionados:', selectedItems.length);
   }
-
 }

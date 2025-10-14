@@ -1,1 +1,299 @@
-<p>roles-settings-page works!</p>,
+<div class="container mx-auto p-6 max-w-7xl">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold mb-2">Gestión de Roles y Permisos</h1>
+    <p class="text-base-content/70">Administra los roles del sistema, permisos disponibles y sus asignaciones</p>
+  </div>
+
+  <!-- Tabs de navegación -->
+  <div class="tabs tabs-boxed mb-6 bg-base-200">
+    <button
+      class="tab"
+      [class.tab-active]="seccionActiva() === 'roles'"
+      (click)="cambiarSeccion('roles')">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+      Roles
+    </button>
+    <button
+      class="tab"
+      [class.tab-active]="seccionActiva() === 'permisos'"
+      (click)="cambiarSeccion('permisos')">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+      Permisos
+    </button>
+    <button
+      class="tab"
+      [class.tab-active]="seccionActiva() === 'asignacion'"
+      (click)="cambiarSeccion('asignacion')">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+      Asignar Permisos
+    </button>
+  </div>
+
+  <!-- ========== SECCIÓN 1: ROLES ========== -->
+  <div *ngIf="seccionActiva() === 'roles'" class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="card-title text-2xl">Roles del Sistema</h2>
+        <button class="btn btn-primary" (click)="abrirModalRol()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Nuevo Rol
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="cargando()" class="flex justify-center py-8">
+        <span class="loading loading-spinner loading-lg"></span>
+      </div>
+
+      <!-- Tabla de roles -->
+      <div *ngIf="!cargando()" class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let rol of roles()">
+              <td>{{ rol.id }}</td>
+              <td><span class="badge badge-lg badge-outline">{{ rol.nombre }}</span></td>
+              <td>{{ rol.descripcion || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div *ngIf="roles().length === 0" class="text-center py-8">
+          <p class="text-base-content/60">No hay roles registrados</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SECCIÓN 2: PERMISOS ========== -->
+  <div *ngIf="seccionActiva() === 'permisos'" class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="card-title text-2xl">Permisos Disponibles</h2>
+        <button class="btn btn-primary" (click)="abrirModalPermiso()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Nuevo Permiso
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="cargando()" class="flex justify-center py-8">
+        <span class="loading loading-spinner loading-lg"></span>
+      </div>
+
+      <!-- Tabla de permisos -->
+      <div *ngIf="!cargando()" class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre Vista</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let permiso of permisos()">
+              <td>{{ permiso.id }}</td>
+              <td><code class="badge badge-accent">{{ permiso.nombre_vista }}</code></td>
+              <td>{{ permiso.desc_vista }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div *ngIf="permisos().length === 0" class="text-center py-8">
+          <p class="text-base-content/60">No hay permisos registrados</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SECCIÓN 3: ASIGNACIÓN ========== -->
+  <div *ngIf="seccionActiva() === 'asignacion'" class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title text-2xl mb-4">Asignar Permisos a Roles</h2>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Selección de rol -->
+        <div class="card bg-base-200">
+          <div class="card-body">
+            <h3 class="font-bold text-lg mb-4">Seleccionar Rol</h3>
+
+            <div *ngIf="cargando()" class="flex justify-center py-4">
+              <span class="loading loading-spinner loading-md"></span>
+            </div>
+
+            <div *ngIf="!cargando()" class="space-y-2">
+              <button
+                *ngFor="let rol of roles()"
+                class="btn w-full justify-start"
+                [class.btn-primary]="rolSeleccionado()?.id === rol.id"
+                [class.btn-ghost]="rolSeleccionado()?.id !== rol.id"
+                (click)="seleccionarRolParaAsignar(rol)">
+                <svg *ngIf="rolSeleccionado()?.id === rol.id" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                {{ rol.nombre }}
+              </button>
+
+              <div *ngIf="roles().length === 0" class="text-center py-4">
+                <p class="text-base-content/60">No hay roles disponibles</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Permisos disponibles -->
+        <div class="card bg-base-200">
+          <div class="card-body">
+            <h3 class="font-bold text-lg mb-4">Permisos Disponibles</h3>
+
+            <div *ngIf="!rolSeleccionado()" class="alert alert-info">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Selecciona un rol para gestionar sus permisos</span>
+            </div>
+
+            <div *ngIf="cargando() && rolSeleccionado()" class="flex justify-center py-4">
+              <span class="loading loading-spinner loading-md"></span>
+            </div>
+
+            <div *ngIf="!cargando() && rolSeleccionado()" class="space-y-2 max-h-96 overflow-y-auto">
+              <div *ngFor="let permiso of permisos()" class="form-control">
+                <label class="label cursor-pointer justify-start gap-3 hover:bg-base-300 p-3 rounded-lg transition-colors">
+                  <input
+                    type="checkbox"
+                    class="checkbox checkbox-primary"
+                    [checked]="permisosSeleccionados().has(permiso.id)"
+                    (change)="togglePermiso(permiso.id)" />
+                  <div class="flex-1">
+                    <span class="label-text font-semibold">{{ permiso.nombre_vista }}</span>
+                    <p class="text-xs text-base-content/60">{{ permiso.desc_vista }}</p>
+                  </div>
+                </label>
+              </div>
+
+              <div *ngIf="permisos().length === 0" class="text-center py-4">
+                <p class="text-base-content/60">No hay permisos disponibles</p>
+              </div>
+            </div>
+
+            <!-- Botón guardar -->
+            <div *ngIf="rolSeleccionado()" class="card-actions justify-end mt-4">
+              <button
+                class="btn btn-primary btn-block"
+                [disabled]="cargando()"
+                (click)="guardarAsignacion()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Guardar Asignación
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL ROL ========== -->
+<div *ngIf="mostrarModalRol()" class="modal modal-open">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4">Nuevo Rol</h3>
+
+    <div class="form-control mb-4">
+      <label class="label">
+        <span class="label-text font-semibold">Nombre del Rol *</span>
+      </label>
+      <input
+        type="text"
+        placeholder="ej: admin, usuario, moderador"
+        class="input input-bordered w-full"
+        [(ngModel)]="rolForm().nombre" />
+    </div>
+
+    <div class="form-control mb-6">
+      <label class="label">
+        <span class="label-text font-semibold">Descripción</span>
+      </label>
+      <textarea
+        class="textarea textarea-bordered h-24"
+        placeholder="Descripción del rol..."
+        [(ngModel)]="rolForm().descripcion"></textarea>
+    </div>
+
+    <div class="modal-action">
+      <button class="btn btn-ghost" (click)="cerrarModalRol()">Cancelar</button>
+      <button
+        class="btn btn-primary"
+        [disabled]="cargando()"
+        (click)="guardarRol()">
+        <span *ngIf="cargando()" class="loading loading-spinner loading-sm"></span>
+        Crear
+      </button>
+    </div>
+  </div>
+  <div class="modal-backdrop" (click)="cerrarModalRol()"></div>
+</div>
+
+<!-- ========== MODAL PERMISO ========== -->
+<div *ngIf="mostrarModalPermiso()" class="modal modal-open">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4">Nuevo Permiso</h3>
+
+    <div class="form-control mb-4">
+      <label class="label">
+        <span class="label-text font-semibold">Nombre de la Vista *</span>
+      </label>
+      <input
+        type="text"
+        placeholder="ej: departamentos, usuarios.crear"
+        class="input input-bordered w-full"
+        [(ngModel)]="permisoForm().nombre_vista" />
+      <label class="label">
+        <span class="label-text-alt">Identificador único del permiso (sin espacios)</span>
+      </label>
+    </div>
+
+    <div class="form-control mb-6">
+      <label class="label">
+        <span class="label-text font-semibold">Descripción *</span>
+      </label>
+      <input
+        type="text"
+        placeholder="ej: Ver departamentos, Crear usuarios"
+        class="input input-bordered w-full"
+        [(ngModel)]="permisoForm().desc_vista" />
+    </div>
+
+    <div class="modal-action">
+      <button class="btn btn-ghost" (click)="cerrarModalPermiso()">Cancelar</button>
+      <button
+        class="btn btn-primary"
+        [disabled]="cargando()"
+        (click)="guardarPermiso()">
+        <span *ngIf="cargando()" class="loading loading-spinner loading-sm"></span>
+        Crear
+      </button>
+    </div>
+  </div>
+  <div class="modal-backdrop" (click)="cerrarModalPermiso()"></div>
+</div>

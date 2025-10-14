@@ -6,10 +6,11 @@
 <section class="w-full flex gap-2 items-start mb-8">
   <!-- Formulario (más ancho con padding derecho) -->
   <div class="flex-[2] pr-4">
-    <!-- 🔥 AGREGADA REFERENCIA Y EVENTO DE COORDENADAS -->
+    <!-- 🔥 AGREGADOS AMBOS EVENTOS -->
     <app-form 
       #formComponent
-      (coordinatesChange)="onCoordinatesChange($event)" />
+      (coordinatesChange)="onCoordinatesChange($event)"
+      (departamentoCreado)="onDepartamentoCreado()" />
   </div>
 
   <!-- Separador vertical pegado -->

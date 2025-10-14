@@ -22,8 +22,9 @@ export class UserPageComponent {
   refreshTrigger = signal(0);
   selectedUsuarios = signal<User[]>([]);
 
+  // MODIFICADO: Ahora el resource depende del refreshTrigger
   usersResource = rxResource({
-    request: () => ({}),
+    request: () => ({ refresh: this.refreshTrigger() }),
     loader: () => this.usersService.getUsuarios()
   });
 
@@ -135,14 +136,17 @@ export class UserPageComponent {
   onSort(event: {column: string, direction: 'asc' | 'desc'}): void {
     this.sortColumn.set(event.column);
     this.sortDirection.set(event.direction);
-    // El computed se recalcula automáticamente
+  }
+
+  // NUEVO: Método para refrescar la lista de usuarios
+  onUsuarioCreado(): void {
+    this.refreshTrigger.update(v => v + 1);
   }
 
   private getValue(obj: any, path: string): any {
     return path.split('.').reduce((o, p) => o && o[p], obj);
   }
 
-  // Resto de métodos...
   isLoading = computed(() => this.usersResource.isLoading());
   error = computed(() => this.usersResource.error());
 
@@ -173,7 +177,6 @@ export class UserPageComponent {
     }, 4000);
   }
 
-  // Método para mostrar toast de error
   private showErrorToast(message: string): void {
     const toast = document.createElement('div');
     toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
@@ -181,7 +184,7 @@ export class UserPageComponent {
       <div class="alert alert-error shadow-lg">
         <div class="flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span class="text-sm">${message}</span>
         </div>
@@ -196,6 +199,4 @@ export class UserPageComponent {
       }
     }, 4000);
   }
-
 }
-

@@ -1,5 +1,4 @@
-
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Propietario } from '../../../../propietarios/interfaces/propietario.interface';
 import { Router } from '@angular/router';
@@ -14,7 +13,11 @@ import { FormErrorLabelComponent } from "../../../../shared/components/form-erro
   ],
   templateUrl: './form.component.html',
 })
-export class FormComponent implements OnInit{
+export class FormComponent implements OnInit {
+
+  // NUEVO: Output para notificar cuando se crea un propietario
+  @Output() propietarioCreado = new EventEmitter<void>();
+
   propietario: Propietario = {
     id: 0,
     nombreApellido: '',
@@ -34,6 +37,7 @@ export class FormComponent implements OnInit{
   fb = inject(FormBuilder);
   propietariosService = inject(PropietariosService);
 
+  // ✅ Esta es la propiedad que estaba faltando
   propietarioForm = this.fb.group({
     nombreApellido: ['', [Validators.required, Validators.minLength(3)]],
     direccion: ['', [Validators.required, Validators.minLength(3)]],
@@ -52,38 +56,103 @@ export class FormComponent implements OnInit{
     this.setFormValue(this.propietario);
   }
 
-  setFormValue( formLike: Partial<Propietario>) {
+  setFormValue(formLike: Partial<Propietario>) {
     this.propietarioForm.patchValue(formLike);
   }
 
-  limpiarForm(){
-    this.propietarioForm.reset();
+  // ✅ Este es el método que estaba faltando
+  limpiarForm() {
+    this.propietarioForm.reset({
+      activo: 0
+    });
     this.propietarioForm.markAsUntouched();
     this.propietarioForm.markAsPristine();
 
     console.log('Formulario limpiado');
   }
 
-  onSubmit(){
+  onSubmit() {
     const isValid = this.propietarioForm.valid;
     this.propietarioForm.markAllAsTouched();
 
-    // console.log(isValid);
-    // console.log(this.propietarioForm.value);
-
-    if (!isValid) return ;
+    if (!isValid) return;
 
     const formValue = this.propietarioForm.value;
-    // console.log('Datos del formulario:', formValue);
 
-    this.propietariosService.createPropietario(formValue as Propietario).subscribe(
-      propietario => {
-        console.log('Propietario creado:', propietario);
-        this.propietarioForm.reset();
+    this.propietariosService.createPropietario(formValue as Propietario).subscribe({
+      next: (propietario) => {
+
+        // console.log('Propietario creado:', propietario);
+
+        // Resetear el formulario
+        this.propietarioForm.reset({
+          activo: 0
+        });
         this.propietarioForm.markAsUntouched();
         this.propietarioForm.markAsPristine();
-        this.router.navigate(['/admin/admin-propietarios']);
-      });
+
+        // NUEVO: Emitir evento para refrescar la lista
+        this.propietarioCreado.emit();
+
+        // Mostrar mensaje de éxito
+        this.showSuccessToast('Propietario creado exitosamente');
+      },
+      error: (error) => {
+        console.error('Error al crear propietario:', error);
+        this.showErrorToast('Error al crear el propietario');
+      }
+    });
   }
 
+  /**
+   * Muestra un toast de éxito
+   */
+  private showSuccessToast(message: string): void {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
+    toast.innerHTML = `
+      <div class="alert alert-success shadow-lg">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">${message}</span>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
+  }
+
+  /**
+   * Muestra un toast de error
+   */
+  private showErrorToast(message: string): void {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
+    toast.innerHTML = `
+      <div class="alert alert-error shadow-lg">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">${message}</span>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
+  }
 }

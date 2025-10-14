@@ -33,8 +33,8 @@
 
       <!-- Dropdown Departamentos - Solo si tiene permisos -->
       @if (tieneAlgunPermisoDepartamentos()) {
-        <li class="dropdown dropdown-hover" [class.dropdown-open]="isParent2Open">
-          <div tabindex="0" role="button" (click)="toggleParent2()">Departamentos</div>
+        <li class="dropdown dropdown-hover" [class.dropdown-open]="isDepartamentoOpen">
+          <div tabindex="0" role="button" (click)="toggleDepartamento()">Departamentos</div>
           <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
             @if (tieneDepartamentos()) {
               <li><a routerLink="/home/fullscreen_map" (click)="onMenuItemClick()" routerLinkActive="active">FullMap</a></li>
@@ -98,15 +98,7 @@
                   routerLink="/admin/roles-settings"
                   (click)="onMenuItemClick()"
                   routerLinkActive="active"
-                >... de Roles
-                </a>
-              </li>
-              <li>
-                <a
-                  routerLink="/admin/settings-permisos-roles"
-                  (click)="onMenuItemClick()"
-                  routerLinkActive="active"
-                >... de Permisos
+                >... de Roles y Permisos
                 </a>
               </li>
               <li>

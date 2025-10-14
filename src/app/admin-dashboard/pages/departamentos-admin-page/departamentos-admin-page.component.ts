@@ -28,15 +28,17 @@ interface Marker {
 })
 export class DepartamentosAdminPageComponent implements AfterViewInit {
   departamentosService = inject(DepartamentosService);
-  departamentosResource = rxResource({
-    request: () => ({}),
-    loader: () => this.departamentosService.getDepartamentosRaw()
-  });
 
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   refreshTrigger = signal(0);
   selectedDepartamentos = signal<Departamento[]>([]);
+
+  // MODIFICADO: Ahora el resource depende del refreshTrigger
+  departamentosResource = rxResource({
+    request: () => ({ refresh: this.refreshTrigger() }),
+    loader: () => this.departamentosService.getDepartamentosRaw()
+  });
 
   // Coordenadas fijas de Buenos Aires (centro de la ciudad)
   buenosAiresCoords = () => ({ lng: -58.433160, lat: -34.612762 });
@@ -51,8 +53,6 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
 
   departamentos = computed(() => {
     const data = this.departamentosResource.value() || [];
-    // console.log('Raw data from service:', data);
-    // console.log('Type of first lngLat:', typeof data[0]?.lngLat);
 
     const transformedData = data.map(departamentos => ({
       ...departamentos,
@@ -66,13 +66,11 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
 
       // Si lngLat ya es un objeto, los datos están transformados
       if (typeof firstItem.lngLat === 'object' && firstItem.lngLat !== null) {
-        // console.log('Datos ya transformados, usando directamente');
         return data as unknown as Departamento[];
       }
 
       // Si lngLat es string, necesitamos transformar
       if (typeof firstItem.lngLat === 'string') {
-    // console.log('Transformando datos del backend');
         const backendData = data as DepartamentoBackend[];
 
         return backendData.map(item => {
@@ -101,9 +99,6 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
               activoTexto: item.activo === 1 ? 'Sí' : 'No'
             } as Departamento;
           } catch (error) {
-            // console.error(`Error parseando coordenadas para ${item.nombre}:`, error);
-            // console.error('Coordenadas recibidas:', item.lngLat);
-
             // Coordenadas por defecto (Buenos Aires) si hay error
             return {
               id: item.id,
@@ -125,7 +120,6 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
       }
     }
 
-    // console.log('No hay datos o formato desconocido');
     return [] as Departamento[];
   });
 
@@ -282,6 +276,11 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
     }
   }
 
+  // NUEVO: Método para refrescar la lista de departamentos
+  onDepartamentoCreado(): void {
+    this.refreshTrigger.update(v => v + 1);
+  }
+
   // 🔥 NUEVA FUNCIONALIDAD: Parser inteligente para el componente padre
   private parseCoordinatesIntelligent(coordinatesString: string): { lng: number; lat: number } | null {
     if (!coordinatesString || coordinatesString.trim() === '') {
@@ -338,10 +337,8 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
   onSort(event: {column: string, direction: 'asc' | 'desc'}): void {
     this.sortColumn.set(event.column);
     this.sortDirection.set(event.direction);
-    // El computed se recalcula automáticamente
   }
 
-  // Resto de métodos...
   isLoading = computed(() => this.departamentosResource.isLoading());
   error = computed(() => this.departamentosResource.error());
 
@@ -355,13 +352,12 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
     await new Promise((resolve) => setTimeout(resolve, 80));
 
     const element = this.divElement()!.nativeElement;
-    // console.log(element);
 
     const map = new mapboxgl.Map({
-      container: element, // container ID
-      style: 'mapbox://styles/mapbox/streets-v12', // style URL
-      center: [this.buenosAiresCoords().lng, this.buenosAiresCoords().lat], // starting position [lng, lat]
-      zoom: 10.3, // starting zoom
+      container: element,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [this.buenosAiresCoords().lng, this.buenosAiresCoords().lat],
+      zoom: 10.3,
       dragPan: false,
       dragRotate: false,
       doubleClickZoom: false,
@@ -375,11 +371,8 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
   }
 
   mapListeners( map: mapboxgl.Map ) {
-
     map.on('click', (event) => this.mapClick(event));
-
     this.map.set(map);
-
   }
 
   mapClick(event: mapboxgl.MapMouseEvent) {
@@ -405,7 +398,5 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
     }
 
     this.markers.set([ newMarker, ...this.markers()]);
-    // this.markers.update((markers) => [newMarker, ...markers]);
   }
-
 }
