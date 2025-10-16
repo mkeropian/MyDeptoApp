@@ -1,3 +1,4 @@
+// user-profile-page.component.ts
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../auth/services/auth.service';
@@ -10,8 +11,11 @@ import { UsuariosService } from '../../../auth/services/users.service';
   templateUrl: './user-profile-page.component.html',
 })
 export class UserProfilePageComponent {
-  private authService = inject(AuthService);
+  authService = inject(AuthService);
   private usuariosService = inject(UsuariosService);
+
+  // Usar el computed del servicio
+  userAvatar = computed(() => this.authService.userAvatarUrl());
 
   // Señal para controlar la visibilidad del modal
   isOpen = signal<boolean>(false);
@@ -96,7 +100,7 @@ export class UserProfilePageComponent {
     this.isUploadingAvatar.set(true);
     this.uploadError.set('');
 
-    this.usuariosService.uploadAvatarForUser(userId, file).subscribe({
+    this.usuariosService.uploadAvatar(file, userId).subscribe({
       next: (response: any) => {
         this.isUploadingAvatar.set(false);
 
@@ -107,12 +111,22 @@ export class UserProfilePageComponent {
           }
         });
       },
-      error: (error) => {
+      error: (error: any) => {
         this.isUploadingAvatar.set(false);
         this.uploadError.set('Error al subir el avatar. Intenta nuevamente.');
         // console.error('❌ Error subiendo avatar:', error);
       }
     });
+  }
+
+  /**
+   * Maneja error al cargar avatar
+   */
+  onAvatarError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    const user = this.currentUser();
+    // Usar el avatar por defecto del servicio
+    img.src = this.authService.getDefaultAvatarUrl(user?.nombreCompleto || 'Usuario');
   }
 
   /**

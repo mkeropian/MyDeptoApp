@@ -1,21 +1,22 @@
-import { Component, inject, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, inject, OnInit, Output, EventEmitter, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Propietario } from '../../../../propietarios/interfaces/propietario.interface';
 import { Router } from '@angular/router';
 import { PropietariosService } from '../../../../propietarios/services/propietarios.service';
 import { FormErrorLabelComponent } from "../../../../shared/components/form-error-label/form-error-label.component";
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-form',
   imports: [
     ReactiveFormsModule,
-    FormErrorLabelComponent
+    FormErrorLabelComponent,
+    CommonModule
   ],
   templateUrl: './form.component.html',
 })
 export class FormComponent implements OnInit {
 
-  // NUEVO: Output para notificar cuando se crea un propietario
   @Output() propietarioCreado = new EventEmitter<void>();
 
   propietario: Propietario = {
@@ -37,7 +38,11 @@ export class FormComponent implements OnInit {
   fb = inject(FormBuilder);
   propietariosService = inject(PropietariosService);
 
-  // ✅ Esta es la propiedad que estaba faltando
+  // NUEVO: Señales para manejo de avatar
+  selectedFile = signal<File | null>(null);
+  avatarPreview = signal<string>('');
+  isUploadingAvatar = signal<boolean>(false);
+
   propietarioForm = this.fb.group({
     nombreApellido: ['', [Validators.required, Validators.minLength(3)]],
     direccion: ['', [Validators.required, Validators.minLength(3)]],
@@ -60,7 +65,6 @@ export class FormComponent implements OnInit {
     this.propietarioForm.patchValue(formLike);
   }
 
-  // ✅ Este es el método que estaba faltando
   limpiarForm() {
     this.propietarioForm.reset({
       activo: 0
@@ -68,7 +72,59 @@ export class FormComponent implements OnInit {
     this.propietarioForm.markAsUntouched();
     this.propietarioForm.markAsPristine();
 
-    console.log('Formulario limpiado');
+    // Limpiar avatar
+    this.selectedFile.set(null);
+    this.avatarPreview.set('');
+
+    // console.log('Formulario limpiado');
+  }
+
+  /**
+   * NUEVO: Maneja la selección de archivo para el avatar
+   */
+  onAvatarChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    // Validar tipo de archivo
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      this.showErrorToast('Solo se permiten archivos de imagen (JPG, PNG, GIF, WEBP)');
+      return;
+    }
+
+    // Validar tamaño (máximo 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      this.showErrorToast('El archivo no debe superar los 5MB');
+      return;
+    }
+
+    // Guardar archivo y mostrar preview
+    this.selectedFile.set(file);
+
+    // Crear preview
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      this.avatarPreview.set(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /**
+   * NUEVO: Elimina el avatar seleccionado
+   */
+  removeAvatar(): void {
+    this.selectedFile.set(null);
+    this.avatarPreview.set('');
+
+    // Resetear el input file
+    const fileInput = document.getElementById('avatarInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   onSubmit() {
@@ -81,27 +137,64 @@ export class FormComponent implements OnInit {
 
     this.propietariosService.createPropietario(formValue as Propietario).subscribe({
       next: (propietario) => {
+        console.log('Propietario creado:', propietario);
 
-        // console.log('Propietario creado:', propietario);
-
-        // Resetear el formulario
-        this.propietarioForm.reset({
-          activo: 0
-        });
-        this.propietarioForm.markAsUntouched();
-        this.propietarioForm.markAsPristine();
-
-        // NUEVO: Emitir evento para refrescar la lista
-        this.propietarioCreado.emit();
-
-        // Mostrar mensaje de éxito
-        this.showSuccessToast('Propietario creado exitosamente');
+        // Si hay un avatar seleccionado, subirlo
+        const file = this.selectedFile();
+        if (file && propietario.id) {
+          this.uploadAvatar(file, propietario.id);
+        } else {
+          this.finalizarCreacion();
+        }
       },
       error: (error) => {
         console.error('Error al crear propietario:', error);
         this.showErrorToast('Error al crear el propietario');
       }
     });
+  }
+
+  /**
+   * NUEVO: Sube el avatar del propietario
+   */
+  private uploadAvatar(file: File, propietarioId: number): void {
+    this.isUploadingAvatar.set(true);
+
+    this.propietariosService.uploadAvatarPropietario(file, propietarioId).subscribe({
+      next: (response: any) => {
+        console.log('Avatar subido exitosamente:', response);
+        this.finalizarCreacion();
+      },
+      error: (error: any) => {
+        console.error('Error subiendo avatar:', error);
+        this.showErrorToast('Propietario creado pero falló la carga del avatar');
+        this.finalizarCreacion();
+      }
+    });
+  }
+
+  /**
+   * NUEVO: Finaliza el proceso de creación
+   */
+  private finalizarCreacion(): void {
+    this.isUploadingAvatar.set(false);
+
+    // Resetear el formulario
+    this.propietarioForm.reset({
+      activo: 0
+    });
+    this.propietarioForm.markAsUntouched();
+    this.propietarioForm.markAsPristine();
+
+    // Limpiar avatar
+    this.selectedFile.set(null);
+    this.avatarPreview.set('');
+
+    // Emitir evento para refrescar la lista
+    this.propietarioCreado.emit();
+
+    // Mostrar mensaje de éxito
+    this.showSuccessToast('Propietario creado exitosamente');
   }
 
   /**

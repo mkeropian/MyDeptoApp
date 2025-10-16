@@ -24,7 +24,7 @@ export class AuthService {
   private _authStatus = signal<AuthStatus>('checking');
   private _user = signal<UserLogin | null>(null);
   private _token = signal<string | null>(localStorage.getItem('token'));
-  private _permisos = signal<string[]>([]); // NUEVO: Permisos del usuario
+  private _permisos = signal<string[]>([]);
 
   private http = inject(HttpClient);
   private router = inject(Router);
@@ -46,9 +46,26 @@ export class AuthService {
 
   user = computed(() => this._user());
   token = computed(() => this._token());
-  permisos = computed(() => this._permisos()); // NUEVO: Exponer permisos
+  permisos = computed(() => this._permisos());
   isAdmin = computed(() => this._user()?.roles?.includes('admin') ?? false);
   isAuthenticated = computed(() => this.authStatus() === 'authenticated');
+
+  // NUEVO: Computed para URL completa del avatar
+  userAvatarUrl = computed(() => {
+    const user = this._user();
+    if (!user?.avatarUrl) {
+      return this.getDefaultAvatarUrl(user?.nombreCompleto || 'Usuario');
+    }
+
+    // Si ya es una URL completa, devolverla tal cual
+    if (user.avatarUrl.startsWith('http')) {
+      return user.avatarUrl;
+    }
+
+    // CORREGIDO: Construir la URL correctamente
+    // environment.baseUrl ya es 'http://localhost:3050/api'
+    return `${baseUrl}/archivos/avatar/${user.avatarUrl}`;
+  });
 
   /**
    * Login con usuario o email
@@ -103,8 +120,7 @@ export class AuthService {
   }
 
   /**
-   * MODIFICADO: Obtiene el perfil completo del usuario con roles Y permisos
-   * PRESERVA el valor de 'activo' si no viene en la respuesta
+   * Obtiene el perfil completo del usuario con roles Y permisos
    */
   getProfile(): Observable<ProfileResponse> {
     return this.http.get<ProfileResponse>(`${baseUrl}/auth/profile`)
@@ -122,7 +138,7 @@ export class AuthService {
 
             this._user.set(updatedUser);
 
-            // NUEVO: Guardar permisos
+            // Guardar permisos
             this._permisos.set(resp.usuario.permisos || []);
 
             // Aplicar el tema del usuario
@@ -159,11 +175,29 @@ export class AuthService {
     this._authStatus.set('not-authenticated');
     this._user.set(null);
     this._token.set(null);
-    this._permisos.set([]); // NUEVO: Limpiar permisos
+    this._permisos.set([]);
     localStorage.removeItem('token');
 
     this.themeService.resetTheme();
     this.router.navigate(['/auth/login']);
+  }
+
+  /**
+   * NUEVO: Genera URL de avatar por defecto
+   */
+  getDefaultAvatarUrl(name: string): string {
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=128&format=svg`;
+  }
+
+  /**
+   * NUEVO: Obtiene URL del avatar (con fallback)
+   */
+  getAvatarUrl(user?: UserLogin | null): string {
+    const currentUser = user || this._user();
+    if (!currentUser?.avatarUrl) {
+      return this.getDefaultAvatarUrl(currentUser?.nombreCompleto || 'Usuario');
+    }
+    return `${baseUrl}/archivos/avatar/${currentUser.avatarUrl}`;
   }
 
   /**
@@ -183,16 +217,14 @@ export class AuthService {
   }
 
   /**
-   * NUEVO: Verifica si el usuario tiene un permiso específico
-   * @param permiso Nombre del permiso (ej: 'departamentos', 'departamentos.crear')
+   * Verifica si el usuario tiene un permiso específico
    */
   tienePermiso(permiso: string): boolean {
     return this._permisos().includes(permiso);
   }
 
   /**
-   * NUEVO: Verifica si el usuario tiene TODOS los permisos especificados
-   * @param permisos Array de permisos requeridos
+   * Verifica si el usuario tiene TODOS los permisos especificados
    */
   tienePermisos(permisos: string[]): boolean {
     const permisosUsuario = this._permisos();
@@ -200,8 +232,7 @@ export class AuthService {
   }
 
   /**
-   * NUEVO: Verifica si el usuario tiene AL MENOS UNO de los permisos especificados
-   * @param permisos Array de permisos
+   * Verifica si el usuario tiene AL MENOS UNO de los permisos especificados
    */
   tieneAlgunPermiso(permisos: string[]): boolean {
     const permisosUsuario = this._permisos();
@@ -227,8 +258,9 @@ export class AuthService {
       nombreCompleto: resp.name!,
       activo: 1,
       roles: [],
-      permisos: [], // NUEVO: Inicializar permisos vacíos
-      tema: resp.tema
+      permisos: [],
+      tema: resp.tema,
+      avatarUrl: resp.avatarUrl // NUEVO: Incluir avatar del login
     };
 
     this._user.set(userLogin);

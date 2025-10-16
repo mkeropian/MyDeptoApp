@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { UsuariosService } from '../../../../auth/services/users.service';
-import { User } from '../../../../auth/interfaces/user.interface';
+import { CreateUserRequest, User } from '../../../../auth/interfaces/user.interface';
 import { rxResource } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -32,12 +32,12 @@ import { rxResource } from '@angular/core/rxjs-interop';
 })
 export class FormComponent {
 
-  // NUEVO: Output para notificar cuando se crea un usuario
   @Output() usuarioCreado = new EventEmitter<void>();
 
   // Signals para manejar la preview del avatar
   avatarPreview = signal<string>('');
   selectedFile = signal<File | null>(null);
+  isUploading = signal<boolean>(false);
 
   router = inject(Router);
   usersService = inject(UsuariosService);
@@ -58,6 +58,7 @@ export class FormComponent {
       nombreCompleto: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       clave: ['', [Validators.required, Validators.minLength(6)]],
+      rolId: [0, [Validators.required, Validators.min(1)]],
       activo: [true],
     });
   }
@@ -73,7 +74,7 @@ export class FormComponent {
       // Validar tipo de archivo
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.type)) {
-        alert('Tipo de archivo no permitido. Use JPG, PNG o GIF.');
+        this.showErrorToast('Tipo de archivo no permitido. Use JPG, PNG o GIF.');
         input.value = '';
         this.selectedFile.set(null);
         this.avatarPreview.set('');
@@ -83,7 +84,7 @@ export class FormComponent {
       // Validar tamaño (4MB máximo)
       const maxSize = 4 * 1024 * 1024;
       if (file.size > maxSize) {
-        alert('El archivo es demasiado grande. Máximo 4MB permitido.');
+        this.showErrorToast('El archivo es demasiado grande. Máximo 4MB permitido.');
         input.value = '';
         this.selectedFile.set(null);
         this.avatarPreview.set('');
@@ -104,13 +105,6 @@ export class FormComponent {
   }
 
   /**
-   * Genera la ruta del avatar basada en el nombre del archivo
-   */
-  private generateAvatarUrl(fileName: string): string {
-    return `assets/images/${fileName}`;
-  }
-
-  /**
    * Maneja errores de carga de imagen
    */
   onImageError(event: Event): void {
@@ -123,33 +117,44 @@ export class FormComponent {
    */
   onSubmit(): void {
     if (this.userForm.valid) {
+      this.isUploading.set(true);
       const selectedFile = this.selectedFile();
+      const formValue = this.userForm.value;
 
-      const userData = {
-        ...this.userForm.value,
-        avatarUrl: selectedFile ? this.generateAvatarUrl(selectedFile.name) : '',
-        tema: 'light'
+      const userData: CreateUserRequest = {
+        usuario: formValue.usuario,
+        nombreCompleto: formValue.nombreCompleto,
+        email: formValue.email,
+        clave: formValue.clave,
+        activo: formValue.activo ? 1 : 0,
+        avatarUrl: '', // Se establecerá después de subir el archivo
+        tema: 'light',
+        rolId: parseInt(formValue.rolId, 10)
       };
 
       console.log('Datos del formulario:', userData);
 
-      this.usersService.createUsuario(userData as User).subscribe({
+      // Crear el usuario primero
+      this.usersService.createUsuario(userData).subscribe({
         next: (usuario) => {
           console.log('Usuario creado:', usuario);
-          console.log(selectedFile);
 
-          if (selectedFile) {
-            this.uploadAvatarFile(selectedFile, usuario);
+          // Si hay archivo seleccionado, subirlo después de crear el usuario
+          if (selectedFile && usuario.id) {
+            this.uploadAvatarFile(selectedFile, usuario.id).then(() => {
+              this.handleSuccess('Usuario creado correctamente');
+            }).catch((error) => {
+              console.error('Error al subir avatar:', error);
+              this.handleSuccess('Usuario creado, pero hubo un error al subir el avatar');
+            });
+          } else {
+            this.handleSuccess('Usuario creado correctamente');
           }
-
-          this.resetForm();
-
-          // NUEVO: Emitir evento para refrescar la lista
-          this.usuarioCreado.emit();
         },
         error: (error) => {
           console.error('Error al crear usuario:', error);
           this.showErrorToast('Error al crear el usuario');
+          this.isUploading.set(false);
         }
       });
 
@@ -162,19 +167,29 @@ export class FormComponent {
   /**
    * Método para subir el archivo físico al servidor
    */
-  private uploadAvatarFile(file: File, usuario: User): void {
-    const formData = new FormData();
-    formData.append('archivo', file);
-    formData.append('userId', usuario.id?.toString() || '');
-
-    this.usersService.uploadAvatar(formData).subscribe({
-      next: (response) => {
-        console.log('Avatar subido correctamente:', response);
-      },
-      error: (error) => {
-        console.error('Error al subir avatar:', error);
-      }
+  private async uploadAvatarFile(file: File, userId: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.usersService.uploadAvatar(file, userId).subscribe({
+        next: (response) => {
+          console.log('Avatar subido correctamente:', response);
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error al subir avatar:', error);
+          reject(error);
+        }
+      });
     });
+  }
+
+  /**
+   * Maneja el éxito en la creación del usuario
+   */
+  private handleSuccess(message: string): void {
+    this.resetForm();
+    this.showSuccessToast(message);
+    this.usuarioCreado.emit();
+    this.isUploading.set(false);
   }
 
   /**
@@ -192,6 +207,7 @@ export class FormComponent {
    */
   resetForm(): void {
     this.userForm.reset({
+      rolId: 0,
       activo: true
     });
     this.avatarPreview.set('');
@@ -201,6 +217,32 @@ export class FormComponent {
     if (fileInput) {
       fileInput.value = '';
     }
+  }
+
+  /**
+   * Muestra un toast de éxito
+   */
+  private showSuccessToast(message: string): void {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
+    toast.innerHTML = `
+      <div class="alert alert-success shadow-lg">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">${message}</span>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
   }
 
   /**
@@ -236,5 +278,6 @@ export class FormComponent {
   get nombreCompleto() { return this.userForm.get('nombreCompleto'); }
   get email() { return this.userForm.get('email'); }
   get clave() { return this.userForm.get('clave'); }
+  get rolId() { return this.userForm.get('rolId'); }
   get activo() { return this.userForm.get('activo'); }
 }

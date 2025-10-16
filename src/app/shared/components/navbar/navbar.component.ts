@@ -38,8 +38,15 @@ export class NavbarComponent {
   currentUser = computed(() => this.authService.user());
   isAdmin = computed(() => this.authService.isAdmin());
 
-  // NUEVO: Permisos específicos para el navbar
-  // Estos se evalúan reactivamente cuando cambien los permisos
+  // NUEVO: URL del avatar usando el computed del AuthService
+  userAvatarUrl = computed(() => this.authService.userAvatarUrl());
+
+  // NUEVO: Método helper para obtener avatar por defecto (accesible desde template)
+  getDefaultAvatarUrl = computed(() =>
+    this.authService.getDefaultAvatarUrl(this.currentUser()?.nombreCompleto || 'Usuario')
+  );
+
+  // Permisos específicos para el navbar
   tieneDashboard = computed(() => this.authService.tienePermiso('dashboard'));
   tieneDepartamentos = computed(() => this.authService.tienePermiso('departamentos'));
   tienePropietarios = computed(() => this.authService.tienePermiso('propietarios'));
@@ -51,7 +58,7 @@ export class NavbarComponent {
   tieneUsuarios = computed(() => this.authService.tienePermiso('usuarios'));
   tieneRoles = computed(() => this.authService.tienePermiso('roles'));
 
-  // Permisos compuestos - mostrar dropdown si tiene al menos uno de estos permisos
+  // Permisos compuestos
   tieneAlgunPermisoDashboard = computed(() =>
     this.authService.tieneAlgunPermiso(['dashboard', 'estadisticas', 'departamentos', 'propietarios'])
   );
@@ -141,5 +148,11 @@ export class NavbarComponent {
   onLogout() {
     this.onMenuItemClick();
     this.authService.logout();
+  }
+
+  // Método para manejar error al cargar avatar
+  onAvatarError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.src = this.getDefaultAvatarUrl();
   }
 }

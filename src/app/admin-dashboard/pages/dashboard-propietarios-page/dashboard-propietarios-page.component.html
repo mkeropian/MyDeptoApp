@@ -1,3 +1,4 @@
+<!-- dashboard-propietarios-page.component.html -->
 <section class="container mx-auto">
   <h2 class="text-3xl font-bold mb-2">Dashboard</h2>
 </section>
@@ -9,14 +10,12 @@
 
       <!-- Imagen del propietario en la parte superior -->
       <div class="w-full h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
-
         <img
-          src="{{ propietario.avatarUrl }}"
-          alt="Avatar de {{ propietario.nombreApellido }}"
+          [src]="propietario.avatarUrl"
+          [alt]="'Avatar de ' + propietario.nombreApellido"
           class="w-full h-full object-contain"
-          onerror="this.src='assets/images/default-avatar.png'"
+          (error)="onAvatarError($event)"
         >
-
       </div>
 
       <!-- Contenido del card -->
@@ -31,26 +30,19 @@
           </h3>
 
           <div class="space-y-1 text-xs">
-            <p class="text-gray-600 line-clamp-1" title="{{ propietario.email }}">
+            <p class="text-gray-600 line-clamp-1" [title]="propietario.email">
               <span class="font-medium">Email:</span> {{ propietario.email }}
             </p>
 
-            <p class="text-gray-600 line-clamp-1" title="{{ propietario.telefono }}">
+            <p class="text-gray-600 line-clamp-1" [title]="propietario.telefono">
               <span class="font-medium">Tel:</span> {{ propietario.telefono }}
             </p>
 
-            <p class="text-gray-600 line-clamp-1" title="{{ propietario.cuenta_nro }}">
+            <p class="text-gray-600 line-clamp-1" [title]="propietario.cuenta_nro">
               <span class="font-medium">Cuenta:</span> {{ propietario.cuenta_nro }}
             </p>
           </div>
         </div>
-
-        <!-- Botón de acción (opcional) -->
-        <!-- <div class="mt-4 flex justify-center">
-          <button class="btn btn-primary btn-xs w-full">
-            Ver detalles
-          </button>
-        </div> -->
       </div>
 
     </div>
@@ -58,7 +50,7 @@
     <div class="col-span-full text-center py-12">
       <div class="text-gray-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 4 0 014 0z" />
         </svg>
         <p class="text-lg font-medium">No hay propietarios disponibles</p>
         <p class="text-sm">Los propietarios aparecerán aquí cuando estén disponibles</p>

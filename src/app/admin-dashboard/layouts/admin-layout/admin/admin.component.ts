@@ -7,19 +7,26 @@ import { FooterComponent } from "../../../../shared/components/footer/footer.com
   selector: 'app-admin',
   imports: [NavbarComponent, RouterOutlet, FooterComponent],
   templateUrl: './admin.component.html',
-  styles: `
-    #controls {
-      position: fixed;
-      bottom: 0px;
-      width: 100%;
-      height: 70px; /* Define la altura del footer */
-      z-index: 10;
+styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
 
-    /* Agregar padding bottom al container principal */
-    section.container {
-      margin-bottom: 200px; /* Espacio para footer + card (ajusta según necesites) */
-      min-height: calc(100vh - 200px); /* Altura mínima considerando los elementos fijos */
+    section.main-content {
+      flex: 1;
+      padding-bottom: 90px; /* Espacio para el footer */
+      overflow-y: auto;
+    }
+
+    #controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      z-index: 50;
     }
   `
 })

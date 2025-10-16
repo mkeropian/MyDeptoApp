@@ -11,14 +11,15 @@ import { FooterCardComponent } from '../../../../shared/components/footer-card/f
   styles: `
     #controls {
       position: fixed;
-      bottom: 0px;
+      bottom: 0;
+      left: 0;
+      right: 0;
       width: 100%;
-      height: 70px; /* Define la altura del footer */
-      z-index: 10;
+      z-index: 50;
     }
     #card-controls {
       position: fixed;
-      bottom: 70px;
+      bottom: 68px;
       width: 100%;
       height: auto; /* Altura automática para el card */
       z-index: 10;

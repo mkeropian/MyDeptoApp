@@ -12,10 +12,11 @@ import { filter, Subscription } from 'rxjs';
   styles: `
     #controls {
       position: fixed;
-      bottom: 0px;
+      bottom: 0;
+      left: 0;
+      right: 0;
       width: 100%;
-      height: 70px;
-      z-index: 10;
+      z-index: 50;
     }
 
     .main-content {

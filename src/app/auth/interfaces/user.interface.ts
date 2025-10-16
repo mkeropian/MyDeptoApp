@@ -11,6 +11,18 @@ export interface User {
   tema?: string;
 }
 
+// NUEVA: Interfaz para crear usuario con rol
+export interface CreateUserRequest {
+  usuario: string;
+  nombreCompleto: string;
+  email: string;
+  clave: string;
+  activo: number;
+  avatarUrl?: string;
+  tema?: string;
+  rolId: number; // El campo del rol
+}
+
 export interface UserTema {
   id: number;
   tema: string;

@@ -140,7 +140,8 @@
         <div class="w-10 rounded-full">
           <img
             alt="Avatar de usuario"
-            [src]="currentUser()?.avatarUrl || 'https://ui-avatars.com/api/?name=' + (currentUser()?.nombreCompleto || 'U') + '&background=random&size=128'"
+            [src]="userAvatarUrl()"
+            (error)="onAvatarError($event)"
             title="Abrir menú de usuario"
           />
         </div>
@@ -159,7 +160,8 @@
               <div class="avatar">
                 <div class="w-12 rounded-full">
                   <img
-                    [src]="currentUser()?.avatarUrl || 'https://ui-avatars.com/api/?name=' + (currentUser()?.nombreCompleto || 'Usuario') + '&background=random&size=128'"
+                    [src]="userAvatarUrl()"
+                    (error)="onAvatarError($event)"
                     alt="Avatar de usuario"
                   />
                 </div>
@@ -174,6 +176,7 @@
             </span>
           </li>
 
+          <!-- resto del dropdown menu sin cambios -->
           <hr class="my-1 border-base-300">
 
           <li role="none">
