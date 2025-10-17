@@ -1,3 +1,5 @@
+// dashboard-departamentos-page.component.ts
+
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { DepartamentosService } from '../../../departamentos/services/departamentos.service';
@@ -93,7 +95,6 @@ export class DashboardDepartamentosPageComponent {
     });
   }
 
-
   departamentos = computed(() => {
     const backendData: DepartamentoBackend[] = this.departamentosResource.value() || [];
     const propietariosData: Propietario[] = this.propietariosResource.value() || [];
@@ -115,8 +116,12 @@ export class DashboardDepartamentosPageComponent {
           throw new Error('Coordenadas inválidas');
         }
 
-        // Buscar el propietario correspondiente
+        // Buscar el propietario correspondiente y transformar su avatarUrl
         const propietario = propietariosMap.get(item.idProp);
+        const propietarioConAvatar = propietario ? {
+          ...propietario,
+          avatarUrl: this.propietariosService.getAvatarUrl(propietario.avatarUrl)
+        } : undefined;
 
         return {
           id: item.id,
@@ -131,11 +136,15 @@ export class DashboardDepartamentosPageComponent {
           lngLat: { lng, lat }, // Crear el objeto esperado
           observaciones: item.observaciones,
           activo: item.activo,
-          propietario: propietario
+          propietario: propietarioConAvatar
         };
       } catch (error) {
         // Buscar el propietario correspondiente incluso si hay error en coordenadas
         const propietario = propietariosMap.get(item.idProp);
+        const propietarioConAvatar = propietario ? {
+          ...propietario,
+          avatarUrl: this.propietariosService.getAvatarUrl(propietario.avatarUrl)
+        } : undefined;
 
         // Coordenadas por defecto (Buenos Aires) si hay error
         return {
@@ -151,13 +160,11 @@ export class DashboardDepartamentosPageComponent {
           lngLat: { lng: -58.3816, lat: -34.6037 }, // Buenos Aires por defecto
           observaciones: item.observaciones,
           activo: item.activo,
-          propietario: propietario
+          propietario: propietarioConAvatar
         };
       }
     });
 
-    // console.log('Datos del backend:', backendData);
-    // console.log('Departamentos transformados:', transformedData);
     return transformedData;
   });
 
@@ -199,36 +206,30 @@ export class DashboardDepartamentosPageComponent {
 
   // Métodos para obtener categorías
   getCategoriasIngresos(): CategoriaOption[] {
-    const tipoPagoData= this.tipoPagoResource.value();
+    const tipoPagoData = this.tipoPagoResource.value();
 
     if (tipoPagoData && tipoPagoData.length > 0) {
-      // Mapear los datos del backend al formato esperado
       return tipoPagoData.map(item => ({
-        value: item.id.toString(), // o item.codigo, dependiendo de tu estructura
+        value: item.id.toString(),
         label: item.descripcion,
       }));
     }
 
-    // Si no hay datos, mostrar mensaje informativo
     return [
       { value: '', label: 'Sin categorías disponibles' }
     ];
-
   }
 
   getCategoriasGastos(): CategoriaOption[] {
-    // Usar los datos del resource si están disponibles
     const tipoGastoData = this.tipoGastoResource.value();
 
     if (tipoGastoData && tipoGastoData.length > 0) {
-      // Mapear los datos del backend al formato esperado
       return tipoGastoData.map(item => ({
-        value: item.id.toString(), // o item.codigo, dependiendo de tu estructura
+        value: item.id.toString(),
         label: item.descripcion,
       }));
     }
 
-    // Si no hay datos, mostrar mensaje informativo
     return [
       { value: '', label: 'Sin categorías disponibles' }
     ];
@@ -240,12 +241,16 @@ export class DashboardDepartamentosPageComponent {
     return today.toISOString().split('T')[0];
   }
 
+  // NUEVO: Método para manejar errores de carga de avatar
+  onAvatarError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = this.propietariosService.getDefaultAvatarUrl();
+  }
+
   onSubmit(): void {
     if (this.operacionForm.valid && this.selectedDepartamento()) {
 
-      // console.log('Operación a guardar:', operacion);
-
-      if (this.tipoOperacion() === 'ingresos'){
+      if (this.tipoOperacion() === 'ingresos') {
 
         const formValue: Pago = {
           id: 0,
@@ -260,7 +265,7 @@ export class DashboardDepartamentosPageComponent {
           pago => {
             console.log('Pago creado:', pago);
           });
-      } else if (this.tipoOperacion() === 'gastos'){
+      } else if (this.tipoOperacion() === 'gastos') {
 
         const formValue: Gasto = {
           id: 0,
@@ -289,5 +294,4 @@ export class DashboardDepartamentosPageComponent {
       });
     }
   }
-
 }

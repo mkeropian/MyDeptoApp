@@ -69,15 +69,15 @@ export class FormComponent implements OnInit {
     this.pagosForm.markAsUntouched();
     this.pagosForm.markAsPristine();
 
-    console.log('Formulario limpiado');
+    // console.log('Formulario limpiado');
   }
 
   onSubmit() {
     const isValid = this.pagosForm.valid;
     this.pagosForm.markAllAsTouched();
 
-    console.log('Formulario válido:', isValid);
-    console.log('Valores del formulario:', this.pagosForm.value);
+    // console.log('Formulario válido:', isValid);
+    // console.log('Valores del formulario:', this.pagosForm.value);
 
     if (!isValid) return;
 
@@ -85,7 +85,7 @@ export class FormComponent implements OnInit {
 
     this.pagosService.createPago(formValue as Pago).subscribe({
       next: (pago) => {
-        console.log('Pago creado:', pago);
+        // console.log('Pago creado:', pago);
 
         // Resetear el formulario
         this.pagosForm.reset({
@@ -103,7 +103,7 @@ export class FormComponent implements OnInit {
         this.showSuccessToast('Pago/Ingreso creado exitosamente');
       },
       error: (error) => {
-        console.error('Error al crear pago:', error);
+        // console.error('Error al crear pago:', error);
         this.showErrorToast('Error al crear el pago/ingreso');
       }
     });

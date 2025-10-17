@@ -72,15 +72,15 @@ export class FormComponent implements OnInit {
     this.gastosForm.markAsUntouched();
     this.gastosForm.markAsPristine();
 
-    console.log('Formulario limpiado');
+    // console.log('Formulario limpiado');
   }
 
   onSubmit() {
     const isValid = this.gastosForm.valid;
     this.gastosForm.markAllAsTouched();
 
-    console.log('Formulario válido:', isValid);
-    console.log('Valores del formulario:', this.gastosForm.value);
+    // console.log('Formulario válido:', isValid);
+    // console.log('Valores del formulario:', this.gastosForm.value);
 
     if (!isValid) return;
 
@@ -88,7 +88,7 @@ export class FormComponent implements OnInit {
 
     this.gastosService.createGasto(formValue as Gasto).subscribe({
       next: (gasto) => {
-        console.log('Gasto creado:', gasto);
+        // console.log('Gasto creado:', gasto);
 
         // Resetear el formulario
         this.gastosForm.reset({
@@ -106,7 +106,7 @@ export class FormComponent implements OnInit {
         this.showSuccessToast('Gasto creado exitosamente');
       },
       error: (error) => {
-        console.error('Error al crear gasto:', error);
+        // console.error('Error al crear gasto:', error);
         this.showErrorToast('Error al crear el gasto');
       }
     });
