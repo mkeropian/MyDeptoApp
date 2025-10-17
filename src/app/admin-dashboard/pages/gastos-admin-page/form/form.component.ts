@@ -6,6 +6,8 @@ import { GastosService } from '../../../../gastos/services/gastos.service';
 import { DepartamentosService } from '../../../../departamentos/services/departamentos.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormErrorLabelComponent } from '../../../../shared/components/form-error-label/form-error-label.component';
+import Swal from 'sweetalert2';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-form',
@@ -17,7 +19,6 @@ import { FormErrorLabelComponent } from '../../../../shared/components/form-erro
 })
 export class FormComponent implements OnInit {
 
-  // NUEVO: Output para notificar cuando se crea un gasto
   @Output() gastoCreado = new EventEmitter<void>();
 
   gasto: Gasto = {
@@ -48,10 +49,10 @@ export class FormComponent implements OnInit {
   departamentos = computed(() => this.departamentosResource.value() || []);
 
   gastosForm = this.fb.group({
-    idDep:        [0, Validators.required],
-    idTipoGasto:  [1, Validators.required],
-    monto:        [0, Validators.required],
-    fecha:        [''],
+    idsDep: [[] as number[], Validators.required], // Cambiado a array
+    idTipoGasto: [1, Validators.required],
+    monto: [0, Validators.required],
+    fecha: [''],
     observaciones: [''],
   });
 
@@ -60,54 +61,105 @@ export class FormComponent implements OnInit {
   }
 
   setFormValue(formLike: Partial<Gasto>) {
-    this.gastosForm.patchValue(formLike);
+    this.gastosForm.patchValue(formLike as any);
   }
 
   limpiarForm() {
     this.gastosForm.reset({
-      idDep: 0,
+      idsDep: [],
       idTipoGasto: 1,
       monto: 0
     });
     this.gastosForm.markAsUntouched();
     this.gastosForm.markAsPristine();
-
-    // console.log('Formulario limpiado');
   }
 
-  onSubmit() {
+  async onSubmit() {
     const isValid = this.gastosForm.valid;
     this.gastosForm.markAllAsTouched();
-
-    // console.log('Formulario válido:', isValid);
-    // console.log('Valores del formulario:', this.gastosForm.value);
 
     if (!isValid) return;
 
     const formValue = this.gastosForm.value;
+    const selectedDepartments = formValue.idsDep || [];
+    const totalMonto = formValue.monto || 0;
 
-    this.gastosService.createGasto(formValue as Gasto).subscribe({
-      next: (gasto) => {
-        // console.log('Gasto creado:', gasto);
+    // Validar que haya al menos 1 departamento seleccionado
+    if (selectedDepartments.length === 0) {
+      this.showErrorToast('Debe seleccionar al menos un departamento');
+      return;
+    }
 
+    // Calcular monto por departamento
+    const montoPorDepartamento = totalMonto / selectedDepartments.length;
+
+    // Obtener nombres de departamentos seleccionados
+    const nombresDeptos = selectedDepartments
+      .map(id => {
+        const depto = this.departamentos().find(d => d.id === id);
+        return depto ? depto.nombre : `Depto ${id}`;
+      })
+      .join(', ');
+
+    // Mostrar confirmación con SweetAlert2
+    const result = await Swal.fire({
+      title: '¿Confirmar distribución de gasto?',
+      html: `
+        <div class="text-left">
+          <p class="mb-2"><strong>Monto total:</strong> $${totalMonto.toLocaleString()}</p>
+          <p class="mb-2"><strong>Departamentos seleccionados:</strong> ${selectedDepartments.length}</p>
+          <p class="mb-2"><strong>Monto por departamento:</strong> $${montoPorDepartamento.toLocaleString()}</p>
+          <p class="mb-2 text-sm text-gray-600"><strong>Departamentos:</strong> ${nombresDeptos}</p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+    });
+
+    if (!result.isConfirmed) return;
+
+    // Crear array de observables para ejecutar todos los POST
+    const requests = selectedDepartments.map(idDep => {
+      const gastoIndividual: Gasto = {
+        id: 0,
+        idTipoGasto: formValue.idTipoGasto!,
+        idDep: idDep,
+        monto: montoPorDepartamento,
+        fecha: formValue.fecha || '',
+        observaciones: formValue.observaciones || ''
+      };
+      return this.gastosService.createGasto(gastoIndividual);
+    });
+
+    // Ejecutar todos los requests en paralelo
+    forkJoin(requests).subscribe({
+      next: (resultados) => {
         // Resetear el formulario
         this.gastosForm.reset({
-          idDep: 0,
+          idsDep: [],
           idTipoGasto: 1,
           monto: 0
         });
         this.gastosForm.markAsUntouched();
         this.gastosForm.markAsPristine();
 
-        // NUEVO: Emitir evento para refrescar la lista
+        // Emitir evento para refrescar la lista
         this.gastoCreado.emit();
 
         // Mostrar mensaje de éxito
-        this.showSuccessToast('Gasto creado exitosamente');
+        this.showSuccessToast(
+          `${resultados.length} gasto(s) creado(s) exitosamente ($${montoPorDepartamento.toLocaleString()} c/u)`
+        );
       },
       error: (error) => {
-        // console.error('Error al crear gasto:', error);
-        this.showErrorToast('Error al crear el gasto');
+        console.error('Error al crear gastos:', error);
+        this.showErrorToast(
+          `Error al crear los gastos. Algunos registros pueden no haberse guardado.`
+        );
       }
     });
   }

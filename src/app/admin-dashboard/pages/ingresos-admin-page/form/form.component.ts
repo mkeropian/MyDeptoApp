@@ -6,6 +6,8 @@ import { Router } from '@angular/router';
 import { PagosService } from '../../../../incomes/services/incomes.service';
 import { DepartamentosService } from '../../../../departamentos/services/departamentos.service';
 import { rxResource } from '@angular/core/rxjs-interop';
+import Swal from 'sweetalert2';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-form',
@@ -14,7 +16,6 @@ import { rxResource } from '@angular/core/rxjs-interop';
 })
 export class FormComponent implements OnInit {
 
-  // NUEVO: Output para notificar cuando se crea un pago
   @Output() pagoCreado = new EventEmitter<void>();
 
   pago: Pago = {
@@ -45,10 +46,10 @@ export class FormComponent implements OnInit {
   departamentos = computed(() => this.departamentosResource.value() || []);
 
   pagosForm = this.fb.group({
-    idDep:        [0, Validators.required],
-    idTipoPago:   [1, Validators.required],
-    monto:        [0, Validators.required],
-    fecha:        [''],
+    idsDep: [[] as number[], Validators.required], // Cambiado a array
+    idTipoPago: [1, Validators.required],
+    monto: [0, Validators.required],
+    fecha: [''],
     observaciones: [''],
   });
 
@@ -57,54 +58,105 @@ export class FormComponent implements OnInit {
   }
 
   setFormValue(formLike: Partial<Pago>) {
-    this.pagosForm.patchValue(formLike);
+    this.pagosForm.patchValue(formLike as any);
   }
 
   limpiarForm() {
     this.pagosForm.reset({
-      idDep: 0,
+      idsDep: [],
       idTipoPago: 1,
       monto: 0
     });
     this.pagosForm.markAsUntouched();
     this.pagosForm.markAsPristine();
-
-    // console.log('Formulario limpiado');
   }
 
-  onSubmit() {
+  async onSubmit() {
     const isValid = this.pagosForm.valid;
     this.pagosForm.markAllAsTouched();
-
-    // console.log('Formulario válido:', isValid);
-    // console.log('Valores del formulario:', this.pagosForm.value);
 
     if (!isValid) return;
 
     const formValue = this.pagosForm.value;
+    const selectedDepartments = formValue.idsDep || [];
+    const totalMonto = formValue.monto || 0;
 
-    this.pagosService.createPago(formValue as Pago).subscribe({
-      next: (pago) => {
-        // console.log('Pago creado:', pago);
+    // Validar que haya al menos 1 departamento seleccionado
+    if (selectedDepartments.length === 0) {
+      this.showErrorToast('Debe seleccionar al menos un departamento');
+      return;
+    }
 
+    // Calcular monto por departamento
+    const montoPorDepartamento = totalMonto / selectedDepartments.length;
+
+    // Obtener nombres de departamentos seleccionados
+    const nombresDeptos = selectedDepartments
+      .map(id => {
+        const depto = this.departamentos().find(d => d.id === id);
+        return depto ? depto.nombre : `Depto ${id}`;
+      })
+      .join(', ');
+
+    // Mostrar confirmación con SweetAlert2
+    const result = await Swal.fire({
+      title: '¿Confirmar distribución de pago?',
+      html: `
+        <div class="text-left">
+          <p class="mb-2"><strong>Monto total:</strong> $${totalMonto.toLocaleString()}</p>
+          <p class="mb-2"><strong>Departamentos seleccionados:</strong> ${selectedDepartments.length}</p>
+          <p class="mb-2"><strong>Monto por departamento:</strong> $${montoPorDepartamento.toLocaleString()}</p>
+          <p class="mb-2 text-sm text-gray-600"><strong>Departamentos:</strong> ${nombresDeptos}</p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+    });
+
+    if (!result.isConfirmed) return;
+
+    // Crear array de observables para ejecutar todos los POST
+    const requests = selectedDepartments.map(idDep => {
+      const pagoIndividual: Pago = {
+        id: 0,
+        idTipoPago: formValue.idTipoPago!,
+        idDep: idDep,
+        monto: montoPorDepartamento,
+        fecha: formValue.fecha || '',
+        observaciones: formValue.observaciones || ''
+      };
+      return this.pagosService.createPago(pagoIndividual);
+    });
+
+    // Ejecutar todos los requests en paralelo
+    forkJoin(requests).subscribe({
+      next: (resultados) => {
         // Resetear el formulario
         this.pagosForm.reset({
-          idDep: 0,
+          idsDep: [],
           idTipoPago: 1,
           monto: 0
         });
         this.pagosForm.markAsUntouched();
         this.pagosForm.markAsPristine();
 
-        // NUEVO: Emitir evento para refrescar la lista
+        // Emitir evento para refrescar la lista
         this.pagoCreado.emit();
 
         // Mostrar mensaje de éxito
-        this.showSuccessToast('Pago/Ingreso creado exitosamente');
+        this.showSuccessToast(
+          `${resultados.length} pago(s)/ingreso(s) creado(s) exitosamente ($${montoPorDepartamento.toLocaleString()} c/u)`
+        );
       },
       error: (error) => {
-        // console.error('Error al crear pago:', error);
-        this.showErrorToast('Error al crear el pago/ingreso');
+        console.error('Error al crear pagos:', error);
+        this.showErrorToast(
+          `Error al crear los pagos. Algunos registros pueden no haberse guardado.`
+        );
       }
     });
   }
