@@ -127,7 +127,8 @@ interface DepartmentRanking {
     }
 
     .month-dropdown.open {
-      max-height: 400px;
+      max-height: 600px;
+      overflow-y: auto;
     }
 
     .month-option {
