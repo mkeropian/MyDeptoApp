@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, computed, effect, ElementRef, inject, signal, viewChild, ViewChild } from '@angular/core';
 import { Departamento, DepartamentoBackend } from '../../../departamentos/interfaces/departamento.interface';
 import { v4 as UUIDv4 } from 'uuid';
 import { MiniMapComponent } from "../../../shared/components/mini-map/mini-map.component";
@@ -7,8 +7,10 @@ import { DepartamentosService } from '../../../departamentos/services/departamen
 import { rxResource } from '@angular/core/rxjs-interop';
 import { TableAction, TableColumn } from '../../../shared/components/smart-grid/smart-grid.interface';
 import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-grid.component";
+import { EditModalComponent } from './edit-modal/edit-modal.component';
 import mapboxgl from 'mapbox-gl';
 import { last } from 'rxjs';
+import Swal from 'sweetalert2';
 
 interface Marker {
   id: number;
@@ -18,7 +20,7 @@ interface Marker {
 
 @Component({
   selector: 'departamentos-admin-page',
-  imports: [FormComponent, SmartGridComponent],
+  imports: [FormComponent, SmartGridComponent, EditModalComponent],
   templateUrl: './departamentos-admin-page.component.html',
   styles: `
 	.map-container {
@@ -28,6 +30,9 @@ interface Marker {
 })
 export class DepartamentosAdminPageComponent implements AfterViewInit {
   departamentosService = inject(DepartamentosService);
+
+  // NUEVO: ViewChild para el modal de edición
+  @ViewChild(EditModalComponent) editModal?: EditModalComponent;
 
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
@@ -194,7 +199,17 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
       label: 'Editar',
       icon: 'fas fa-edit',
       class: 'btn-primary btn-xs',
-      action: (departamentos) => this.editar(departamentos)
+      action: (departamento) => this.editar(departamento)
+    },
+    {
+      label: '',
+      icon: '',
+      class: 'btn-xs',
+      action: (departamento) => this.toggleActivo(departamento),
+
+      getIcon: (departamento: any) => departamento.activo === 1 ?  'fas fa-trash-can' : 'fas fa-circle-check',
+
+      getClass: (departamento: any) => departamento.activo === 1 ? 'btn-error btn-xs' : 'btn-success btn-xs',
     }
   ];
 
@@ -281,6 +296,11 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
     this.refreshTrigger.update(v => v + 1);
   }
 
+  // NUEVO: Método para refrescar cuando se actualiza un departamento
+  onDepartamentoActualizado(): void {
+    this.refreshTrigger.update(v => v + 1);
+  }
+
   // 🔥 NUEVA FUNCIONALIDAD: Parser inteligente para el componente padre
   private parseCoordinatesIntelligent(coordinatesString: string): { lng: number; lat: number } | null {
     if (!coordinatesString || coordinatesString.trim() === '') {
@@ -326,8 +346,51 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
     }
   }
 
-  editar(departamentos: any) {
-    console.log('Editando departamentos:', departamentos);
+  // MODIFICADO: Método editar para abrir el modal
+  editar(departamento: any) {
+    if (this.editModal) {
+      this.editModal.open(departamento);
+    }
+  }
+
+  // NUEVO: Método para toggle activo/inactivo
+  async toggleActivo(departamento: any) {
+    const accion = departamento.activo === 1 ? 'desactivar' : 'activar';
+    const accionCapitalizada = accion.charAt(0).toUpperCase() + accion.slice(1);
+
+    const result = await Swal.fire({
+      title: `¿${accionCapitalizada} departamento?`,
+      html: `
+        <div class="text-left text-sm">
+          <p class="mb-2"><strong>Departamento:</strong> ${departamento.nombre}</p>
+          <p class="mb-2"><strong>Dirección:</strong> ${departamento.calle}</p>
+          <p class="text-warning">Esta acción cambiará el estado del departamento.</p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: accionCapitalizada,
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: departamento.activo === 1 ? '#d33' : '#3085d6',
+      cancelButtonColor: '#6c757d',
+      customClass: {
+        popup: 'swal-compact'
+      }
+    });
+
+    if (!result.isConfirmed) return;
+
+    this.departamentosService.toggleActivo(departamento.id).subscribe({
+      next: (response) => {
+        const nuevoEstado = response.activo === 1 ? 'activado' : 'desactivado';
+        this.showSuccessToast(`Departamento ${nuevoEstado} exitosamente`);
+        this.refreshTrigger.update(v => v + 1);
+      },
+      error: (error) => {
+        console.error('Error al cambiar estado:', error);
+        this.showErrorToast('Error al cambiar el estado del departamento');
+      }
+    });
   }
 
   agregarDepartamento() {
@@ -398,5 +461,52 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
     }
 
     this.markers.set([ newMarker, ...this.markers()]);
+  }
+
+  // Métodos de toast
+  private showSuccessToast(message: string): void {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
+    toast.innerHTML = `
+      <div class="alert alert-success shadow-lg">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">${message}</span>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
+  }
+
+  private showErrorToast(message: string): void {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
+    toast.innerHTML = `
+      <div class="alert alert-error shadow-lg">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">${message}</span>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
   }
 }

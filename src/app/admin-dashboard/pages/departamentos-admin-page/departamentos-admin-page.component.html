@@ -7,7 +7,7 @@
   <!-- Formulario (más ancho con padding derecho) -->
   <div class="flex-[2] pr-4">
     <!-- 🔥 AGREGADOS AMBOS EVENTOS -->
-    <app-form 
+    <app-form
       #formComponent
       (coordinatesChange)="onCoordinatesChange($event)"
       (departamentoCreado)="onDepartamentoCreado()" />
@@ -68,3 +68,6 @@
     </div>
   </div>
 </section>
+
+<!-- AGREGAR ESTA LÍNEA AL FINAL -->
+<app-edit-modal-departamento (departamentoActualizado)="onDepartamentoActualizado()" />

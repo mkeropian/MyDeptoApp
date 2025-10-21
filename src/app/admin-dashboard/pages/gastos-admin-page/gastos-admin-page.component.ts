@@ -1,14 +1,15 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ViewChild } from '@angular/core';
 import { FormComponent } from "./form/form.component";
 import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-grid.component";
 import { GastosService } from '../../../gastos/services/gastos.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Gasto } from '../../../gastos/interfaces/gasto.interface';
 import { TableAction, TableColumn } from '../../../shared/components/smart-grid/smart-grid.interface';
+import { EditModalComponent } from './edit-modal/edit-modal.component';
 
 @Component({
   selector: 'gastos-admin-page',
-  imports: [FormComponent, SmartGridComponent],
+  imports: [FormComponent, SmartGridComponent, EditModalComponent],
   templateUrl: './gastos-admin-page.component.html',
 })
 
@@ -16,12 +17,13 @@ export class GastosAdminPageComponent {
 
   gastosService = inject(GastosService);
 
+  @ViewChild(EditModalComponent) editModal!: EditModalComponent;
+
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   refreshTrigger = signal(0);
   selectedGastos = signal<Gasto[]>([]);
 
-  // MODIFICADO: Ahora el resource depende del refreshTrigger
   gastosResource = rxResource({
     request: () => ({ refresh: this.refreshTrigger() }),
     loader: () => this.gastosService.getGastos()
@@ -119,7 +121,9 @@ export class GastosAdminPageComponent {
   ];
 
   editar(gasto: any) {
-    console.log('Editando Gasto:', gasto);
+    if (this.editModal) {
+      this.editModal.open(gasto);
+    }
   }
 
   onSort(event: {column: string, direction: 'asc' | 'desc'}): void {
@@ -127,8 +131,12 @@ export class GastosAdminPageComponent {
     this.sortDirection.set(event.direction);
   }
 
-  // NUEVO: Método para refrescar la lista de gastos
   onGastoCreado(): void {
+    this.refreshTrigger.update(v => v + 1);
+  }
+
+  // NUEVO: Método para refrescar cuando se actualiza un gasto
+  onGastoActualizado(): void {
     this.refreshTrigger.update(v => v + 1);
   }
 

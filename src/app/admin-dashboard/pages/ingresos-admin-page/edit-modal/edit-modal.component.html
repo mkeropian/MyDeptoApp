@@ -1,0 +1,132 @@
+<dialog id="edit_pago_modal" class="modal">
+  <div class="modal-box w-11/12 max-w-2xl bg-green-50">
+
+    <!-- Header con tonalidad verde -->
+    <div class="border-b border-green-200 pb-3 mb-4">
+      <h3 class="font-bold text-xl text-green-900">Editar Pago/Ingreso</h3>
+      <p class="text-sm text-green-700 mt-1">Modifique la información del pago</p>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+      <div class="space-y-4">
+
+        <!-- Tipo de Pago -->
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text font-semibold text-green-900">Tipo de Pago</span>
+          </div>
+          <select
+            class="select select-bordered w-full bg-white"
+            [class.select-error]="editForm.get('idTipoPago')?.invalid && (editForm.get('idTipoPago')?.dirty || editForm.get('idTipoPago')?.touched)"
+            formControlName="idTipoPago"
+          >
+            <option [value]="0" disabled>Seleccionar tipo de pago</option>
+            @if (tipoPagoResource.isLoading()) {
+              <option disabled>Cargando tipos de pagos...</option>
+            } @else {
+              @for (tipoPago of tipoPagos(); track tipoPago.id) {
+                <option [value]="tipoPago.id">
+                  {{ tipoPago.descripcion }}
+                </option>
+              }
+            }
+          </select>
+          <form-error-label [control]="editForm.get('idTipoPago')!" />
+        </label>
+
+        <!-- Departamento -->
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text font-semibold text-green-900">Departamento</span>
+          </div>
+          <select
+            class="select select-bordered w-full bg-white"
+            [class.select-error]="editForm.get('idDep')?.invalid && (editForm.get('idDep')?.dirty || editForm.get('idDep')?.touched)"
+            formControlName="idDep"
+          >
+            <option [value]="0" disabled>Seleccionar departamento</option>
+            @if (departamentosResource.isLoading()) {
+              <option disabled>Cargando departamentos...</option>
+            } @else {
+              @for (departamento of departamentos(); track departamento.id) {
+                <option [value]="departamento.id">
+                  {{ departamento.nombre }}
+                  @if (departamento.calle) {
+                    - {{ departamento.calle }}
+                  }
+                </option>
+              }
+            }
+          </select>
+          <form-error-label [control]="editForm.get('idDep')!" />
+        </label>
+
+        <!-- Monto y Fecha en una fila -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- Monto -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-green-900">Monto ($)</span>
+            </div>
+            <input
+              type="number"
+              class="input input-bordered w-full bg-white"
+              [class.input-error]="editForm.get('monto')?.invalid && (editForm.get('monto')?.dirty || editForm.get('monto')?.touched)"
+              placeholder="0.00"
+              formControlName="monto"
+            />
+            <form-error-label [control]="editForm.get('monto')!" />
+          </label>
+
+          <!-- Fecha -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-green-900">Fecha</span>
+            </div>
+            <input
+              type="date"
+              class="input input-bordered w-full bg-white"
+              [class.input-error]="editForm.get('fecha')?.invalid && (editForm.get('fecha')?.dirty || editForm.get('fecha')?.touched)"
+              formControlName="fecha"
+            />
+            <form-error-label [control]="editForm.get('fecha')!" />
+          </label>
+
+        </div>
+
+        <!-- Observaciones -->
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text font-semibold text-green-900">Observaciones</span>
+          </div>
+          <textarea
+            class="textarea textarea-bordered h-20 bg-white"
+            placeholder="Observaciones adicionales..."
+            formControlName="observaciones"
+          ></textarea>
+          <form-error-label [control]="editForm.get('observaciones')!" />
+        </label>
+
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="modal-action">
+        <button type="button" class="btn btn-ghost" (click)="close()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn bg-green-600 hover:bg-green-700 text-white">
+          <i class="fa-solid fa-save"></i>
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+
+  </div>
+
+  <!-- Backdrop para cerrar el modal -->
+  <form method="dialog" class="modal-backdrop">
+    <button type="button" (click)="close()">close</button>
+  </form>
+</dialog>

@@ -1,26 +1,29 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ViewChild } from '@angular/core';
 import { FormComponent } from "./form/form.component";
 import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-grid.component";
 import { PagosService } from '../../../incomes/services/incomes.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Pago } from '../../../incomes/interfaces/incomes.interface';
 import { TableAction, TableColumn } from '../../../shared/components/smart-grid/smart-grid.interface';
+import { EditModalComponent } from './edit-modal/edit-modal.component';
+
 
 @Component({
   selector: 'ingresos-admin-page',
-  imports: [FormComponent, SmartGridComponent],
+  imports: [FormComponent, SmartGridComponent, EditModalComponent],
   templateUrl: './ingresos-admin-page.component.html',
 })
 export class IngresosAdminPageComponent {
 
   pagosService = inject(PagosService);
 
+  @ViewChild(EditModalComponent) editModal!: EditModalComponent;
+
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   refreshTrigger = signal(0);
   selectedPagos = signal<Pago[]>([]);
 
-  // MODIFICADO: Ahora el resource depende del refreshTrigger
   pagosResource = rxResource({
     request: () => ({ refresh: this.refreshTrigger() }),
     loader: () => this.pagosService.getPagos()
@@ -118,7 +121,9 @@ export class IngresosAdminPageComponent {
   ];
 
   editar(pago: any) {
-    console.log('Editando Pago:', pago);
+    if (this.editModal) {
+      this.editModal.open(pago);
+    }
   }
 
   onSort(event: {column: string, direction: 'asc' | 'desc'}): void {
@@ -126,8 +131,12 @@ export class IngresosAdminPageComponent {
     this.sortDirection.set(event.direction);
   }
 
-  // NUEVO: Método para refrescar la lista de pagos
   onPagoCreado(): void {
+    this.refreshTrigger.update(v => v + 1);
+  }
+
+  // NUEVO: Método para refrescar cuando se actualiza un pago
+  onPagoActualizado(): void {
     this.refreshTrigger.update(v => v + 1);
   }
 

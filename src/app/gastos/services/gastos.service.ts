@@ -21,4 +21,8 @@ export class GastosService {
   createGasto(gastoLike: Partial<Gasto>): Observable<Gasto> {
     return this.http.put<Gasto>(`${baseUrl}/gastos`, gastoLike);
   }
+
+  updateGasto(id: number, gastoLike: Partial<Gasto>): Observable<Gasto> {
+    return this.http.post<Gasto>(`${baseUrl}/gastos/${id}`, gastoLike);
+  }
 }

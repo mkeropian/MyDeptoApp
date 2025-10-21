@@ -11,4 +11,8 @@ export interface TableAction {
   icon?: string;
   class?: string;
   action: (item: any) => void;
+  // Nuevas propiedades opcionales para botones dinámicos
+  getLabel?: (item: any) => string;
+  getIcon?: (item: any) => string;
+  getClass?: (item: any) => string;
 }

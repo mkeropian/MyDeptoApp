@@ -11,5 +11,19 @@
     font-family: "Berkshire";
     src: url("/assets/fonts/berkshire_swash/berkshireswash-segular.ttf") format("truetype");
   }
+}
 
+/* SweetAlert compacto para modales de edición */
+.swal-compact .swal2-html-container {
+  margin: 0.5em 1em !important;
+  padding: 0 !important;
+}
+
+.swal-compact .swal2-title {
+  font-size: 1rem !important;  /* Título más pequeño */
+  padding: 0.5em 1em 0.3em !important;
+}
+
+.swal-compact .swal2-actions {
+  margin: 0.5em auto 0 !important;
 }

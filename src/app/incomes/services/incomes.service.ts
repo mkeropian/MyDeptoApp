@@ -21,4 +21,9 @@ export class PagosService {
   createPago(pagoLike: Partial<Pago>): Observable<Pago> {
     return this.http.put<Pago>(`${baseUrl}/pagos`, pagoLike);
   }
+
+  updatePago(id: number, pagoLike: Partial<Pago>): Observable<Pago> {
+    return this.http.post<Pago>(`${baseUrl}/pagos/${id}`, pagoLike);
+  }
+
 }

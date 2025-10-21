@@ -93,19 +93,18 @@
               </ng-template>
             </td>
 
-            <!-- Acciones -->
-            <th *ngIf="actions.length > 0">
-              <div class="flex gap-1">
-                <button
-                  *ngFor="let action of actions"
-                  class="btn {{ action.class || 'btn-ghost btn-xs' }}"
-                  (click)="action.action(item)">
-                  <i *ngIf="action.icon" class="{{ action.icon }}"></i>
-                  {{ action.label }}
-                </button>
-              </div>
-            </th>
-          </tr>
+          <!-- Acciones -->
+          <th *ngIf="actions.length > 0">
+            <div class="flex gap-1">
+              <button
+                *ngFor="let action of actions"
+                [class]="'btn ' + (action.getClass ? action.getClass(item) : (action.class || 'btn-ghost btn-xs'))"
+                (click)="action.action(item)">
+                <i [ngClass]="action.getIcon ? action.getIcon(item) : action.icon"></i>
+                {{ action.getLabel ? action.getLabel(item) : action.label }}
+              </button>
+            </div>
+          </th>
 
           <!-- Fila vacía -->
           <tr *ngIf="data.length === 0">

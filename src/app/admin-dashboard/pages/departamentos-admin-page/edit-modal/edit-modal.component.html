@@ -1,0 +1,228 @@
+<dialog id="edit_departamento_modal" class="modal">
+  <div class="modal-box w-11/12 max-w-3xl bg-blue-50">
+
+    <!-- Header con tonalidad azul -->
+    <div class="border-b border-blue-200 pb-3 mb-4">
+      <h3 class="font-bold text-xl text-blue-900">Editar Departamento</h3>
+      <p class="text-sm text-blue-700 mt-1">Modifique la información del departamento</p>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+
+      <!-- Layout en 2 columnas -->
+      <div class="flex gap-4">
+
+        <!-- Columna Izquierda -->
+        <div class="flex-1 space-y-3">
+
+          <!-- Código Propietario -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Propietario</span>
+            </div>
+            <select
+              class="select select-bordered w-full bg-white"
+              [class.select-error]="editForm.get('idProp')?.invalid && (editForm.get('idProp')?.dirty || editForm.get('idProp')?.touched)"
+              formControlName="idProp"
+            >
+              <option [value]="0" disabled>Seleccionar propietario</option>
+              @if (propietariosResource.isLoading()) {
+                <option disabled>Cargando propietarios...</option>
+              } @else {
+                @for (propietario of propietarios(); track propietario.id) {
+                  <option [value]="propietario.id">
+                    {{ propietario.nombreApellido }}
+                    @if (propietario.email) {
+                      - {{ propietario.email }}
+                    }
+                  </option>
+                }
+              }
+            </select>
+            <form-error-label [control]="editForm.get('idProp')!" />
+          </label>
+
+          <!-- Nombre -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Nombre</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              [class.input-error]="editForm.get('nombre')?.invalid && (editForm.get('nombre')?.dirty || editForm.get('nombre')?.touched)"
+              placeholder="Amazing Studio Department"
+              formControlName="nombre"
+            />
+            <form-error-label [control]="editForm.get('nombre')!" />
+          </label>
+
+          <!-- Descripción -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Descripción</span>
+            </div>
+            <textarea
+              class="textarea textarea-bordered bg-white h-20"
+              [class.textarea-error]="editForm.get('descripcion')?.invalid && (editForm.get('descripcion')?.dirty || editForm.get('descripcion')?.touched)"
+              placeholder="Descripción del departamento..."
+              formControlName="descripcion"
+            ></textarea>
+            <form-error-label [control]="editForm.get('descripcion')!" />
+          </label>
+
+          <!-- Calle -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Calle</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              [class.input-error]="editForm.get('calle')?.invalid && (editForm.get('calle')?.dirty || editForm.get('calle')?.touched)"
+              placeholder="Tucumán 1234"
+              formControlName="calle"
+            />
+            <form-error-label [control]="editForm.get('calle')!" />
+          </label>
+
+          <!-- Barrio -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Barrio</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              placeholder="San Telmo"
+              formControlName="barrio"
+            />
+          </label>
+
+        </div>
+
+        <!-- Columna Derecha -->
+        <div class="flex-1 space-y-3">
+
+          <!-- Localidad -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Localidad</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              placeholder="Lomas del Mirador"
+              formControlName="localidad"
+            />
+          </label>
+
+          <!-- Provincia -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Provincia</span>
+            </div>
+            <select
+              class="select select-bordered w-full bg-white"
+              formControlName="provincia"
+            >
+              <option value="">Seleccionar provincia</option>
+              <option value="CABA">CABA</option>
+              <option value="BA">Buenos Aires</option>
+              <option value="CA">Catamarca</option>
+              <option value="CH">Chaco</option>
+              <option value="CO">Córdoba</option>
+              <option value="CR">Corrientes</option>
+              <option value="ER">Entre Ríos</option>
+              <option value="FO">Formosa</option>
+              <option value="JU">Jujuy</option>
+              <option value="LP">La Pampa</option>
+              <option value="LR">La Rioja</option>
+              <option value="ME">Mendoza</option>
+              <option value="MI">Misiones</option>
+              <option value="NE">Neuquén</option>
+              <option value="RN">Río Negro</option>
+              <option value="SA">Salta</option>
+              <option value="SJ">San Juan</option>
+              <option value="SL">San Luis</option>
+              <option value="SC">Santa Cruz</option>
+              <option value="SF">Santa Fe</option>
+              <option value="SE">Santiago del Estero</option>
+              <option value="TF">Tierra del Fuego</option>
+              <option value="TU">Tucumán</option>
+            </select>
+          </label>
+
+          <!-- Código Postal -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Código Postal</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              placeholder="1425"
+              formControlName="codigoPostal"
+              pattern="[0-9]{4}"
+            />
+          </label>
+
+          <!-- Coordenadas -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Coordenadas</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              [class.input-error]="editForm.get('lngLat')?.invalid && (editForm.get('lngLat')?.dirty || editForm.get('lngLat')?.touched)"
+              placeholder="-58.433160,-34.612762"
+              formControlName="lngLat"
+            />
+            <div *ngIf="editForm.get('lngLat')?.invalid && (editForm.get('lngLat')?.dirty || editForm.get('lngLat')?.touched)"
+                 class="label">
+              <span class="label-text-alt text-error text-xs">
+                {{ getCoordinatesErrorMessage() }}
+              </span>
+            </div>
+            <div *ngIf="!editForm.get('lngLat')?.invalid || (!editForm.get('lngLat')?.dirty && !editForm.get('lngLat')?.touched)"
+                 class="label">
+              <span class="label-text-alt text-xs opacity-70">Formato: longitud,latitud</span>
+            </div>
+          </label>
+
+          <!-- Observaciones -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Observaciones</span>
+            </div>
+            <textarea
+              class="textarea textarea-bordered bg-white h-20"
+              placeholder="Notas adicionales..."
+              formControlName="observaciones"
+            ></textarea>
+          </label>
+
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="modal-action mt-6">
+        <button type="button" class="btn btn-ghost" (click)="close()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn bg-blue-600 hover:bg-blue-700 text-white">
+          <i class="fa-solid fa-save"></i>
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+
+  </div>
+
+  <!-- Backdrop para cerrar el modal -->
+  <form method="dialog" class="modal-backdrop">
+    <button type="button" (click)="close()">close</button>
+  </form>
+</dialog>
