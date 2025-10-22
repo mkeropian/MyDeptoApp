@@ -206,9 +206,7 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
       icon: '',
       class: 'btn-xs',
       action: (departamento) => this.toggleActivo(departamento),
-
-      getIcon: (departamento: any) => departamento.activo === 1 ?  'fas fa-trash-can' : 'fas fa-circle-check',
-
+      getIcon: (departamento: any) => departamento.activo === 1 ? 'fas fa-toggle-off' : 'fas fa-toggle-on',
       getClass: (departamento: any) => departamento.activo === 1 ? 'btn-error btn-xs' : 'btn-success btn-xs',
     }
   ];

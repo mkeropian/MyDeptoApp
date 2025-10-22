@@ -52,6 +52,10 @@ export class PropietariosService {
     return this.http.post(`${baseUrl}/archivos/upload-avatar-propietario`, formData);
   }
 
+  toggleActivo(id: number): Observable<{ id: number; activo: number }> {
+    return this.http.post<{ id: number; activo: number }>(`${baseUrl}/propietarios/activo/${id}`, {});
+  }
+
   /**
    * Obtiene URL completa del avatar de propietario
    * VALIDANDO que las rutas de assets sean válidas
@@ -112,4 +116,9 @@ export class PropietariosService {
   getDefaultAvatarUrl(): string {
     return 'assets/images/default-avatar.png';
   }
+
+  updatePropietario(id: number, propietario: Partial<Propietario>): Observable<any> {
+    return this.http.post<any>(`${baseUrl}/propietarios/${id}`, propietario);
+  }
+
 }

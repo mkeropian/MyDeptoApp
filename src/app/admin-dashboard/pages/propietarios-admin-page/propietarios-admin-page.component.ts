@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, ViewChild } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { PropietariosService } from '../../../propietarios/services/propietarios.service';
 import { JsonPipe } from '@angular/common';
@@ -6,15 +6,19 @@ import { FormComponent } from "./form/form.component";
 import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-grid.component";
 import { Propietario } from '../../../propietarios/interfaces/propietario.interface';
 import { TableAction, TableColumn } from '../../../shared/components/smart-grid/smart-grid.interface';
+import Swal from 'sweetalert2';
+import { EditModalComponent } from './edit-modal/edit-modal.component';
 
 @Component({
   selector: 'propietarios-admin-page',
-  imports: [FormComponent, SmartGridComponent],
+  imports: [FormComponent, SmartGridComponent, EditModalComponent],
   templateUrl: './propietarios-admin-page.component.html',
 })
 export class PropietariosAdminPageComponent {
 
   propietariosService = inject(PropietariosService);
+
+  @ViewChild(EditModalComponent) editModal?: EditModalComponent;
 
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
@@ -121,11 +125,65 @@ export class PropietariosAdminPageComponent {
       icon: 'fas fa-edit',
       class: 'btn-primary btn-xs',
       action: (propietario) => this.editar(propietario)
+    },
+    {
+      label: '',
+      icon: '',
+      class: 'btn-xs',
+      action: (propietario) => this.toggleActivo(propietario),
+      getIcon: (propietario: any) => propietario.activo === 1 ? 'fas fa-toggle-off' : 'fas fa-toggle-on',
+      getClass: (propietario: any) => propietario.activo === 1 ? 'btn-error btn-xs' : 'btn-success btn-xs',
     }
   ];
 
   editar(propietario: any) {
-    console.log('Editando Propietario:', propietario);
+    if (this.editModal) {
+      this.editModal.open(propietario);
+    }
+  }
+
+  onPropietarioActualizado(): void {
+    this.refreshTrigger.update(v => v + 1);
+  }
+
+  // NUEVO: Método para toggle activo/inactivo
+  async toggleActivo(propietario: any) {
+    const accion = propietario.activo === 1 ? 'desactivar' : 'activar';
+    const accionCapitalizada = accion.charAt(0).toUpperCase() + accion.slice(1);
+
+    const result = await Swal.fire({
+      title: `¿${accionCapitalizada} propietario?`,
+      html: `
+        <div class="text-left text-sm">
+          <p class="mb-2"><strong>Propietario:</strong> ${propietario.nombreApellido}</p>
+          <p class="mb-2"><strong>DNI:</strong> ${propietario.dni}</p>
+          <p class="text-warning">Esta acción cambiará el estado del propietario.</p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: accionCapitalizada,
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: propietario.activo === 1 ? '#d33' : '#3085d6',
+      cancelButtonColor: '#6c757d',
+      customClass: {
+        popup: 'swal-compact'
+      }
+    });
+
+    if (!result.isConfirmed) return;
+
+    this.propietariosService.toggleActivo(propietario.id).subscribe({
+      next: (response) => {
+        const nuevoEstado = response.activo === 1 ? 'activado' : 'desactivado';
+        this.showSuccessToast(`Propietario ${nuevoEstado} exitosamente`);
+        this.refreshTrigger.update(v => v + 1);
+      },
+      error: (error) => {
+        console.error('Error al cambiar estado:', error);
+        this.showErrorToast('Error al cambiar el estado del propietario');
+      }
+    });
   }
 
   agregarPropietario() {
@@ -153,22 +211,50 @@ export class PropietariosAdminPageComponent {
     console.log('Propietarios seleccionados:', selectedItems.length);
   }
 
-  // TODO:
-  // toggleActivo(propietarios: any) {
-  //   propietarios.activo = !propietarios.activo;
-  //   propietarios.activoTexto = propietarios.activo ? 'Sí' : 'No';
+  // Métodos de toast
+  private showSuccessToast(message: string): void {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
+    toast.innerHTML = `
+      <div class="alert alert-success shadow-lg">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">${message}</span>
+        </div>
+      </div>
+    `;
 
-  //   this.propietariosService.updatePropietarioActivo(propietarios.id, { activo: propietarios.activo }).subscribe(
-  //     response => {
-  //       this.showSuccessToast(`Usuario ${usuario.usuario} actualizado correctamente.`);
-  //     },
-  //     error => {
-  //       // Revertir el cambio en caso de error
-  //       usuario.activo = !usuario.activo;
-  //       usuario.activoTexto = usuario.activo ? 'Sí' : 'No';
-  //       console.error('Error al actualizar el usuario:', error);
-  //       this.showErrorToast(`Error al actualizar el usuario ${usuario.usuario}.`);
-  //     }
-  //   );
-  // }
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
+  }
+
+  private showErrorToast(message: string): void {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
+    toast.innerHTML = `
+      <div class="alert alert-error shadow-lg">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">${message}</span>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 4000);
+  }
 }

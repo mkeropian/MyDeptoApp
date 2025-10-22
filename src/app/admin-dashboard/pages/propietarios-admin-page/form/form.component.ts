@@ -52,7 +52,7 @@ export class FormComponent implements OnInit {
     dni: ['', [Validators.required, Validators.minLength(8)]],
     ciudad: [''],
     provincia: [''],
-    codigoPostal: [''],
+    codigoPostal: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(6)]],
     cuenta_nro: [''],
     avatarUrl: [''],
   });

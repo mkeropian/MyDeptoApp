@@ -1,0 +1,196 @@
+<dialog id="edit_propietario_modal" class="modal">
+  <div class="modal-box w-11/12 max-w-3xl bg-blue-50">
+
+    <!-- Header con tonalidad azul -->
+    <div class="border-b border-blue-200 pb-3 mb-4">
+      <h3 class="font-bold text-xl text-blue-900">Editar Propietario</h3>
+      <p class="text-sm text-blue-700 mt-1">Modifique la información del propietario</p>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+
+      <!-- Layout en 2 columnas -->
+      <div class="flex gap-4">
+
+        <!-- Columna Izquierda -->
+        <div class="flex-1 space-y-3">
+
+          <!-- Nombre Completo -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Nombre Completo</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              [class.input-error]="editForm.get('nombreApellido')?.invalid && (editForm.get('nombreApellido')?.dirty || editForm.get('nombreApellido')?.touched)"
+              placeholder="Juan Pérez"
+              formControlName="nombreApellido"
+            />
+            <form-error-label [control]="editForm.get('nombreApellido')!" />
+          </label>
+
+          <!-- DNI -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">DNI</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              [class.input-error]="editForm.get('dni')?.invalid && (editForm.get('dni')?.dirty || editForm.get('dni')?.touched)"
+              placeholder="12.345.678"
+              formControlName="dni"
+            />
+            <form-error-label [control]="editForm.get('dni')!" />
+          </label>
+
+          <!-- Email -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Email</span>
+            </div>
+            <input
+              type="email"
+              class="input input-bordered w-full bg-white"
+              [class.input-error]="editForm.get('email')?.invalid && (editForm.get('email')?.dirty || editForm.get('email')?.touched)"
+              placeholder="juan.perez@email.com"
+              formControlName="email"
+            />
+            <form-error-label [control]="editForm.get('email')!" />
+          </label>
+
+          <!-- Teléfono -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Teléfono</span>
+            </div>
+            <input
+              type="tel"
+              class="input input-bordered w-full bg-white"
+              [class.input-error]="editForm.get('telefono')?.invalid && (editForm.get('telefono')?.dirty || editForm.get('telefono')?.touched)"
+              placeholder="+54 11 1234-5678"
+              formControlName="telefono"
+            />
+            <form-error-label [control]="editForm.get('telefono')!" />
+          </label>
+
+          <!-- Dirección -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Dirección</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              [class.input-error]="editForm.get('direccion')?.invalid && (editForm.get('direccion')?.dirty || editForm.get('direccion')?.touched)"
+              placeholder="Av. Corrientes 1234"
+              formControlName="direccion"
+            />
+            <form-error-label [control]="editForm.get('direccion')!" />
+          </label>
+
+        </div>
+
+        <!-- Columna Derecha -->
+        <div class="flex-1 space-y-3">
+
+          <!-- Ciudad -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Ciudad</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              placeholder="Buenos Aires"
+              formControlName="ciudad"
+            />
+          </label>
+
+          <!-- Provincia -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Provincia</span>
+            </div>
+            <select
+              class="select select-bordered w-full bg-white"
+              formControlName="provincia"
+            >
+              <option value="">Seleccionar provincia</option>
+              <option value="CABA">Ciudad Autónoma de Buenos Aires</option>
+              <option value="BA">Buenos Aires</option>
+              <option value="CA">Catamarca</option>
+              <option value="CH">Chaco</option>
+              <option value="CT">Chubut</option>
+              <option value="CB">Córdoba</option>
+              <option value="CR">Corrientes</option>
+              <option value="ER">Entre Ríos</option>
+              <option value="FO">Formosa</option>
+              <option value="JY">Jujuy</option>
+              <option value="LP">La Pampa</option>
+              <option value="LR">La Rioja</option>
+              <option value="MZ">Mendoza</option>
+              <option value="MI">Misiones</option>
+              <option value="NQ">Neuquén</option>
+              <option value="RN">Río Negro</option>
+              <option value="SA">Salta</option>
+              <option value="SJ">San Juan</option>
+              <option value="SL">San Luis</option>
+              <option value="SC">Santa Cruz</option>
+              <option value="SF">Santa Fe</option>
+              <option value="SE">Santiago del Estero</option>
+              <option value="TF">Tierra del Fuego</option>
+              <option value="TU">Tucumán</option>
+            </select>
+          </label>
+
+          <!-- Código Postal -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Código Postal</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              placeholder="1234"
+              formControlName="codigoPostal"
+            />
+          </label>
+
+          <!-- Cuenta Número -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Cuenta Número</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              placeholder="123456789"
+              formControlName="cuenta_nro"
+            />
+          </label>
+
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="modal-action mt-6">
+        <button type="button" class="btn btn-ghost" (click)="close()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn bg-blue-600 hover:bg-blue-700 text-white">
+          <i class="fa-solid fa-save"></i>
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+
+  </div>
+
+  <!-- Backdrop para cerrar el modal -->
+  <form method="dialog" class="modal-backdrop">
+    <button type="button" (click)="close()">close</button>
+  </form>
+</dialog>

@@ -73,6 +73,9 @@
             @if (tieneReportes()) {
               <li><a (click)="onRendicionesClick()" class="cursor-pointer">Rendiciones</a></li>
             }
+            @if (tieneReportes()) {
+              <li><a (click)="onRendicionesClick()" class="cursor-pointer">Rendiciones Propietarios</a></li>
+            }
           </ul>
         </li>
       }
@@ -107,6 +110,14 @@
                   (click)="onMenuItemClick()"
                   routerLinkActive="active"
                 >... de Calendarios
+                </a>
+              </li>
+              <li>
+                <a
+                  routerLink="/admin/calendar-settings"
+                  (click)="onMenuItemClick()"
+                  routerLinkActive="active"
+                >... de Rendiciones Aut.
                 </a>
               </li>
             }

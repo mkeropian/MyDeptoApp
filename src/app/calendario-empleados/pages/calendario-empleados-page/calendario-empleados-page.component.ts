@@ -138,9 +138,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
               activo: true
             }));
 
-            console.log('Tipos de calendario permitidos:', this.tiposCalendarioPermitidos);
-            console.log('Tipos de calendario para select:', this.tiposCalendario);
-
             // Si es empleado, preseleccionar y bloquear su usuario en el filtro
             if (this.esEmpleado && this.usuarioLogueadoId !== null) { // ✅ AGREGAR VALIDACIÓN
               this.filtrosForm.patchValue({
@@ -155,7 +152,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
             this.aplicarFiltros();
           },
           error: (error) => {
-            console.error('Error al obtener calendarios del usuario:', error);
             this.tiposCalendarioPermitidos = [];
             this.tiposCalendario = [];
             this.aplicarFiltros();
@@ -177,7 +173,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
           this.cargando = false;
         },
         error: (error) => {
-          console.error('Error al cargar eventos:', error);
           this.cargando = false;
           this.mostrarNotificacion('Error al cargar eventos', 'error');
         }
@@ -201,7 +196,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
           this.tiposEvento = tiposEvento;
         },
         error: (error) => {
-          console.error('Error al cargar datos:', error);
           this.mostrarNotificacion('Error al cargar datos', 'error');
         }
       });
@@ -266,7 +260,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
     this.eventosFiltrados = this.calendarioService.filtrarEventos(this.eventos, filtros);
 
-    console.log('Eventos después de filtrar:', this.eventosFiltrados.length);
   }
 
   limpiarFiltros(): void {
@@ -542,7 +535,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
             this.cerrarModal();
           },
           error: (error) => {
-            console.error('Error al actualizar evento:', error);
             this.mostrarNotificacion('Error al actualizar el evento', 'error');
           }
         });
@@ -554,7 +546,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
             this.cerrarModal();
           },
           error: (error) => {
-            console.error('Error al crear evento:', error);
             this.mostrarNotificacion('Error al crear el evento', 'error');
           }
         });
@@ -580,7 +571,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
           this.cerrarModal();
         },
         error: (error) => {
-          console.error('Error al eliminar evento:', error);
           this.mostrarNotificacion('Error al eliminar el evento', 'error');
         }
       });
