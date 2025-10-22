@@ -47,36 +47,59 @@ export class NavbarComponent {
   );
 
   // Permisos específicos para el navbar
-  tieneDashboard = computed(() => this.authService.tienePermiso('dashboard'));
-  tieneDepartamentos = computed(() => this.authService.tienePermiso('departamentos'));
-  tienePropietarios = computed(() => this.authService.tienePermiso('propietarios'));
+  tieneDashboardEstadisticas = computed(() => this.authService.tienePermiso('dashboard.estadisticas'));
+  tieneDashboardDepartamentos = computed(() => this.authService.tienePermiso('dashboard.departamentos'));
+  tieneDashboardPropietarios = computed(() => this.authService.tienePermiso('dashboard.propietarios'));
+
   tieneCalendario = computed(() => this.authService.tienePermiso('calendario'));
-  tieneGastos = computed(() => this.authService.tienePermiso('gastos'));
-  tieneIngresos = computed(() => this.authService.tienePermiso('ingresos'));
-  tieneReportes = computed(() => this.authService.tienePermiso('reportes'));
-  tieneConfiguracion = computed(() => this.authService.tienePermiso('configuracion'));
-  tieneUsuarios = computed(() => this.authService.tienePermiso('usuarios'));
-  tieneRoles = computed(() => this.authService.tienePermiso('roles'));
+  
+  tieneDepartamentosFullmap = computed(() => this.authService.tienePermiso('departamentos.fullmap'));
+  tieneDepartamentosCards = computed(() => this.authService.tienePermiso('departamentos.cards'));
+
+  tieneOperacionGastos = computed(() => this.authService.tienePermiso('operacion.gastos'));
+  tieneOperacionIngresos = computed(() => this.authService.tienePermiso('operacion.ingresos'));
+
+  tieneAdministracionDepartamentos = computed(() => this.authService.tienePermiso('administracion.departamentos'));
+  tieneAdministracionPropietarios = computed(() => this.authService.tienePermiso('administracion.propietarios'));
+  tieneAdministracionRendiciones = computed(() => this.authService.tienePermiso('administracion.rendiciones'));
+  tieneAdministracionRendicionesPropietarios = computed(() => this.authService.tienePermiso('administracion.rendiciones-propietarios'));
+
+  tieneConfiguracionSistema = computed(() => this.authService.tienePermiso('configuracion.sistema'));
+  tieneConfiguracionRoles = computed(() => this.authService.tienePermiso('configuracion.roles'));
+  tieneConfiguracionCalendarios = computed(() => this.authService.tienePermiso('configuracion.calendarios'));
+  tieneConfiguracionRendicionesAut = computed(() => this.authService.tienePermiso('configuracion.rendiciones-aut'));
+  tieneConfiguracionUsuarios = computed(() => this.authService.tienePermiso('configuracion.usuarios'));
 
   // Permisos compuestos
   tieneAlgunPermisoDashboard = computed(() =>
-    this.authService.tieneAlgunPermiso(['dashboard', 'estadisticas', 'departamentos', 'propietarios'])
+    this.authService.tieneAlgunPermiso(['dashboard.estadisticas','dashboard.departamentos','dashboard.propietarios'])
   );
 
   tieneAlgunPermisoDepartamentos = computed(() =>
-    this.authService.tieneAlgunPermiso(['departamentos', 'departamentos.ver'])
+    this.authService.tieneAlgunPermiso(['departamentos.fullmap', 'departamentos.cards'])
   );
 
   tieneAlgunPermisoOperacion = computed(() =>
-    this.authService.tieneAlgunPermiso(['gastos', 'ingresos'])
+    this.authService.tieneAlgunPermiso(['operacion.gastos', 'operacion.ingresos'])
   );
 
   tieneAlgunPermisoAdmin = computed(() =>
-    this.authService.tieneAlgunPermiso(['departamentos', 'propietarios', 'reportes'])
+    this.authService.tieneAlgunPermiso(
+      ['administracion.departamentos', 
+      'administracion.propietarios', 
+      'administracion.rendiciones',
+      'administracion.rendiciones-propietarios']
+    )
   );
 
   tieneAlgunPermisoConfig = computed(() =>
-    this.authService.tieneAlgunPermiso(['configuracion', 'usuarios', 'roles'])
+    this.authService.tieneAlgunPermiso(
+      ['configuracion.sistema', 
+      'configuracion.roles',
+      'configuracion.calendarios',
+      'configuracion.rendiciones-aut',
+      'configuracion.usuarios']
+    )
   );
 
   // Métodos para toggle de cada dropdown

@@ -6,6 +6,44 @@
   height: 600px;
 }
 
+/* ==================== ✅ ESTILOS PARA EL ÍCONO DE UBICACIÓN ==================== */
+
+.location-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 10px;
+  color: #6366f1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.location-icon:hover {
+  transform: scale(1.3);
+  color: #4f46e5;
+  filter: drop-shadow(0 0 3px rgba(79, 70, 229, 0.6));
+}
+
+/* Animación sutil cuando se hace hover sobre el evento completo */
+.evento-item:hover .location-icon,
+button:hover .location-icon {
+  animation: iconPulse 0.6s ease-in-out;
+}
+
+@keyframes iconPulse {
+  0%, 100% { 
+    transform: scale(1); 
+  }
+  50% { 
+    transform: scale(1.3); 
+  }
+}
+
+/* ==================== FIN ESTILOS ÍCONO DE UBICACIÓN ==================== */
+
 /* Animaciones para los modales */
 .modal-enter {
   opacity: 0;
@@ -31,13 +69,19 @@
 
 /* Estilos para los eventos en el calendario */
 .evento-item {
-  @apply bg-indigo-100 border-l-4 border-indigo-500 p-1 mb-1 rounded text-xs;
+  background-color: rgb(224 231 255);
+  border-left: 4px solid rgb(99 102 241);
+  padding: 0.25rem;
+  margin-bottom: 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .evento-item:hover {
-  @apply bg-indigo-200 shadow-sm;
+  background-color: rgb(199 210 254);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 /* Responsive */
@@ -48,6 +92,13 @@
 
   .calendar-view {
     height: auto;
+  }
+
+  /* Hacer el ícono un poco más grande en móvil para mejor tap target */
+  .location-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 11px;
   }
 }
 
@@ -65,48 +116,80 @@
 
 /* Estilos para el estado hover de los días */
 .day-cell:hover {
-  @apply bg-gray-50;
+  background-color: rgb(249 250 251);
 }
 
 .day-cell.selected {
-  @apply bg-indigo-50 ring-2 ring-indigo-200;
+  background-color: rgb(238 242 255);
+  ring-width: 2px;
+  ring-color: rgb(199 210 254);
 }
 
 /* Mejoras visuales para los formularios */
 .form-input:focus {
-  @apply ring-2 ring-indigo-500 border-indigo-500;
+  ring-width: 2px;
+  ring-color: rgb(99 102 241);
+  border-color: rgb(99 102 241);
 }
 
 .form-select:focus {
-  @apply ring-2 ring-indigo-500 border-indigo-500;
+  ring-width: 2px;
+  ring-color: rgb(99 102 241);
+  border-color: rgb(99 102 241);
 }
 
 /* Estilos para botones deshabilitados */
 .btn-disabled {
-  @apply bg-gray-300 cursor-not-allowed;
+  background-color: rgb(209 213 219);
+  cursor: not-allowed;
 }
 
 /* Animación de carga */
 .loading-spinner {
-  @apply animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600;
+  animation: spin 1s linear infinite;
+  border-radius: 9999px;
+  height: 1.5rem;
+  width: 1.5rem;
+  border-bottom-width: 2px;
+  border-color: rgb(99 102 241);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Estilos para notificaciones */
 .notification {
-  @apply fixed top-4 right-4 bg-white shadow-lg rounded-lg p-4 border-l-4 z-50;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background-color: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border-left-width: 4px;
+  z-index: 50;
   animation: slideIn 0.3s ease-out;
 }
 
 .notification.success {
-  @apply border-green-500 bg-green-50;
+  border-color: rgb(34 197 94);
+  background-color: rgb(240 253 244);
 }
 
 .notification.error {
-  @apply border-red-500 bg-red-50;
+  border-color: rgb(239 68 68);
+  background-color: rgb(254 242 242);
 }
 
 .notification.warning {
-  @apply border-yellow-500 bg-yellow-50;
+  border-color: rgb(234 179 8);
+  background-color: rgb(254 252 232);
 }
 
 @keyframes slideIn {
@@ -122,7 +205,12 @@
 
 /* Estilos para el indicador de día actual */
 .today-indicator {
-  @apply bg-indigo-600 text-white rounded-full flex items-center justify-center;
+  background-color: rgb(99 102 241);
+  color: white;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 28px;
   height: 28px;
   font-weight: 600;
@@ -143,7 +231,10 @@
 
 /* Focus visible para navegación por teclado */
 .focus-visible:focus {
-  @apply outline-none ring-2 ring-indigo-500 ring-offset-2;
+  outline: none;
+  ring-width: 2px;
+  ring-color: rgb(99 102 241);
+  ring-offset-width: 2px;
 }
 
 /* Estilos para eventos múltiples en un día */
@@ -178,20 +269,20 @@
 }
 
 .horarios-columna {
-  border-right: 1px solid #e5e7eb;
-  background-color: #f9fafb;
+  border-right: 1px solid rgb(229 231 235);
+  background-color: rgb(249 250 251);
 }
 
 .hora-marca {
   height: 60px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid rgb(229 231 235);
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
   padding-right: 8px;
   padding-top: 4px;
   font-size: 0.75rem;
-  color: #6b7280;
+  color: rgb(107 114 128);
   font-weight: 500;
 }
 
@@ -227,7 +318,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background-color: #ef4444;
+  background-color: rgb(239 68 68);
   z-index: 20;
   pointer-events: none;
 }
@@ -239,23 +330,26 @@
   top: -4px;
   width: 10px;
   height: 10px;
-  background-color: #ef4444;
+  background-color: rgb(239 68 68);
   border-radius: 50%;
 }
 
 /* Estilos para tarjetas de eventos en vistas semanal y mensual */
 .evento-card {
-  @apply border-l-4 bg-indigo-50;
+  border-left-width: 4px;
+  background-color: rgb(238 242 255);
   transition: all 0.2s ease;
 }
 
 .evento-card:hover {
-  @apply shadow-md bg-indigo-100;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  background-color: rgb(224 231 255);
   transform: translateY(-1px);
 }
 
 .evento-horario {
-  @apply text-indigo-600 font-medium;
+  color: rgb(99 102 241);
+  font-weight: 500;
   font-size: 0.7rem;
 }
 
@@ -269,7 +363,10 @@
 
 /* Estilos para inputs de hora */
 input[type="time"] {
-  @apply px-3 py-2;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 input[type="time"]::-webkit-calendar-picker-indicator {
@@ -288,17 +385,17 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 }
 
 .vista-diaria-scroll::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: rgb(241 245 249);
   border-radius: 4px;
 }
 
 .vista-diaria-scroll::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgb(203 213 225);
   border-radius: 4px;
 }
 
 .vista-diaria-scroll::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgb(148 163 184);
 }
 
 /* Animación suave para cambios de vista */
@@ -343,7 +440,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   top: 4px;
   width: 8px;
   height: 8px;
-  background-color: #f59e0b;
+  background-color: rgb(245 158 11);
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
@@ -366,6 +463,14 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   .evento-card:hover {
     transform: none;
   }
+  
+  /* En dispositivos táctiles, hacer el ícono más grande para mejor tap target */
+  .location-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    padding: 2px;
+  }
 }
 
 /* Print styles */
@@ -383,6 +488,65 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   .evento-card-diaria,
   .evento-card {
     box-shadow: none;
-    border: 1px solid #e5e7eb;
+    border: 1px solid rgb(229 231 235);
+  }
+  
+  .location-icon {
+    display: none;
   }
 }
+
+/* ==================== ✅ ESTILOS ADICIONALES PARA EL MODAL DE MAPA ==================== */
+
+/* Backdrop con blur para el modal de mapa */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+/* Animación para el marcador del mapa en el placeholder */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Estilos para el contenedor del mapa cuando se integre el componente real */
+.mapa-container {
+  position: relative;
+  width: 100%;
+  height: 24rem; /* h-96 */
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Placeholder del mapa con gradiente */
+.map-placeholder {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efecto de zoom suave al abrir el modal del mapa */
+@keyframes mapZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.map-modal-content {
+  animation: mapZoomIn 0.3s ease-out;
+}
+
+/* ==================== FIN ESTILOS MODAL DE MAPA ==================== */

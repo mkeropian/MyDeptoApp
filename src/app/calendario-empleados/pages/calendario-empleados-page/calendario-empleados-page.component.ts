@@ -16,15 +16,19 @@ import {
 } from '../../services/calendario.service';
 import { AuthService } from '../../../auth/services/auth.service';
 
+import { MiniMapComponent } from '../../../shared/components/mini-map/mini-map.component';
+import { DepartamentosService } from '../../../departamentos/services/departamentos.service';
+
 @Component({
   selector: 'app-calendario-empleados-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MiniMapComponent],
   templateUrl: './calendario-empleados-page.component.html',
   styleUrls: ['./calendario-empleados-page.component.css']
 })
 export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private departamentosConMapa: Map<number, { lng: number; lat: number }> = new Map();
 
   eventos: EventoCalendarioExtendido[] = [];
   eventosFiltrados: EventoCalendarioExtendido[] = [];
@@ -40,6 +44,8 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
   mostrarModalEvento = false;
   mostrarModalDetalles = false;
+  // ✅ NUEVO - Modal para mostrar el mapa
+  mostrarModalMapa = false;
   eventoEditando: EventoCalendarioExtendido | null = null;
 
   tooltipVisible = false;
@@ -67,7 +73,8 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     public calendarioService: CalendarioService,
     private cdr: ChangeDetectorRef,
-    private authService: AuthService  // ✅ Inyectar AuthService
+    private authService: AuthService,
+    private departamentosService: DepartamentosService
   ) {
     this.eventoForm = this.fb.group({
       idTipoCalendario: ['', Validators.required],
@@ -90,7 +97,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       this.horasDia.push(`${String(i).padStart(2, '0')}:00`);
     }
 
-    // ✅ NUEVO - Agregar estas líneas
     this.eventoForm.get('idTipoEventoCalendario')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.calcularHoraFin());
@@ -101,10 +107,11 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.verificarRolUsuario();  // ✅ NUEVO
+    this.verificarRolUsuario();
     this.cargarDatos();
     this.suscribirAEventos();
     this.suscribirAFiltros();
+    this.cargarDepartamentosConMapa();
   }
 
   ngOnDestroy(): void {
@@ -120,35 +127,28 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     if (user) {
       this.usuarioLogueadoId = user.id;
 
-      // Verificar si tiene rol "emp"
       this.esEmpleado = user.roles?.includes('emp') ?? false;
 
-      // ✅ Obtener los tipos de calendario permitidos
       this.calendarioService.obtenerCalendariosPorUsuario(user.id)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (calendarios) => {
-            // Extraer los IDs de tipo de calendario
             this.tiposCalendarioPermitidos = calendarios.map(cal => cal.idCalendar);
 
-            // ✅ Mapear a la estructura que espera el select
             this.tiposCalendario = calendarios.map(cal => ({
               id: cal.idCalendar,
               descripcion: cal.descCalendar,
               activo: true
             }));
 
-            // Si es empleado, preseleccionar y bloquear su usuario en el filtro
-            if (this.esEmpleado && this.usuarioLogueadoId !== null) { // ✅ AGREGAR VALIDACIÓN
+            if (this.esEmpleado && this.usuarioLogueadoId !== null) {
               this.filtrosForm.patchValue({
                 idUsuario: this.usuarioLogueadoId.toString()
               });
 
-              // Deshabilitar el campo de usuario para empleados
               this.filtrosForm.get('idUsuario')?.disable();
             }
 
-            // Aplicar filtros iniciales con los calendarios permitidos
             this.aplicarFiltros();
           },
           error: (error) => {
@@ -206,7 +206,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(eventos => {
         this.eventos = eventos;
-        // Solo aplicar filtros si ya se cargaron los tipos de calendario
         if (this.tiposCalendarioPermitidos.length > 0 || !this.usuarioLogueadoId) {
           this.aplicarFiltros();
         }
@@ -228,21 +227,17 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   aplicarFiltros(): void {
-    // Obtener el filtro de tipo de calendario seleccionado por el usuario
     const tipoCalendarioSeleccionado = this.filtrosForm.get('idTipoCalendario')?.value
       ? Number(this.filtrosForm.get('idTipoCalendario')?.value)
       : null;
 
     const filtros: FiltrosCalendario = {
-      // ✅ MODIFICADO - Si el usuario seleccionó un tipo específico, usar ese
-      // Si no, usar todos los permitidos
       idsTipoCalendario: tipoCalendarioSeleccionado
-        ? [tipoCalendarioSeleccionado]  // Solo el seleccionado
+        ? [tipoCalendarioSeleccionado]
         : (this.tiposCalendarioPermitidos.length > 0
-            ? this.tiposCalendarioPermitidos  // Todos los permitidos
+            ? this.tiposCalendarioPermitidos
             : undefined),
 
-      // Si es empleado, forzar su ID incluso si el campo está deshabilitado
       idUsuario: this.esEmpleado && this.usuarioLogueadoId
         ? this.usuarioLogueadoId
         : (this.filtrosForm.get('idUsuario')?.value
@@ -254,180 +249,148 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         : undefined
     };
 
-    const rangoFechas = this.obtenerRangoFechasVista();
-    filtros.fechaInicio = this.calendarioService.formatearFechaParaBackend(rangoFechas.inicio);
-    filtros.fechaFin = this.calendarioService.formatearFechaParaBackend(rangoFechas.fin);
-
+    // ✅ CORREGIDO - Pasar eventos y filtros
     this.eventosFiltrados = this.calendarioService.filtrarEventos(this.eventos, filtros);
-
   }
 
   limpiarFiltros(): void {
-    if (this.esEmpleado) {
-      // Para empleados, solo limpiar el departamento y tipo de calendario
+    if (!this.esEmpleado) {
       this.filtrosForm.patchValue({
-        idDepartamento: '',
-        idTipoCalendario: ''  // ✅ AGREGAR
-      });
-    } else {
-      // Para otros roles, limpiar todo
-      this.filtrosForm.reset({
         idUsuario: '',
         idDepartamento: '',
-        idTipoCalendario: ''  // ✅ AGREGAR
+        idTipoCalendario: ''
+      });
+    } else {
+      this.filtrosForm.patchValue({
+        idDepartamento: '',
+        idTipoCalendario: ''
       });
     }
   }
 
-  // ==================== NAVEGACIÓN DEL CALENDARIO ====================
+  cargarDepartamentosConMapa(): void {
+    this.departamentosService.getDepartamentosRaw()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (deptos) => {
+          deptos.forEach(depto => {
+            try {
+              const [lng, lat] = depto.lngLat.split(',').map(coord => parseFloat(coord.trim()));
+              if (!isNaN(lng) && !isNaN(lat)) {
+                this.departamentosConMapa.set(depto.id, { lng, lat });
+              }
+            } catch (error) {
+              console.error(`Error parseando coordenadas para depto ${depto.id}`);
+            }
+          });
+        },
+        error: (error) => {
+          console.error('Error cargando departamentos con mapa:', error);
+        }
+      });
+  }
+
+  // ==================== NAVEGACIÓN ====================
 
   get tituloCalendario(): string {
-    switch (this.vistaActual) {
-      case 'dia':
-        return this.fechaSeleccionada.toLocaleDateString('es-ES', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
-      case 'semana':
-        const rangoSemana = this.obtenerRangoSemana(this.fechaSeleccionada);
-        return `${rangoSemana.inicio.getDate()} - ${rangoSemana.fin.getDate()} de ${this.meses[this.fechaSeleccionada.getMonth()]} ${this.fechaSeleccionada.getFullYear()}`;
-      case 'mes':
-        return `${this.meses[this.fechaSeleccionada.getMonth()]} ${this.fechaSeleccionada.getFullYear()}`;
+    if (this.vistaActual === 'dia') {
+      return this.fechaSeleccionada.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } else if (this.vistaActual === 'semana') {
+      const primerDia = this.diasDeLaSemana[0];
+      const ultimoDia = this.diasDeLaSemana[6];
+      return `${primerDia.getDate()} - ${ultimoDia.getDate()} de ${this.meses[this.fechaSeleccionada.getMonth()]} ${this.fechaSeleccionada.getFullYear()}`;
+    } else {
+      return `${this.meses[this.fechaSeleccionada.getMonth()]} ${this.fechaSeleccionada.getFullYear()}`;
     }
   }
 
-  anteriorPeriodo(): void {
-    const nuevaFecha = new Date(this.fechaSeleccionada);
-
-    switch (this.vistaActual) {
-      case 'dia':
-        nuevaFecha.setDate(nuevaFecha.getDate() - 1);
-        break;
-      case 'semana':
-        nuevaFecha.setDate(nuevaFecha.getDate() - 7);
-        break;
-      case 'mes':
-        nuevaFecha.setMonth(nuevaFecha.getMonth() - 1);
-        break;
-    }
-
-    this.fechaSeleccionada = nuevaFecha;
-    this.ocultarTooltip();
-    this.aplicarFiltros();
-  }
-
-  siguientePeriodo(): void {
-    const nuevaFecha = new Date(this.fechaSeleccionada);
-
-    switch (this.vistaActual) {
-      case 'dia':
-        nuevaFecha.setDate(nuevaFecha.getDate() + 1);
-        break;
-      case 'semana':
-        nuevaFecha.setDate(nuevaFecha.getDate() + 7);
-        break;
-      case 'mes':
-        nuevaFecha.setMonth(nuevaFecha.getMonth() + 1);
-        break;
-    }
-
-    this.fechaSeleccionada = nuevaFecha;
-    this.ocultarTooltip();
-    this.aplicarFiltros();
-  }
-
-  irAHoy(): void {
-    this.fechaSeleccionada = new Date();
-    this.ocultarTooltip();
-    this.aplicarFiltros();
-  }
-
-  cambiarVista(vista: VistaCalendario): void {
-    this.vistaActual = vista;
-    this.ocultarTooltip();
-    this.aplicarFiltros();
-  }
-
-  // ==================== VISTA MENSUAL ====================
-
-  get diasDelMes(): Date[] {
-    const primerDia = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth(), 1);
-    const ultimoDia = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth() + 1, 0);
-
-    const primerDiaSemana = (primerDia.getDay() === 0) ? 6 : primerDia.getDay() - 1;
+  get diasDeLaSemana(): Date[] {
     const dias: Date[] = [];
+    const primerDia = new Date(this.fechaSeleccionada);
+    primerDia.setDate(primerDia.getDate() - primerDia.getDay() + 1);
 
-    for (let i = primerDiaSemana - 1; i >= 0; i--) {
+    for (let i = 0; i < 7; i++) {
       const dia = new Date(primerDia);
-      dia.setDate(dia.getDate() - (i + 1));
+      dia.setDate(dia.getDate() + i);
       dias.push(dia);
-    }
-
-    for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
-      dias.push(new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth(), dia));
-    }
-
-    const diasRestantes = 42 - dias.length;
-    for (let dia = 1; dia <= diasRestantes; dia++) {
-      dias.push(new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth() + 1, dia));
     }
 
     return dias;
   }
 
-  // ==================== VISTA SEMANAL ====================
+  get diasDelMes(): Date[] {
+    const primerDiaMes = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth(), 1);
+    const ultimoDiaMes = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth() + 1, 0);
 
-  get diasDeLaSemana(): Date[] {
-    const rango = this.obtenerRangoSemana(this.fechaSeleccionada);
-    return rango.dias;
-  }
-
-  obtenerRangoSemana(fecha: Date): { inicio: Date; fin: Date; dias: Date[] } {
-    const inicioSemana = this.obtenerInicioSemana(fecha);
-    const finSemana = new Date(inicioSemana);
-    finSemana.setDate(inicioSemana.getDate() + 6);
+    let primerDiaGrid = new Date(primerDiaMes);
+    primerDiaGrid.setDate(primerDiaGrid.getDate() - (primerDiaGrid.getDay() === 0 ? 6 : primerDiaGrid.getDay() - 1));
 
     const dias: Date[] = [];
-    for (let i = 0; i < 7; i++) {
-      const dia = new Date(inicioSemana);
-      dia.setDate(inicioSemana.getDate() + i);
-      dias.push(dia);
+    const diaActual = new Date(primerDiaGrid);
+
+    for (let i = 0; i < 42; i++) {
+      dias.push(new Date(diaActual));
+      diaActual.setDate(diaActual.getDate() + 1);
     }
 
-    return { inicio: inicioSemana, fin: finSemana, dias };
+    return dias;
   }
 
-  obtenerInicioSemana(fecha: Date): Date {
-    const dia = new Date(fecha);
-    const diaSemana = dia.getDay();
-    const diasHastaLunes = (diaSemana === 0) ? 6 : diaSemana - 1;
-    dia.setDate(dia.getDate() - diasHastaLunes);
-    return dia;
+  irAHoy(): void {
+    this.fechaSeleccionada = new Date();
   }
 
-  // ==================== EVENTOS ====================
+  anteriorPeriodo(): void {
+    if (this.vistaActual === 'dia') {
+      this.fechaSeleccionada.setDate(this.fechaSeleccionada.getDate() - 1);
+    } else if (this.vistaActual === 'semana') {
+      this.fechaSeleccionada.setDate(this.fechaSeleccionada.getDate() - 7);
+    } else {
+      this.fechaSeleccionada.setMonth(this.fechaSeleccionada.getMonth() - 1);
+    }
+    this.fechaSeleccionada = new Date(this.fechaSeleccionada);
+  }
+
+  siguientePeriodo(): void {
+    if (this.vistaActual === 'dia') {
+      this.fechaSeleccionada.setDate(this.fechaSeleccionada.getDate() + 1);
+    } else if (this.vistaActual === 'semana') {
+      this.fechaSeleccionada.setDate(this.fechaSeleccionada.getDate() + 7);
+    } else {
+      this.fechaSeleccionada.setMonth(this.fechaSeleccionada.getMonth() + 1);
+    }
+    this.fechaSeleccionada = new Date(this.fechaSeleccionada);
+  }
+
+  cambiarVista(vista: VistaCalendario): void {
+    this.vistaActual = vista;
+  }
+
+  // ==================== EVENTOS POR FECHA ====================
 
   obtenerEventosPorFecha(fecha: Date): EventoCalendarioExtendido[] {
-    return this.calendarioService.obtenerEventosPorFecha(this.eventosFiltrados, fecha);
+    const fechaStr = this.calendarioService.formatearFechaParaBackend(fecha);
+
+    return this.eventosFiltrados.filter(evento => {
+      const eventoFecha = evento.fecha.split('T')[0];
+      return eventoFecha === fechaStr;
+    });
   }
 
-  obtenerRangoFechasVista(): { inicio: Date; fin: Date } {
-    switch (this.vistaActual) {
-      case 'dia':
-        const inicioDia = new Date(this.fechaSeleccionada);
-        inicioDia.setHours(0, 0, 0, 0);
-        const finDia = new Date(this.fechaSeleccionada);
-        finDia.setHours(23, 59, 59, 999);
-        return { inicio: inicioDia, fin: finDia };
-
-      case 'semana':
-        return this.obtenerRangoSemana(this.fechaSeleccionada);
-
-      case 'mes':
-        const inicioMes = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth(), 1);
-        const finMes = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth() + 1, 0);
+  obtenerRangoFechas(): { inicio: Date; fin: Date } {
+    if (this.vistaActual === 'dia') {
+      return { inicio: this.fechaSeleccionada, fin: this.fechaSeleccionada };
+    } else if (this.vistaActual === 'semana') {
+      const dias = this.diasDeLaSemana;
+      return { inicio: dias[0], fin: dias[6] };
+    } else {
+      const inicioMes = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth(), 1);
+      const finMes = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth() + 1, 0);
         return { inicio: inicioMes, fin: finMes };
     }
   }
@@ -465,9 +428,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
 // ==================== ✅ CRUD EVENTOS - MODIFICADOS CON RESTRICCIONES ====================
 
-  // ✅ MODIFICADO - Bloquea creación para empleados
   abrirModalEvento(fecha?: Date): void {
-    // ✅ Si es empleado, NO permitir abrir el modal de creación
     if (this.esEmpleado) {
       this.mostrarNotificacion('No tienes permisos para crear eventos', 'warning');
       return;
@@ -489,9 +450,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.mostrarModalEvento = true;
   }
 
-  // ✅ MODIFICADO - Bloquea edición para empleados
   editarEvento(evento: EventoCalendarioExtendido): void {
-    // ✅ Si es empleado, NO permitir editar eventos
     if (this.esEmpleado) {
       this.mostrarNotificacion('No tienes permisos para editar eventos', 'warning');
       return;
@@ -552,9 +511,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ MODIFICADO - Bloquea eliminación para empleados
   eliminarEvento(id: number): void {
-    // ✅ Si es empleado, NO permitir eliminar eventos
     if (this.esEmpleado) {
       this.mostrarNotificacion('No tienes permisos para eliminar eventos', 'warning');
       return;
@@ -584,10 +541,48 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  // ==================== ✅ NUEVO - MODAL DE MAPA ====================
+
+  abrirModalMapa(evento: EventoCalendarioExtendido, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+
+    this.ocultarTooltip();
+    this.eventoEditando = evento;
+    this.mostrarModalMapa = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarModalMapa(): void {
+    this.mostrarModalMapa = false;
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Verifica si un evento tiene ubicación válida
+   * NOTA: Como tu interfaz Departamento del calendario no tiene lngLat,
+   * este método siempre retornará true si hay departamento.
+   * Si quieres validación real, necesitas agregar lngLat a tu interface.
+   */
+  tieneUbicacion(evento: EventoCalendarioExtendido): boolean {
+    return !!evento.idDepartamento && !!evento.nombreDepartamento;
+  }
+
+  obtenerCoordenadasDepartamento(evento: EventoCalendarioExtendido): { lng: number; lat: number } | null {
+    if (!evento.idDepartamento) {
+      return null;
+    }
+    
+    // Buscar en el Map de departamentos con coordenadas
+    return this.departamentosConMapa.get(evento.idDepartamento) || null;
+  }
+
   cerrarModal(): void {
     this.ocultarTooltip();
     this.mostrarModalEvento = false;
     this.mostrarModalDetalles = false;
+    this.mostrarModalMapa = false;
     this.eventoEditando = null;
     this.eventoForm.reset();
   }
@@ -627,7 +622,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   obtenerColorEvento(tipoEvento: string): string {
-    // ✅ Ya no usamos colores fijos, vienen del backend
     return 'border-indigo-500';
   }
 
@@ -639,26 +633,21 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Buscar el tipo de evento seleccionado
     const tipoEvento = this.tiposEvento.find(te => te.id === Number(idTipoEvento));
 
     if (!tipoEvento || !tipoEvento.duracionMinutos) {
       return;
     }
 
-    // Convertir hora inicio a minutos
     const [horas, minutos] = horaInicio.split(':').map(Number);
     const minutosInicio = horas * 60 + minutos;
 
-    // Sumar la duración
     const minutosFin = minutosInicio + tipoEvento.duracionMinutos;
 
-    // Convertir de vuelta a formato HH:MM
     const horasFin = Math.floor(minutosFin / 60) % 24;
     const minutosFinales = minutosFin % 60;
     const horaFin = `${String(horasFin).padStart(2, '0')}:${String(minutosFinales).padStart(2, '0')}`;
 
-    // Actualizar el campo horaFin
     this.eventoForm.patchValue({ horaFin }, { emitEvent: false });
   }
 

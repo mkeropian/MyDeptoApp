@@ -13,13 +13,13 @@
         <li class="dropdown dropdown-hover" [class.dropdown-open]="isDashboard">
           <div tabindex="0" role="button" (click)="toggleDashboard()">Dashboard</div>
           <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-            @if (tieneDashboard()) {
+            @if (tieneDashboardEstadisticas()) {
               <li><a routerLink="/dashboard/estadisticas" (click)="onMenuItemClick()">Estadísticas</a></li>
             }
-            @if (tieneDepartamentos()) {
+            @if (tieneDashboardDepartamentos()) {
               <li><a routerLink="/dashboard/departamentos" (click)="onMenuItemClick()">Departamentos</a></li>
             }
-            @if (tienePropietarios()) {
+            @if (tieneDashboardPropietarios()) {
               <li><a routerLink="/dashboard/propietarios" (click)="onMenuItemClick()">Propietarios</a></li>
             }
           </ul>
@@ -36,8 +36,10 @@
         <li class="dropdown dropdown-hover" [class.dropdown-open]="isDepartamentoOpen">
           <div tabindex="0" role="button" (click)="toggleDepartamento()">Departamentos</div>
           <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-            @if (tieneDepartamentos()) {
+            @if (tieneDepartamentosFullmap()) {
               <li><a routerLink="/home/fullscreen_map" (click)="onMenuItemClick()" routerLinkActive="active">FullMap</a></li>
+            }
+            @if (tieneDepartamentosCards()) {
               <li><a routerLink="/home/cards" (click)="onMenuItemClick()" routerLinkActive="active">Cards</a></li>
             }
           </ul>
@@ -49,10 +51,10 @@
         <li class="dropdown dropdown-hover" [class.dropdown-open]="isOperacionOpen">
           <div tabindex="0" role="button" (click)="toggleOperacion()">Operación</div>
           <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-            @if (tieneGastos()) {
+            @if (tieneOperacionGastos()) {
               <li><a routerLink="/admin/admin-gastos" (click)="onMenuItemClick()">Carga de Gastos</a></li>
             }
-            @if (tieneIngresos()) {
+            @if (tieneOperacionIngresos()) {
               <li><a routerLink="/admin/admin-ingresos" (click)="onMenuItemClick()">Carga de Ingresos</a></li>
             }
           </ul>
@@ -64,17 +66,17 @@
         <li class="dropdown dropdown-hover" [class.dropdown-open]="isAdminOpen">
           <div tabindex="0" role="button" (click)="toggleAdmin()">Administración</div>
           <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-            @if (tieneDepartamentos()) {
+            @if (tieneAdministracionDepartamentos()) {
               <li><a routerLink="/admin/admin-departamentos" (click)="onMenuItemClick()" routerLinkActive="active">Departamentos</a></li>
             }
-            @if (tienePropietarios()) {
+            @if (tieneAdministracionPropietarios()) {
               <li><a routerLink="/admin/admin-propietarios" (click)="onMenuItemClick()" routerLinkActive="active">Propietarios</a></li>
             }
-            @if (tieneReportes()) {
+            @if (tieneAdministracionRendiciones()) {
               <li><a (click)="onRendicionesClick()" class="cursor-pointer">Rendiciones</a></li>
             }
-            @if (tieneReportes()) {
-              <li><a (click)="onRendicionesClick()" class="cursor-pointer">Rendiciones Propietarios</a></li>
+            @if (tieneAdministracionRendicionesPropietarios()) {
+              <li><a routerLink="/admin/rendiciones-propietarios" (click)="onMenuItemClick()" routerLinkActive="active">Rendiciones Propietarios</a></li>
             }
           </ul>
         </li>
@@ -85,7 +87,7 @@
         <li class="dropdown dropdown-hover" [class.dropdown-open]="isConfigOpen">
           <div tabindex="0" role="button" (click)="toggleConfig()">Configuración</div>
           <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
-            @if (tieneConfiguracion()) {
+            @if (tieneConfiguracionSistema()) {
               <li>
                 <a
                   routerLink="/admin/themes-settings"
@@ -95,7 +97,7 @@
                 </a>
               </li>
             }
-            @if (tieneRoles()) {
+            @if (tieneConfiguracionRoles()) {
               <li>
                 <a
                   routerLink="/admin/roles-settings"
@@ -104,6 +106,8 @@
                 >... de Roles y Permisos
                 </a>
               </li>
+            }
+            @if (tieneConfiguracionCalendarios()) {
               <li>
                 <a
                   routerLink="/admin/calendar-settings"
@@ -112,16 +116,18 @@
                 >... de Calendarios
                 </a>
               </li>
+            }
+            @if (tieneConfiguracionRendicionesAut()) {
               <li>
                 <a
-                  routerLink="/admin/calendar-settings"
+                  routerLink="/admin/rendiciones-settings"
                   (click)="onMenuItemClick()"
                   routerLinkActive="active"
                 >... de Rendiciones Aut.
                 </a>
               </li>
             }
-            @if (tieneUsuarios()) {
+            @if (tieneConfiguracionUsuarios()) {
               <li>
                 <a
                   routerLink="/admin/admin-usuarios"

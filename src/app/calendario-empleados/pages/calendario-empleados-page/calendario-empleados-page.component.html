@@ -1,11 +1,11 @@
 <div class="calendario-empleados p-6">
 
-<!-- FILTROS -->
+  <!-- FILTROS -->
   <div class="bg-white shadow-sm rounded-lg px-4 py-2 mb-3">
     <form [formGroup]="filtrosForm">
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2">
-          <!-- ✅ NUEVO - Selector de Tipo de Calendario (PRIMERO) -->
+          <!-- Selector de Tipo de Calendario -->
           <div class="w-56">
             <select id="filtroTipoCalendario" formControlName="idTipoCalendario"
                     class="block w-full rounded-md border-gray-300 text-sm py-1 focus:border-indigo-500 focus:ring-indigo-500">
@@ -55,17 +55,17 @@
     </form>
   </div>
 
-<!-- ENCABEZADO -->
+  <!-- ENCABEZADO -->
   <div class="lg:flex lg:h-full lg:flex-col">
     <header class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 lg:flex-none rounded-t-lg">
       <h1 class="text-xl font-bold leading-6 text-gray-900">{{ tituloCalendario }}</h1>
       <div class="flex items-center">
         <div class="relative flex items-center rounded-md bg-white shadow-sm md:items-stretch">
-          <button type="button" (click)="anteriorPeriodo()" class="flex h-9 w-12 items-center justify-center rounded-l-md border-y border-l border-gray-300 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:hover:bg-gray-50" aria-label="Período anterior" title="Ir al período anterior">
+          <button type="button" (click)="anteriorPeriodo()" class="flex h-9 w-12 items-center justify-center rounded-l-md border-y border-l border-gray-300 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:hover:bg-gray-50" aria-label="Período anterior">
             <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" /></svg>
           </button>
-          <button type="button" (click)="irAHoy()" class="hidden border-y border-gray-300 px-3.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 focus:relative md:block" aria-label="Ir a hoy" title="Ir a la fecha de hoy">Hoy</button>
-          <button type="button" (click)="siguientePeriodo()" class="flex h-9 w-12 items-center justify-center rounded-r-md border-y border-r border-gray-300 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:hover:bg-gray-50" aria-label="Período siguiente" title="Ir al período siguiente">
+          <button type="button" (click)="irAHoy()" class="hidden border-y border-gray-300 px-3.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 focus:relative md:block" aria-label="Ir a hoy">Hoy</button>
+          <button type="button" (click)="siguientePeriodo()" class="flex h-9 w-12 items-center justify-center rounded-r-md border-y border-r border-gray-300 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:hover:bg-gray-50" aria-label="Período siguiente">
             <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" /></svg>
           </button>
         </div>
@@ -76,12 +76,10 @@
             <option value="mes">Vista Mensual</option>
           </select>
           <div class="ml-6 h-6 w-px bg-gray-300"></div>
-          <!-- ✅ MODIFICADO - Botón "Nuevo Evento" solo visible para no empleados -->
-          <button *ngIf="!esEmpleado" type="button" (click)="abrirModalEvento()" class="ml-6 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500" aria-label="Crear nuevo evento" title="Crear nuevo evento">Nuevo Evento</button>
+          <button *ngIf="!esEmpleado" type="button" (click)="abrirModalEvento()" class="ml-6 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500" aria-label="Crear nuevo evento">Nuevo Evento</button>
         </div>
       </div>
     </header>
-
 
     <!-- VISTA DIARIA -->
     <div *ngIf="vistaActual === 'dia'" class="p-6">
@@ -94,7 +92,6 @@
           </div>
         </div>
 
-        <!-- ✅ MODIFICADO - Área de eventos con restricción para empleados -->
         <div class="flex-1 relative" [class.cursor-pointer]="!esEmpleado" (click)="!esEmpleado && abrirModalEvento(fechaSeleccionada)">
           <!-- Líneas de fondo -->
           <div class="absolute inset-0 top-12">
@@ -113,15 +110,20 @@
               <div class="flex flex-col h-full justify-between">
                 <div class="flex items-start justify-between gap-2">
                   <div class="flex-1 min-w-0">
-                    <div class="font-semibold text-xs text-gray-900 truncate leading-tight">{{ evento.nombreCompletoUsuario }}</div>
+                    <div class="flex items-center gap-1">
+                      <div class="font-semibold text-xs text-gray-900 truncate leading-tight flex-1">{{ evento.nombreCompletoUsuario }}</div>
+                      <!-- ✅ NUEVO - Ícono de ubicación -->
+                      <i *ngIf="tieneUbicacion(evento)" 
+                         class="fas fa-map-marker-alt location-icon" 
+                         (click)="abrirModalMapa(evento, $event)"
+                         aria-label="Ver ubicación en el mapa"></i>
+                    </div>
                     <div class="text-[10px] text-gray-600 truncate leading-tight mt-0.5">{{ evento.nombreDepartamento }}</div>
                   </div>
-                  <!-- ✅ MODIFICADO - Botón editar solo visible para no empleados -->
                   <button type="button" (click)="$event.stopPropagation(); editarEvento(evento)"
                           *ngIf="!esEmpleado"
                           class="text-indigo-600 hover:text-indigo-900 flex-shrink-0 -mt-0.5"
-                          aria-label="Editar evento"
-                          title="Editar este evento">
+                          aria-label="Editar evento">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                   </button>
                 </div>
@@ -137,8 +139,7 @@
             <div class="text-center text-gray-500">
               <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               <p class="mt-2">No hay eventos programados</p>
-              <!-- ✅ MODIFICADO - Botón agregar solo visible para no empleados -->
-              <button *ngIf="!esEmpleado" type="button" (click)="$event.stopPropagation(); abrirModalEvento(fechaSeleccionada)" class="mt-4 text-indigo-600 hover:text-indigo-500 text-sm font-medium pointer-events-auto" aria-label="Agregar evento para este día" title="Agregar nuevo evento">Agregar evento</button>
+              <button *ngIf="!esEmpleado" type="button" (click)="$event.stopPropagation(); abrirModalEvento(fechaSeleccionada)" class="mt-4 text-indigo-600 hover:text-indigo-500 text-sm font-medium pointer-events-auto" aria-label="Agregar evento para este día">Agregar evento</button>
             </div>
           </div>
         </div>
@@ -158,7 +159,6 @@
 
         <!-- Grid de eventos -->
         <div class="grid grid-cols-7 gap-px bg-gray-200">
-          <!-- ✅ MODIFICADO - Click solo funciona para no empleados -->
           <div *ngFor="let dia of diasDeLaSemana"
                 class="bg-white min-h-[200px] p-2 transition-colors"
                 [class.cursor-pointer]="!esEmpleado"
@@ -169,7 +169,14 @@
               <div class="mb-2 p-2 rounded text-xs cursor-pointer hover:shadow-md hover:bg-indigo-100 transition-all border-l-4 bg-indigo-50"
                 [style.border-left-color]="evento.colorTipoEvento"
                     (click)="$event.stopPropagation(); abrirModalDetalles(evento)">
-                <div class="font-semibold text-gray-900 truncate">{{ evento.nombreCompletoUsuario }}</div>
+                <div class="flex items-start justify-between gap-1">
+                  <div class="font-semibold text-gray-900 truncate flex-1">{{ evento.nombreCompletoUsuario }}</div>
+                  <!-- ✅ NUEVO - Ícono de ubicación -->
+                  <i *ngIf="tieneUbicacion(evento)" 
+                     class="fas fa-map-marker-alt location-icon" 
+                     (click)="abrirModalMapa(evento, $event)"
+                     aria-label="Ver ubicación en el mapa"></i>
+                </div>
                 <div class="text-indigo-600 font-medium mt-1">{{ formatearHora(evento.horaInicio) }} - {{ formatearHora(evento.horaFin) }}</div>
                 <div class="text-gray-600 truncate mt-1">{{ evento.descripcionTipoEventoCalendario }}</div>
                 <div class="text-gray-500 truncate">{{ evento.nombreDepartamento }}</div>
@@ -197,7 +204,6 @@
       </div>
       <div class="flex bg-gray-200 text-xs leading-6 text-gray-700 lg:flex-auto">
         <div class="hidden w-full lg:grid lg:grid-cols-7 lg:auto-rows-min lg:gap-px">
-          <!-- ✅ MODIFICADO - Click solo funciona para no empleados -->
           <div *ngFor="let dia of diasDelMes"
                 [class]="'relative px-2 py-2 min-h-[120px] ' + (esMesActual(dia) ? 'bg-white' : 'bg-gray-50 text-gray-500') + (!esEmpleado ? ' cursor-pointer' : '')"
                 (click)="!esEmpleado && abrirModalEvento(dia)"
@@ -209,9 +215,18 @@
                         (click)="$event.stopPropagation(); abrirModalDetalles(evento)"
                         class="w-full text-left text-xs p-1.5 rounded cursor-pointer hover:shadow-md transition-all border-l-4 bg-indigo-50 hover:bg-indigo-100"
                         [style.border-left-color]="evento.colorTipoEvento">
-                  <div class="font-medium text-indigo-600 text-[10px] mb-0.5">{{ formatearHora(evento.horaInicio) }} - {{ formatearHora(evento.horaFin) }}</div>
-                  <div class="truncate text-gray-900 leading-tight font-medium text-[11px]">{{ evento.nombreCompletoUsuario }} - Tarea: {{ evento.descripcionTipoEventoCalendario }}</div>
-                  <div class="text-gray-600 truncate leading-tight text-[10px] mt-0.5">{{ evento.nombreDepartamento }}</div>
+                  <div class="flex items-start justify-between gap-1">
+                    <div class="flex-1 min-w-0">
+                      <div class="font-medium text-indigo-600 text-[10px] mb-0.5">{{ formatearHora(evento.horaInicio) }} - {{ formatearHora(evento.horaFin) }}</div>
+                      <div class="truncate text-gray-900 leading-tight font-medium text-[11px]">{{ evento.nombreCompletoUsuario }} - Tarea: {{ evento.descripcionTipoEventoCalendario }}</div>
+                      <div class="text-gray-600 truncate leading-tight text-[10px] mt-0.5">{{ evento.nombreDepartamento }}</div>
+                    </div>
+                    <!-- ✅ NUEVO - Ícono de ubicación -->
+                    <i *ngIf="tieneUbicacion(evento)" 
+                       class="fas fa-map-marker-alt location-icon flex-shrink-0" 
+                       (click)="abrirModalMapa(evento, $event)"
+                       aria-label="Ver ubicación en el mapa"></i>
+                  </div>
                 </button>
               </li>
               <li *ngIf="obtenerEventosPorFecha(dia).length > 3" class="text-gray-500 text-xs ml-1">+{{ obtenerEventosPorFecha(dia).length - 3 }} más</li>
@@ -221,13 +236,11 @@
 
 
         <div class="isolate grid w-full grid-cols-7 grid-rows-6 gap-px lg:hidden">
-          <!-- ✅ MODIFICADO - Click solo funciona para no empleados -->
           <button *ngFor="let dia of diasDelMes"
                   type="button"
                   [class]="'flex h-14 flex-col px-3 py-2 transition-colors ' + (esMesActual(dia) ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-500') + (esHoy(dia) ? ' font-semibold text-indigo-600' : '') + (!esEmpleado ? ' hover:bg-gray-100' : '')"
                   (click)="!esEmpleado && abrirModalEvento(dia)"
-                  [attr.aria-label]="'Día ' + dia.getDate() + (obtenerEventosPorFecha(dia).length > 0 ? ', ' + obtenerEventosPorFecha(dia).length + ' eventos programados' : ', sin eventos')"
-                  [attr.title]="'Agregar evento para el día ' + dia.getDate()">
+                  [attr.aria-label]="'Día ' + dia.getDate() + (obtenerEventosPorFecha(dia).length > 0 ? ', ' + obtenerEventosPorFecha(dia).length + ' eventos programados' : ', sin eventos')">
             <time [attr.datetime]="calendarioService.formatearFechaParaBackend(dia)" class="ml-auto">{{ dia.getDate() }}</time>
             <span class="sr-only">{{ obtenerEventosPorFecha(dia).length }} eventos programados</span>
             <span *ngIf="obtenerEventosPorFecha(dia).length > 0" class="-mx-0.5 mt-auto flex flex-wrap-reverse">
@@ -237,11 +250,9 @@
         </div>
       </div>
     </div>
-
-    </div>
   </div>
 
-<!-- MODAL CREAR/EDITAR -->
+  <!-- MODAL CREAR/EDITAR -->
   <div *ngIf="mostrarModalEvento" class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModal()" aria-label="Cerrar modal" role="button" tabindex="0" (keydown.enter)="cerrarModal()" (keydown.space)="cerrarModal()"></div>
@@ -250,77 +261,75 @@
           <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div class="sm:flex sm:items-start">
               <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">{{ eventoEditando ? 'Editar Evento' : 'Nuevo Evento' }}</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">{{ eventoEditando ? 'Editar Evento' : 'Nuevo Evento' }}</h3>
                 <div class="space-y-4">
                   <div>
-                    <label for="tipoCalendario" class="block text-sm font-medium text-gray-700">Tipo de Calendario *</label>
-                    <select id="tipoCalendario" formControlName="idTipoCalendario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                      <option value="">Seleccionar tipo</option>
+                    <label for="idTipoCalendario" class="block text-sm font-medium text-gray-700">Tipo de Calendario</label>
+                    <select id="idTipoCalendario" formControlName="idTipoCalendario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                      <option value="">Seleccionar tipo de calendario</option>
                       <option *ngFor="let tipo of tiposCalendario" [value]="tipo.id">{{ tipo.descripcion }}</option>
                     </select>
-                    <div *ngIf="eventoForm.get('idTipoCalendario')?.invalid && eventoForm.get('idTipoCalendario')?.touched" class="text-red-600 text-sm mt-1">El tipo de calendario es requerido</div>
+                    <div *ngIf="eventoForm.get('idTipoCalendario')?.invalid && eventoForm.get('idTipoCalendario')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
                   </div>
                   <div>
-                    <label for="tipoEvento" class="block text-sm font-medium text-gray-700">Tipo de Evento *</label>
-                    <select id="tipoEvento" formControlName="idTipoEventoCalendario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                      <option value="">Seleccionar tipo</option>
+                    <label for="idTipoEventoCalendario" class="block text-sm font-medium text-gray-700">Tipo de Evento</label>
+                    <select id="idTipoEventoCalendario" formControlName="idTipoEventoCalendario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                      <option value="">Seleccionar tipo de evento</option>
                       <option *ngFor="let tipo of tiposEvento" [value]="tipo.id">{{ tipo.descripcion }}</option>
                     </select>
-                    <div *ngIf="eventoForm.get('idTipoEventoCalendario')?.invalid && eventoForm.get('idTipoEventoCalendario')?.touched" class="text-red-600 text-sm mt-1">El tipo de evento es requerido</div>
+                    <div *ngIf="eventoForm.get('idTipoEventoCalendario')?.invalid && eventoForm.get('idTipoEventoCalendario')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
                   </div>
                   <div>
-                    <label for="usuario" class="block text-sm font-medium text-gray-700">Empleado *</label>
-                    <select id="usuario" formControlName="idUser" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <label for="idUser" class="block text-sm font-medium text-gray-700">Empleado</label>
+                    <select id="idUser" formControlName="idUser" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                       <option value="">Seleccionar empleado</option>
                       <option *ngFor="let usuario of usuarios" [value]="usuario.id">{{ usuario.nombreCompleto }}</option>
                     </select>
-                    <div *ngIf="eventoForm.get('idUser')?.invalid && eventoForm.get('idUser')?.touched" class="text-red-600 text-sm mt-1">El empleado es requerido</div>
+                    <div *ngIf="eventoForm.get('idUser')?.invalid && eventoForm.get('idUser')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
                   </div>
                   <div>
-                    <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento *</label>
-                    <select id="departamento" formControlName="idDep" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <label for="idDep" class="block text-sm font-medium text-gray-700">Departamento</label>
+                    <select id="idDep" formControlName="idDep" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                       <option value="">Seleccionar departamento</option>
                       <option *ngFor="let depto of departamentos" [value]="depto.id">{{ depto.nombre }}</option>
                     </select>
-                    <div *ngIf="eventoForm.get('idDep')?.invalid && eventoForm.get('idDep')?.touched" class="text-red-600 text-sm mt-1">El departamento es requerido</div>
+                    <div *ngIf="eventoForm.get('idDep')?.invalid && eventoForm.get('idDep')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
                   </div>
-
                   <div>
-                    <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha *</label>
+                    <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha</label>
                     <input type="date" id="fecha" formControlName="fecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <div *ngIf="eventoForm.get('fecha')?.invalid && eventoForm.get('fecha')?.touched" class="text-red-600 text-sm mt-1">La fecha es requerida</div>
+                    <div *ngIf="eventoForm.get('fecha')?.invalid && eventoForm.get('fecha')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
                   </div>
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label for="horaInicio" class="block text-sm font-medium text-gray-700">Hora Inicio *</label>
+                      <label for="horaInicio" class="block text-sm font-medium text-gray-700">Hora Inicio</label>
                       <input type="time" id="horaInicio" formControlName="horaInicio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                      <div *ngIf="eventoForm.get('horaInicio')?.invalid && eventoForm.get('horaInicio')?.touched" class="text-red-600 text-sm mt-1">La hora de inicio es requerida</div>
+                      <div *ngIf="eventoForm.get('horaInicio')?.invalid && eventoForm.get('horaInicio')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
                     </div>
                     <div>
-                      <label for="horaFin" class="block text-sm font-medium text-gray-700">Hora Fin *</label>
+                      <label for="horaFin" class="block text-sm font-medium text-gray-700">Hora Fin</label>
                       <input type="time" id="horaFin" formControlName="horaFin" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                      <div *ngIf="eventoForm.get('horaFin')?.invalid && eventoForm.get('horaFin')?.touched" class="text-red-600 text-sm mt-1">La hora de fin es requerida</div>
+                      <div *ngIf="eventoForm.get('horaFin')?.invalid && eventoForm.get('horaFin')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
                     </div>
                   </div>
                   <div>
                     <label for="observaciones" class="block text-sm font-medium text-gray-700">Observaciones</label>
-                    <textarea id="observaciones" formControlName="observaciones" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Información adicional sobre el evento..."></textarea>
+                    <textarea id="observaciones" formControlName="observaciones" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Observaciones adicionales"></textarea>
                   </div>
                 </div>
               </div>
             </div>
           </div>
           <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button type="submit" [disabled]="eventoForm.invalid" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-400 disabled:cursor-not-allowed" [attr.aria-label]="eventoEditando ? 'Actualizar evento' : 'Guardar nuevo evento'" [attr.title]="eventoEditando ? 'Actualizar evento' : 'Guardar nuevo evento'">{{ eventoEditando ? 'Actualizar' : 'Guardar' }}</button>
-            <button type="button" (click)="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Cancelar y cerrar modal" title="Cancelar y cerrar">Cancelar</button>
+            <button type="submit" [disabled]="eventoForm.invalid" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-400 disabled:cursor-not-allowed" [attr.aria-label]="eventoEditando ? 'Actualizar evento' : 'Guardar nuevo evento'">{{ eventoEditando ? 'Actualizar' : 'Guardar' }}</button>
+            <button type="button" (click)="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Cancelar y cerrar modal">Cancelar</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
-
-<!-- MODAL DETALLES -->
+  <!-- MODAL DETALLES -->
   <div *ngIf="mostrarModalDetalles && eventoEditando" class="fixed inset-0 z-[80] overflow-y-auto" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModal()" aria-label="Cerrar detalles del evento" role="button" tabindex="0" (keydown.enter)="cerrarModal()" (keydown.space)="cerrarModal()"></div>
@@ -344,7 +353,17 @@
                 </div>
                 <div class="bg-gray-50 px-4 py-3 rounded-md">
                   <div class="text-sm font-medium text-gray-500">Departamento</div>
-                  <div class="text-base text-gray-900">{{ eventoEditando.nombreDepartamento }}</div>
+                  <div class="flex items-center justify-between">
+                    <div class="text-base text-gray-900">{{ eventoEditando.nombreDepartamento }}</div>
+                    <!-- ✅ NUEVO - Botón para ver ubicación en el modal de detalles -->
+                    <button *ngIf="tieneUbicacion(eventoEditando)" 
+                            type="button" 
+                            (click)="abrirModalMapa(eventoEditando)"
+                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-md text-sm font-medium transition-colors">
+                      <i class="fas fa-map-marker-alt"></i>
+                      <span>Ver en mapa</span>
+                    </button>
+                  </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 rounded-md">
                   <div class="text-sm font-medium text-gray-500">Fecha y Horario</div>
@@ -359,11 +378,112 @@
             </div>
           </div>
         </div>
-        <!-- ✅ MODIFICADO - Botones Editar y Eliminar solo visibles para no empleados -->
         <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button *ngIf="!esEmpleado" type="button" (click)="editarEvento(eventoEditando)" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Editar este evento" title="Editar evento">Editar</button>
-          <button *ngIf="!esEmpleado" type="button" (click)="eliminarEvento(eventoEditando.id)" class="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Eliminar este evento" title="Eliminar evento">Eliminar</button>
-          <button type="button" (click)="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Cerrar detalles del evento" title="Cerrar">Cerrar</button>
+          <button *ngIf="!esEmpleado" type="button" (click)="editarEvento(eventoEditando)" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Editar este evento">Editar</button>
+          <button *ngIf="!esEmpleado" type="button" (click)="eliminarEvento(eventoEditando.id)" class="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Eliminar este evento">Eliminar</button>
+          <button type="button" (click)="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Cerrar detalles del evento">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ NUEVO - MODAL DE MAPA -->
+  <div *ngIf="mostrarModalMapa && eventoEditando" class="fixed inset-0 z-[90] overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" (click)="cerrarModalMapa()" aria-label="Cerrar mapa" role="button" tabindex="0"></div>
+      
+      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+        <!-- Header del modal -->
+        <div class="bg-indigo-600 px-6 py-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <i class="fas fa-map-marker-alt text-white text-xl"></i>
+              <div>
+                <h3 class="text-lg font-medium text-white">Ubicación del Departamento</h3>
+                <p class="text-indigo-100 text-sm">{{ eventoEditando.nombreDepartamento }}</p>
+              </div>
+            </div>
+            <button (click)="cerrarModalMapa()" 
+                    class="text-white hover:text-indigo-200 transition-colors" 
+                    aria-label="Cerrar mapa">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido del modal -->
+        <div class="bg-white px-6 py-4">
+          <!-- Información del evento -->
+          <div class="mb-4 grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                <i class="fas fa-user text-indigo-600 mr-2"></i>Empleado
+              </label>
+              <p class="text-gray-900">{{ eventoEditando.nombreCompletoUsuario }}</p>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                <i class="fas fa-calendar text-indigo-600 mr-2"></i>Fecha y Hora
+              </label>
+              <p class="text-gray-900 text-sm">{{ formatearFecha(eventoEditando.fecha) }}</p>
+              <p class="text-indigo-600 text-sm font-medium">{{ formatearHora(eventoEditando.horaInicio) }} - {{ formatearHora(eventoEditando.horaFin) }}</p>
+            </div>
+          </div>
+
+          <!-- Contenedor del mapa -->
+          <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              <i class="fas fa-map text-indigo-600 mr-2"></i>Mapa de Ubicación
+            </label>
+            
+            <!-- ✅ INTEGRACIÓN CON MINI-MAP COMPONENT -->
+            <ng-container *ngIf="obtenerCoordenadasDepartamento(eventoEditando) as coordenadas; else noCoords">
+              <mini-map
+                [lngLat]="coordenadas"
+                [mapZoom]="16"
+                height="400px"
+                width="100%"
+                class="rounded-lg shadow-lg"
+              />
+              
+              <!-- Botón para abrir en Google Maps -->
+              <div class="mt-3 flex justify-end">
+                <a [href]="'https://www.google.com/maps/search/?api=1&query=' + coordenadas.lat + ',' + coordenadas.lng"
+                   target="_blank"
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+                  <i class="fas fa-external-link-alt text-indigo-600"></i>
+                  <span>Abrir en Google Maps</span>
+                </a>
+              </div>
+            </ng-container>
+            
+            <ng-template #noCoords>
+              <!-- Fallback cuando no hay coordenadas -->
+              <div class="bg-gray-100 rounded-lg h-96 flex items-center justify-center">
+                <div class="text-center p-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <p class="text-gray-600 font-medium mb-2">Ubicación no disponible</p>
+                  <p class="text-gray-500 text-sm">No se encontraron coordenadas para este departamento</p>
+                </div>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+
+        <!-- Footer del modal -->
+        <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2">
+          <button (click)="cerrarModalMapa()" 
+                  class="px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors border border-gray-300">
+            Cerrar
+          </button>
+          <button (click)="abrirModalDetalles(eventoEditando); cerrarModalMapa()" 
+                  class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+            <i class="fas fa-info-circle mr-2"></i>Ver detalles del evento
+          </button>
         </div>
       </div>
     </div>
@@ -391,3 +511,4 @@
     </div>
   </div>
 
+</div>
