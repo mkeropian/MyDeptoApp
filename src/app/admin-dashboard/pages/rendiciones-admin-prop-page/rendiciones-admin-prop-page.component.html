@@ -1,1 +1,375 @@
-<p>rendiciones-admin-prop-page works!</p>,
+<div class="container mx-auto p-6 max-w-7xl">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Mis Rendiciones</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-2">Consulta tus movimientos por departamento y período</p>
+  </div>
+
+  <!-- Formulario de Filtros -->
+  <form [formGroup]="filtrosForm" class="space-y-6">
+
+    <!-- Selección de Departamentos -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title text-lg">Seleccionar Departamentos</h2>
+
+        @if (loading()) {
+          <div class="flex justify-center py-4">
+            <span class="loading loading-spinner loading-lg"></span>
+          </div>
+        } @else {
+          <div class="flex gap-2 mb-3">
+            <button
+              type="button"
+              class="btn btn-sm btn-outline"
+              (click)="seleccionarTodos()">
+              Seleccionar Todos
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline"
+              (click)="limpiarSeleccion()">
+              Limpiar
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            @for (dep of departamentos(); track dep.id) {
+              <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-base-200 transition-colors"
+                     [class.bg-primary]="isDepartamentoSeleccionado(dep.id)"
+                     [class.text-primary-content]="isDepartamentoSeleccionado(dep.id)">
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-primary"
+                  [checked]="isDepartamentoSeleccionado(dep.id)"
+                  (change)="toggleDepartamento(dep.id)">
+                <div class="flex-1">
+                  <div class="font-semibold">{{ dep.nombre }}</div>
+                  @if (dep.descripcion) {
+                    <div class="text-sm opacity-70">{{ dep.descripcion }}</div>
+                  }
+                </div>
+              </label>
+            }
+          </div>
+
+          @if (filtrosForm.get('departamentos')?.hasError('required') && filtrosForm.get('departamentos')?.touched) {
+            <div class="text-error text-sm mt-2">
+              Debe seleccionar al menos un departamento
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Período -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title text-lg mb-4">Período</h2>
+
+        <!-- Radio Buttons -->
+        <div class="flex gap-6 mb-4">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              formControlName="tipoPeriodo"
+              value="diario"
+              class="radio radio-primary">
+            <span class="font-medium">Diario</span>
+          </label>
+
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              formControlName="tipoPeriodo"
+              value="mensual"
+              class="radio radio-primary">
+            <span class="font-medium">Mensual</span>
+          </label>
+        </div>
+
+        <!-- Campos Dinámicos según Tipo de Período -->
+        @if (filtrosForm.get('tipoPeriodo')?.value === 'diario') {
+          <!-- Fecha única -->
+          <div class="form-control w-full max-w-md">
+            <label class="label">
+              <span class="label-text font-semibold">Seleccionar Día *</span>
+            </label>
+            <input
+              type="date"
+              formControlName="fecha"
+              class="input input-bordered w-full"
+              [class.input-error]="filtrosForm.get('fecha')?.hasError('required') && filtrosForm.get('fecha')?.touched">
+            @if (filtrosForm.get('fecha')?.hasError('required') && filtrosForm.get('fecha')?.touched) {
+              <label class="label">
+                <span class="label-text-alt text-error">La fecha es requerida</span>
+              </label>
+            }
+          </div>
+        } @else {
+          <!-- Año y Mes -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-semibold">Año *</span>
+              </label>
+              <select
+                formControlName="anio"
+                class="select select-bordered w-full"
+                [class.select-error]="filtrosForm.get('anio')?.hasError('required') && filtrosForm.get('anio')?.touched">
+                @for (anio of anios; track anio) {
+                  <option [value]="anio">{{ anio }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-semibold">Mes *</span>
+              </label>
+              <select
+                formControlName="mes"
+                class="select select-bordered w-full"
+                [class.select-error]="filtrosForm.get('mes')?.hasError('required') && filtrosForm.get('mes')?.touched">
+                @for (mes of meses; track mes.value) {
+                  <option [value]="mes.value">{{ mes.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Resumen de Selección -->
+    @if (filtrosForm.get('departamentos')?.value?.length > 0 &&
+         (filtrosForm.get('fecha')?.value || (filtrosForm.get('anio')?.value && filtrosForm.get('mes')?.value))) {
+      <div class="alert alert-info">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="flex-1">
+          <h3 class="font-bold">Resumen de Consulta</h3>
+          <div class="text-sm mt-1 space-y-1">
+            <div><strong>Departamentos:</strong> {{ departamentosSeleccionadosTexto() }}</div>
+            <div><strong>Período:</strong> {{ periodoTexto() }}</div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Botones de Acción -->
+    <div class="flex flex-wrap gap-4">
+      <button
+        type="button"
+        class="btn btn-primary"
+        [class.loading]="loading()"
+        [disabled]="loading() || filtrosForm.invalid"
+        (click)="mostrarRendicion()">
+        @if (loading()) {
+          Cargando...
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          Mostrar Rendición
+        }
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-success"
+        [class.loading]="loadingExport()"
+        [disabled]="loadingExport() || filtrosForm.invalid"
+        (click)="exportarExcel()">
+        @if (loadingExport()) {
+          Exportando...
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Exportar a Excel
+        }
+      </button>
+    </div>
+
+  </form>
+
+  <!-- Resultados -->
+  @if (mostrarResultados()) {
+    <div class="mt-8 space-y-6">
+
+      <!-- Resumen en Cards -->
+      @if (movimientos().length > 0) {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Card Ingresos -->
+          <div class="stats shadow">
+            <div class="stat">
+              <div class="stat-figure text-success">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                </svg>
+              </div>
+              <div class="stat-title">Total Ingresos</div>
+              <div class="stat-value text-success">{{ formatCurrency(resumen().totalIngresos) }}</div>
+              <div class="stat-desc">↗︎ Entradas de dinero</div>
+            </div>
+          </div>
+
+          <!-- Card Gastos -->
+          <div class="stats shadow">
+            <div class="stat">
+              <div class="stat-figure text-error">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                </svg>
+              </div>
+              <div class="stat-title">Total Gastos</div>
+              <div class="stat-value text-error">{{ formatCurrency(resumen().totalGastos) }}</div>
+              <div class="stat-desc">↘︎ Salidas de dinero</div>
+            </div>
+          </div>
+
+          <!-- Card Balance -->
+          <div class="stats shadow">
+            <div class="stat">
+              <div class="stat-figure" [class.text-success]="resumen().balance >= 0" [class.text-error]="resumen().balance < 0">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div class="stat-title">Balance</div>
+              <div class="stat-value" [class.text-success]="resumen().balance >= 0" [class.text-error]="resumen().balance < 0">
+                {{ formatCurrency(resumen().balance) }}
+              </div>
+              <div class="stat-desc">
+                @if (resumen().balance >= 0) {
+                  ✓ Balance positivo
+                } @else {
+                  ⚠ Balance negativo
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Tabla de Movimientos -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title">
+            Movimientos
+            <div class="badge badge-primary">{{ movimientos().length }}</div>
+          </h2>
+
+          @if (movimientos().length === 0) {
+            <div class="alert alert-warning">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>No se encontraron movimientos para los filtros seleccionados.</span>
+            </div>
+          } @else {
+            <!-- Movimientos agrupados por departamento -->
+            @for (grupo of movimientosAgrupados(); track grupo.departamento) {
+              <div class="mb-6">
+
+                <!-- Header del Departamento -->
+                <div class="bg-primary text-primary-content p-3 rounded-t-lg flex items-center justify-between">
+                  <h3 class="font-bold text-lg">{{ grupo.departamento }}</h3>
+                  <div class="flex items-center gap-3">
+                    <div class="badge badge-neutral">{{ grupo.movimientos.length }} movimientos</div>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-success"
+                      [class.loading]="loadingExportDep() === grupo.departamento"
+                      [disabled]="loadingExportDep() === grupo.departamento"
+                      (click)="exportarDepartamento(grupo)">
+                      @if (loadingExportDep() === grupo.departamento) {
+                        <span class="loading loading-spinner loading-xs"></span>
+                      } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      }
+                      Excel
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tabla del Departamento -->
+                <div class="overflow-x-auto border-x border-b rounded-b-lg">
+                  <table class="table table-zebra">
+                    <thead>
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Categoría</th>
+                        <th class="text-right">Monto</th>
+                        <th>Observaciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (mov of grupo.movimientos; track $index) {
+                        <tr>
+                          <td>{{ mov.fecha }}</td>
+                          <td>
+                            <span class="badge"
+                                  [class.badge-success]="mov.tipoOperacion === 'Ingreso'"
+                                  [class.badge-error]="mov.tipoOperacion === 'Gasto'">
+                              {{ mov.tipoOperacion }}
+                            </span>
+                          </td>
+                          <td>{{ mov.categoria }}</td>
+                          <td class="text-right font-semibold"
+                              [class.text-success]="mov.tipoOperacion === 'Ingreso'"
+                              [class.text-error]="mov.tipoOperacion === 'Gasto'">
+                            {{ formatCurrency(mov.monto) }}
+                          </td>
+                          <td>
+                            @if (mov.observaciones) {
+                              <div class="tooltip" [attr.data-tip]="mov.observaciones">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </div>
+                            } @else {
+                              <span class="text-gray-400">-</span>
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Resumen del Departamento -->
+                <div class="bg-base-200 p-3 rounded-b-lg grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span class="font-semibold text-success">Ingresos:</span>
+                    <span class="ml-2">{{ formatCurrency(grupo.totalIngresos) }}</span>
+                  </div>
+                  <div>
+                    <span class="font-semibold text-error">Gastos:</span>
+                    <span class="ml-2">{{ formatCurrency(grupo.totalGastos) }}</span>
+                  </div>
+                  <div>
+                    <span class="font-semibold">Balance:</span>
+                    <span class="ml-2"
+                          [class.text-success]="grupo.balance >= 0"
+                          [class.text-error]="grupo.balance < 0">
+                      {{ formatCurrency(grupo.balance) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>

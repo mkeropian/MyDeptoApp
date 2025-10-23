@@ -2,6 +2,7 @@
 import { Routes } from '@angular/router';
 import { NotFoundPageComponent } from './shared/pages/not-found-page/not-found-page.component';
 import { authGuard, guestGuard, roleGuard } from './auth/guards/auth.guard';
+import { UnauthorizedPageComponent } from './shared/pages/unauthorized-page/unauthorized-page.component';
 
 export const routes: Routes = [
   // Ruta por defecto
@@ -29,22 +30,29 @@ export const routes: Routes = [
   {
     path: 'admin',
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['admin'] }, // Solo usuarios con rol 'admin'
+    data: { roles: ['admin','gerenciadora','prop'] }, // Solo usuarios con rol 'admin' y 'gerenciadora'
     loadChildren: () => import('./admin-dashboard/admin.route'),
   },
 
   // Dashboard (requiere autenticación)
   {
     path: 'dashboard',
-    canActivate: [authGuard], // Requiere estar logueado
+    canActivate: [authGuard, roleGuard], // Requiere estar logueado
+    data: { roles: ['admin','gerenciadora'] }, // Solo usuarios con rol 'admin' y 'gerenciadora'
     loadChildren: () => import('./admin-dashboard/dashboard.route'),
   },
 
   // Calendario (requiere autenticación)
   {
     path: 'calendar',
-    canActivate: [authGuard], // Requiere estar logueado
+    canActivate: [authGuard, roleGuard], // Requiere estar logueado
+    data: { roles: ['admin','gerenciadora','emp'] }, // Solo usuarios con rol 'admin' y 'gerenciadora'
     loadChildren: () => import('./calendario-empleados/calendario-empleados.route'),
+  },
+
+  {
+    path: 'unauthorized',
+    component: UnauthorizedPageComponent
   },
 
   // Página 404 - debe ir al final
