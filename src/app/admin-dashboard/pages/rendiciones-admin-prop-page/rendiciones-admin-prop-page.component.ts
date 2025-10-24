@@ -7,6 +7,7 @@ import { AuthService } from '../../../auth/services/auth.service';
 import { Departamento } from '../../../departamentos/interfaces/departamento.interface';
 import { RendicionesService } from '../../../shared/services/rendiciones.service';
 import { RendicionFiltros, RendicionMovimiento, RendicionResumen } from '../../../shared/interfaces/rendicion.interface';
+import { DepartamentosService } from '../../../departamentos/services/departamentos.service';
 
 interface GrupoMovimientos {
   departamento: string;
@@ -26,6 +27,7 @@ export class RendicionesAdminPropPageComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private rendicionesService = inject(RendicionesService);
+  private departamentosService = inject(DepartamentosService);
 
   // Signals
   departamentos = signal<Departamento[]>([]);
@@ -34,6 +36,7 @@ export class RendicionesAdminPropPageComponent implements OnInit {
   loadingExport = signal<boolean>(false);
   loadingExportDep = signal<string | null>(null);
   mostrarResultados = signal<boolean>(false);
+  idPropietario = signal<number | null>(null);
 
   // Computed
   currentUser = computed(() => this.authService.user());
@@ -185,16 +188,43 @@ export class RendicionesAdminPropPageComponent implements OnInit {
 
     this.loading.set(true);
 
-    this.rendicionesService.getDepartamentosByPropietario(user.id).subscribe({
-      next: (deps) => {
-        this.departamentos.set(deps);
-        this.loading.set(false);
-      },
-      error: (error) => {
-        console.error('Error cargando departamentos:', error);
-        this.loading.set(false);
-      }
-    });
+    const tieneSoloRolProp = user.roles?.length === 1 && user.roles.includes('prop');
+
+    if (tieneSoloRolProp) {
+      // Primero obtener el idPropietario del usuario
+      this.rendicionesService.getPropietarioByUsuario(user.id).subscribe({
+        next: (response) => {
+          this.idPropietario.set(response.idPropietario);
+          // Ahora sí cargar los departamentos con el idPropietario correcto
+          this.rendicionesService.getDepartamentosByPropietario(response.idPropietario).subscribe({
+            next: (deps) => {
+              this.departamentos.set(deps);
+              this.loading.set(false);
+            },
+            error: (error) => {
+              console.error('Error cargando departamentos del propietario:', error);
+              this.loading.set(false);
+            }
+          });
+        },
+        error: (error) => {
+          console.error('Error obteniendo propietario del usuario:', error);
+          this.loading.set(false);
+        }
+      });
+    } else {
+      // admin o gestionadora: cargar todos los departamentos activos
+      this.departamentosService.getDepartamentosActivos().subscribe({
+        next: (deps) => {
+          this.departamentos.set(deps);
+          this.loading.set(false);
+        },
+        error: (error) => {
+          console.error('Error cargando todos los departamentos:', error);
+          this.loading.set(false);
+        }
+      });
+    }
   }
 
   private updateValidators(tipoPeriodo: string): void {
@@ -327,10 +357,9 @@ export class RendicionesAdminPropPageComponent implements OnInit {
 
   private buildFiltros(): RendicionFiltros {
     const formValue = this.filtrosForm.value;
-    const user = this.currentUser();
 
     const filtros: RendicionFiltros = {
-      idsPropietario: user?.id ? [user.id] : [],
+      idsPropietario: this.idPropietario() ? [this.idPropietario()!] : [],
       idsDepartamentos: formValue.departamentos,
       tipoPeriodo: formValue.tipoPeriodo
     };

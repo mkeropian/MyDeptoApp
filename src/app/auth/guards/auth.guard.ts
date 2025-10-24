@@ -2,6 +2,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { filter, take, map } from 'rxjs/operators';
 
 /**
  * Guard funcional para Angular 19
@@ -11,21 +13,21 @@ export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const authStatus = authService.authStatus();
+  // Convertir signal a observable y esperar a que termine de verificar
+  return toObservable(authService.authStatus).pipe(
+    filter((status) => status !== 'checking'),
+    take(1),
+    map((status) => {
+      if (status === 'authenticated') {
+        return true;
+      }
 
-  if (authStatus === 'authenticated') {
-    return true;
-  }
-
-  if (authStatus === 'checking') {
-    return true;
-  }
-
-  router.navigate(['/auth/login'], {
-    queryParams: { returnUrl: state.url }
-  });
-
-  return false;
+      router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: state.url }
+      });
+      return false;
+    })
+  );
 };
 
 /**
@@ -35,18 +37,18 @@ export const guestGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const authStatus = authService.authStatus();
+  return toObservable(authService.authStatus).pipe(
+    filter((status) => status !== 'checking'),
+    take(1),
+    map((status) => {
+      if (status === 'not-authenticated') {
+        return true;
+      }
 
-  if (authStatus === 'not-authenticated') {
-    return true;
-  }
-
-  if (authStatus === 'authenticated') {
-    router.navigate(['/home']);
-    return false;
-  }
-
-  return true;
+      router.navigate(['/home']);
+      return false;
+    })
+  );
 };
 
 /**
@@ -56,121 +58,108 @@ export const roleGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const authStatus = authService.authStatus();
   const requiredRoles = route.data['roles'] as string[] | undefined;
 
-  if (authStatus !== 'authenticated') {
-    router.navigate(['/auth/login']);
-    return false;
-  }
+  return toObservable(authService.authStatus).pipe(
+    filter((status) => status !== 'checking'),
+    take(1),
+    map((status) => {
+      if (status !== 'authenticated') {
+        router.navigate(['/auth/login']);
+        return false;
+      }
 
-  if (!requiredRoles || requiredRoles.length === 0) {
-    return true;
-  }
+      if (!requiredRoles || requiredRoles.length === 0) {
+        return true;
+      }
 
-  const hasRequiredRole = authService.hasAnyRole(requiredRoles);
+      const hasRequiredRole = authService.hasAnyRole(requiredRoles);
 
-  if (!hasRequiredRole) {
-    router.navigate(['/unauthorized']);
-    return false;
-  }
+      if (!hasRequiredRole) {
+        router.navigate(['/unauthorized']);
+        return false;
+      }
 
-  return true;
+      return true;
+    })
+  );
 };
 
 /**
- * NUEVO: Guard para verificar permisos específicos
- * Uso en rutas:
- * {
- *   path: 'departamentos',
- *   component: DepartamentosComponent,
- *   canActivate: [authGuard, permissionGuard],
- *   data: { permisos: ['departamentos'] }
- * }
+ * Guard para verificar permisos específicos
  */
 export const permissionGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const authStatus = authService.authStatus();
-
-  // Verificar autenticación primero
-  if (authStatus !== 'authenticated') {
-    router.navigate(['/auth/login'], {
-      queryParams: { returnUrl: state.url }
-    });
-    return false;
-  }
-
-  // Obtener permisos requeridos de la ruta
   const requiredPermisos = route.data['permisos'] as string[] | undefined;
   const requireAll = route.data['requireAllPermisos'] as boolean | undefined;
 
-  // Si no se especificaron permisos, solo requiere autenticación
-  if (!requiredPermisos || requiredPermisos.length === 0) {
-    return true;
-  }
+  return toObservable(authService.authStatus).pipe(
+    filter((status) => status !== 'checking'),
+    take(1),
+    map((status) => {
+      if (status !== 'authenticated') {
+        router.navigate(['/auth/login'], {
+          queryParams: { returnUrl: state.url }
+        });
+        return false;
+      }
 
-  // Verificar permisos
-  let hasPermission = false;
+      if (!requiredPermisos || requiredPermisos.length === 0) {
+        return true;
+      }
 
-  if (requireAll) {
-    // Requiere TODOS los permisos (AND)
-    hasPermission = authService.tienePermisos(requiredPermisos);
-  } else {
-    // Requiere AL MENOS UNO de los permisos (OR) - comportamiento por defecto
-    hasPermission = authService.tieneAlgunPermiso(requiredPermisos);
-  }
+      let hasPermission = false;
 
-  if (!hasPermission) {
-    router.navigate(['/unauthorized']);
-    return false;
-  }
+      if (requireAll) {
+        hasPermission = authService.tienePermisos(requiredPermisos);
+      } else {
+        hasPermission = authService.tieneAlgunPermiso(requiredPermisos);
+      }
 
-  return true;
+      if (!hasPermission) {
+        router.navigate(['/unauthorized']);
+        return false;
+      }
+
+      return true;
+    })
+  );
 };
 
 /**
- * NUEVO: Guard combinado - verifica roles O permisos
- * Más flexible para casos donde un admin puede ver todo
- * pero otros roles necesitan permisos específicos
- *
- * Uso:
- * {
- *   path: 'configuracion',
- *   component: ConfiguracionComponent,
- *   canActivate: [authGuard, roleOrPermissionGuard],
- *   data: {
- *     roles: ['admin'],  // Admins siempre pueden entrar
- *     permisos: ['configuracion']  // O tener el permiso específico
- *   }
- * }
+ * Guard combinado - verifica roles O permisos
  */
 export const roleOrPermissionGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const authStatus = authService.authStatus();
-
-  if (authStatus !== 'authenticated') {
-    router.navigate(['/auth/login']);
-    return false;
-  }
-
   const requiredRoles = route.data['roles'] as string[] | undefined;
   const requiredPermisos = route.data['permisos'] as string[] | undefined;
 
-  // Si es admin, permitir acceso
-  if (requiredRoles && authService.hasAnyRole(requiredRoles)) {
-    return true;
-  }
+  return toObservable(authService.authStatus).pipe(
+    filter((status) => status !== 'checking'),
+    take(1),
+    map((status) => {
+      if (status !== 'authenticated') {
+        router.navigate(['/auth/login']);
+        return false;
+      }
 
-  // Si no es admin, verificar permisos
-  if (requiredPermisos && authService.tieneAlgunPermiso(requiredPermisos)) {
-    return true;
-  }
+      // Si es admin, permitir acceso
+      if (requiredRoles && authService.hasAnyRole(requiredRoles)) {
+        return true;
+      }
 
-  // No tiene ni rol ni permiso
-  router.navigate(['/unauthorized']);
-  return false;
+      // Si no es admin, verificar permisos
+      if (requiredPermisos && authService.tieneAlgunPermiso(requiredPermisos)) {
+        return true;
+      }
+
+      // No tiene ni rol ni permiso
+      router.navigate(['/unauthorized']);
+      return false;
+    })
+  );
 };

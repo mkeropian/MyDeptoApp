@@ -5,7 +5,7 @@ import { environment } from "../../../environments/environment";
 import { UserLogin } from "../interfaces/user.interface";
 import { HttpClient } from "@angular/common/http";
 import { rxResource } from "@angular/core/rxjs-interop";
-import { catchError, map, Observable, of, tap } from "rxjs";
+import { catchError, map, Observable, of, switchMap, tap } from "rxjs";
 import {
   AuthResponse,
   ProfileResponse,
@@ -38,11 +38,7 @@ export class AuthService {
   });
 
   // Computeds públicos
-  authStatus = computed<AuthStatus>(() => {
-    if (this._authStatus() === 'checking') return 'checking';
-    if (this._user()) return 'authenticated';
-    return 'not-authenticated';
-  });
+  authStatus = this._authStatus.asReadonly();
 
   user = computed(() => this._user());
   token = computed(() => this._token());
@@ -69,39 +65,131 @@ export class AuthService {
 
   /**
    * Login con usuario o email
+   * CORREGIDO: Ahora espera a que getProfile() termine antes de marcar como autenticado
    */
   login(usuarioOrEmail: string, password: string): Observable<boolean> {
     return this.http.post<AuthResponse>(`${baseUrl}/auth/login`, {
       usuario: usuarioOrEmail,
       password
     }).pipe(
-      map((resp) => this.handleAuthSuccess(resp)),
+      switchMap((resp) => {
+        if (!resp.ok || !resp.token) {
+          return of(false);
+        }
+
+        // Guardar token
+        this._token.set(resp.token);
+        localStorage.setItem('token', resp.token);
+
+        // Crear usuario temporal con datos básicos del login
+        const userLogin: UserLogin = {
+          id: resp.uid!,
+          email: resp.email!,
+          nombreCompleto: resp.name!,
+          activo: 1,
+          roles: [],
+          permisos: [],
+          tema: resp.tema,
+          avatarUrl: resp.avatarUrl
+        };
+
+        this._user.set(userLogin);
+
+        if (resp.tema) {
+          this.themeService.setTheme(resp.tema);
+        }
+
+        // Obtener perfil completo ANTES de marcar como autenticado
+        return this.getProfile().pipe(
+          map((profileResp) => {
+            if (profileResp.ok) {
+              // Solo marcar como autenticado después de tener roles y permisos
+              this._authStatus.set('authenticated');
+              return true;
+            }
+            return false;
+          }),
+          catchError((error) => {
+            console.error('Error obteniendo perfil después del login:', error);
+            this.logout();
+            return of(false);
+          })
+        );
+      }),
       catchError((error: any) => this.handleAuthError(error))
     );
   }
 
   /**
    * Verifica el estado del token actual
+   * CORREGIDO: NO redirige, solo marca el estado
    */
   checkStatus(): Observable<boolean> {
     const token = localStorage.getItem('token') || '';
 
     if (!token) {
-      this.logout();
+      // CORREGIDO: NO llamar a logout(), solo marcar como no autenticado
+      this._authStatus.set('not-authenticated');
+      this._user.set(null);
+      this._token.set(null);
+      this._permisos.set([]);
       return of(false);
     }
 
     return this.http.get<ValidateTokenResponse>(`${baseUrl}/auth/validate`)
       .pipe(
-        map((resp) => {
-          if (resp.ok) {
-            // Si el token es válido, obtener perfil completo
-            this.getProfile().subscribe();
-            return true;
+        switchMap((resp) => {
+          if (!resp.ok) {
+            // CORREGIDO: NO llamar a logout(), solo marcar como no autenticado
+            this._authStatus.set('not-authenticated');
+            this._user.set(null);
+            this._token.set(null);
+            this._permisos.set([]);
+            localStorage.removeItem('token');
+            return of(false);
           }
-          return false;
+
+          // Token válido, crear usuario temporal
+          const userLogin: UserLogin = {
+            id: resp.uid,
+            nombreCompleto: resp.name,
+            email: '',
+            activo: 1,
+            roles: [],
+            permisos: []
+          };
+
+          this._user.set(userLogin);
+
+          // Obtener perfil completo ANTES de marcar como autenticado
+          return this.getProfile().pipe(
+            map((profileResp) => {
+              if (profileResp.ok) {
+                // Solo marcar como autenticado después de tener roles y permisos
+                this._authStatus.set('authenticated');
+                return true;
+              }
+              return false;
+            }),
+            catchError((error) => {
+              console.error('Error obteniendo perfil en checkStatus:', error);
+              this._authStatus.set('not-authenticated');
+              this._user.set(null);
+              this._token.set(null);
+              this._permisos.set([]);
+              return of(false);
+            })
+          );
         }),
-        catchError((error: any) => this.handleAuthError(error))
+        catchError((error: any) => {
+          console.error('Error validando token:', error);
+          this._authStatus.set('not-authenticated');
+          this._user.set(null);
+          this._token.set(null);
+          this._permisos.set([]);
+          localStorage.removeItem('token');
+          return of(false);
+        })
       );
   }
 
@@ -111,7 +199,50 @@ export class AuthService {
   renewToken(): Observable<boolean> {
     return this.http.get<RenewTokenResponse>(`${baseUrl}/auth/renew`)
       .pipe(
-        map((resp) => this.handleAuthSuccess(resp)),
+        switchMap((resp) => {
+          if (!resp.ok || !resp.token) {
+            this.logout();
+            return of(false);
+          }
+
+          // Guardar token
+          this._token.set(resp.token);
+          localStorage.setItem('token', resp.token);
+
+          // Crear usuario temporal con datos básicos
+          const userLogin: UserLogin = {
+            id: resp.uid!,
+            email: resp.email!,
+            nombreCompleto: resp.name!,
+            activo: 1,
+            roles: [],
+            permisos: [],
+            tema: resp.tema,
+            avatarUrl: resp.avatarUrl
+          };
+
+          this._user.set(userLogin);
+
+          if (resp.tema) {
+            this.themeService.setTheme(resp.tema);
+          }
+
+          // Obtener perfil completo ANTES de marcar como autenticado
+          return this.getProfile().pipe(
+            map((profileResp) => {
+              if (profileResp.ok) {
+                this._authStatus.set('authenticated');
+                return true;
+              }
+              return false;
+            }),
+            catchError((error) => {
+              console.error('Error obteniendo perfil después de renovar token:', error);
+              this.logout();
+              return of(false);
+            })
+          );
+        }),
         catchError((error: any) => {
           this.logout();
           return of(false);
@@ -237,43 +368,6 @@ export class AuthService {
   tieneAlgunPermiso(permisos: string[]): boolean {
     const permisosUsuario = this._permisos();
     return permisos.some(p => permisosUsuario.includes(p));
-  }
-
-  /**
-   * Maneja el éxito de la autenticación
-   */
-  private handleAuthSuccess(resp: AuthResponse): boolean {
-    if (!resp.ok || !resp.token) {
-      return false;
-    }
-
-    // Guardar token
-    this._token.set(resp.token);
-    localStorage.setItem('token', resp.token);
-
-    // Crear usuario temporal con datos básicos del login
-    const userLogin: UserLogin = {
-      id: resp.uid!,
-      email: resp.email!,
-      nombreCompleto: resp.name!,
-      activo: 1,
-      roles: [],
-      permisos: [],
-      tema: resp.tema,
-      avatarUrl: resp.avatarUrl // NUEVO: Incluir avatar del login
-    };
-
-    this._user.set(userLogin);
-    this._authStatus.set('authenticated');
-
-    if (resp.tema) {
-      this.themeService.setTheme(resp.tema);
-    }
-
-    // Obtener perfil completo en background para tener roles y permisos
-    this.getProfile().subscribe();
-
-    return true;
   }
 
   /**

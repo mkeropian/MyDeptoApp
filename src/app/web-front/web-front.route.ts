@@ -9,6 +9,8 @@ import { CardsPageComponent } from "./pages/departamentos-page/cards-page/cards-
 
 import { NotFoundPageComponent } from "../shared/pages/not-found-page/not-found-page.component";
 import { UserProfilePageComponent } from "./pages/user-profile-page/user-profile-page.component";
+import { RendicionesAdminPropPageComponent } from "../admin-dashboard/pages/rendiciones-admin-prop-page/rendiciones-admin-prop-page.component";
+import { authGuard, roleGuard } from "../auth/guards/auth.guard";
 
 export const webFrontRoutes: Routes = [
   {

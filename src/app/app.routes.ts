@@ -29,8 +29,7 @@ export const routes: Routes = [
   // Admin (requiere autenticación Y rol admin)
   {
     path: 'admin',
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['admin','gerenciadora','prop'] }, // Solo usuarios con rol 'admin' y 'gerenciadora'
+    canActivate: [authGuard],
     loadChildren: () => import('./admin-dashboard/admin.route'),
   },
 

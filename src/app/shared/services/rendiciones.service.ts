@@ -21,6 +21,10 @@ export class RendicionesService {
     return this.http.get<Departamento[]>(`${baseUrl}/departamentos/by-propietario/${idPropietario}`);
   }
 
+  getPropietarioByUsuario(idUser: number): Observable<{ idPropietario: number }> {
+    return this.http.get<{ idPropietario: number }>(`${baseUrl}/usuarios/${idUser}/propietario`);
+  }
+
   getMovimientos(filtros: RendicionFiltros): Observable<RendicionMovimiento[]> {
     const body = this.buildRequestBody(filtros);
     return this.http.post<RendicionMovimiento[]>(`${baseUrl}/export/movimientos`, body);
