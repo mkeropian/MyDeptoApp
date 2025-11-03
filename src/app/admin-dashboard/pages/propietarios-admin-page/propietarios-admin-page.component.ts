@@ -8,10 +8,11 @@ import { Propietario } from '../../../propietarios/interfaces/propietario.interf
 import { TableAction, TableColumn } from '../../../shared/components/smart-grid/smart-grid.interface';
 import Swal from 'sweetalert2';
 import { EditModalComponent } from './edit-modal/edit-modal.component';
+import { VincularDesdePropietarioModalComponent } from "./vincular-desde-propietario-modal/vincular-desde-propietario-modal.component";
 
 @Component({
   selector: 'propietarios-admin-page',
-  imports: [FormComponent, SmartGridComponent, EditModalComponent],
+  imports: [FormComponent, SmartGridComponent, EditModalComponent, VincularDesdePropietarioModalComponent],
   templateUrl: './propietarios-admin-page.component.html',
 })
 export class PropietariosAdminPageComponent {
@@ -19,6 +20,7 @@ export class PropietariosAdminPageComponent {
   propietariosService = inject(PropietariosService);
 
   @ViewChild(EditModalComponent) editModal?: EditModalComponent;
+  @ViewChild(VincularDesdePropietarioModalComponent) vincularModal?: VincularDesdePropietarioModalComponent;
 
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
@@ -36,10 +38,13 @@ export class PropietariosAdminPageComponent {
     const column = this.sortColumn();
     const direction = this.sortDirection();
 
-    // Transforma los datos para incluir activoTexto
-    const transformedData = data.map(user => ({
-      ...user,
-      activoTexto: user.activo === 1 ? 'Sí' : 'No'
+    const transformedData = data.map(prop => ({
+      ...prop,
+      activoTexto: prop.activo === 1 ? 'Sí' : 'No',
+      // MODIFICADO: Mostrar código de usuario + nombre completo
+      usuarioDisplay: prop.usuarioNombre && prop.usuarioNombreCompleto
+        ? `${prop.usuarioNombre} - ${prop.usuarioNombreCompleto}`
+        : '-'
     }));
 
     if (!column) return transformedData;
@@ -110,6 +115,14 @@ export class PropietariosAdminPageComponent {
       sortable: true,
       type: 'text'
     },
+    // MODIFICADO: Mostrar código + nombre
+    {
+      key: 'usuarioDisplay',
+      label: 'Usuario',
+      sortable: true,
+      width: '180px',
+      type: 'badge'
+    },
     {
       key: 'activoTexto',
       label: 'Estado',
@@ -133,6 +146,15 @@ export class PropietariosAdminPageComponent {
       action: (propietario) => this.toggleActivo(propietario),
       getIcon: (propietario: any) => propietario.activo === 1 ? 'fas fa-toggle-off' : 'fas fa-toggle-on',
       getClass: (propietario: any) => propietario.activo === 1 ? 'btn-error btn-xs' : 'btn-success btn-xs',
+    },
+    // NUEVO: Botón de vincular usuario
+    {
+      label: '',
+      icon: 'fas fa-user-tie',
+      class: 'btn-info btn-xs',
+      action: (propietario) => this.vincularUsuario(propietario),
+      getIcon: (propietario: any) => propietario.usuarioId ? 'fas fa-user-slash' : 'fas fa-user-tie',
+      getClass: (propietario: any) => propietario.usuarioId ? 'btn-warning btn-xs' : 'btn-info btn-xs'
     }
   ];
 
@@ -146,7 +168,6 @@ export class PropietariosAdminPageComponent {
     this.refreshTrigger.update(v => v + 1);
   }
 
-  // NUEVO: Método para toggle activo/inactivo
   async toggleActivo(propietario: any) {
     const accion = propietario.activo === 1 ? 'desactivar' : 'activar';
     const accionCapitalizada = accion.charAt(0).toUpperCase() + accion.slice(1);
@@ -177,6 +198,7 @@ export class PropietariosAdminPageComponent {
       next: (response) => {
         const nuevoEstado = response.activo === 1 ? 'activado' : 'desactivado';
         this.showSuccessToast(`Propietario ${nuevoEstado} exitosamente`);
+        // NUEVO: Refrescar solo la grilla
         this.refreshTrigger.update(v => v + 1);
       },
       error: (error) => {
@@ -209,6 +231,18 @@ export class PropietariosAdminPageComponent {
 
   onSelectionChange(selectedItems: any[]) {
     console.log('Propietarios seleccionados:', selectedItems.length);
+  }
+
+  // NUEVO: Vincular usuario
+  vincularUsuario(propietario: any) {
+    if (this.vincularModal) {
+      this.vincularModal.openFromPropietario(propietario);
+    }
+  }
+
+  // NUEVO: Refrescar al realizar vinculación
+  onVinculacionRealizada(): void {
+    this.refreshTrigger.update(v => v + 1);
   }
 
   // Métodos de toast
@@ -257,4 +291,5 @@ export class PropietariosAdminPageComponent {
       }
     }, 4000);
   }
+
 }

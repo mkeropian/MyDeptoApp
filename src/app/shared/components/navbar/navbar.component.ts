@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { UserProfilePageComponent } from "../../../web-front/pages/user-profile-page/user-profile-page.component";
 import { AboutPageComponent } from '../../../web-front/pages/about-page/about-page.component';
 import { RendicionesAdminPageComponent } from '../../../admin-dashboard/pages/rendiciones-admin-page/rendiciones-admin-page.component';
+import { VinculacionesModalComponent } from '../vinculaciones-modal/vinculaciones-modal.component';
 
 @Component({
   selector: 'app-navbar',
@@ -15,7 +16,8 @@ import { RendicionesAdminPageComponent } from '../../../admin-dashboard/pages/re
     CommonModule,
     UserProfilePageComponent,
     RendicionesAdminPageComponent,
-    AboutPageComponent
+    AboutPageComponent,
+    VinculacionesModalComponent
   ],
   templateUrl: './navbar.component.html',
 })
@@ -26,6 +28,7 @@ export class NavbarComponent {
   @ViewChild(UserProfilePageComponent, { static: false }) profileModal!: UserProfilePageComponent;
   @ViewChild(RendicionesAdminPageComponent, { static: false }) rendicionesModal!: RendicionesAdminPageComponent;
   @ViewChild(AboutPageComponent, { static: false }) aboutModal!: AboutPageComponent;
+  @ViewChild(VinculacionesModalComponent, { static: false }) vinculacionesModal!: VinculacionesModalComponent;
 
   isDashboard = false;
   isAdminOpen = false;
@@ -52,7 +55,7 @@ export class NavbarComponent {
   tieneDashboardPropietarios = computed(() => this.authService.tienePermiso('dashboard.propietarios'));
 
   tieneCalendario = computed(() => this.authService.tienePermiso('calendario'));
-  
+
   tieneDepartamentosFullmap = computed(() => this.authService.tienePermiso('departamentos.fullmap'));
   tieneDepartamentosCards = computed(() => this.authService.tienePermiso('departamentos.cards'));
 
@@ -85,8 +88,8 @@ export class NavbarComponent {
 
   tieneAlgunPermisoAdmin = computed(() =>
     this.authService.tieneAlgunPermiso(
-      ['administracion.departamentos', 
-      'administracion.propietarios', 
+      ['administracion.departamentos',
+      'administracion.propietarios',
       'administracion.rendiciones',
       'administracion.rendiciones-propietarios']
     )
@@ -94,7 +97,7 @@ export class NavbarComponent {
 
   tieneAlgunPermisoConfig = computed(() =>
     this.authService.tieneAlgunPermiso(
-      ['configuracion.sistema', 
+      ['configuracion.sistema',
       'configuracion.roles',
       'configuracion.calendarios',
       'configuracion.rendiciones-aut',
@@ -178,4 +181,12 @@ export class NavbarComponent {
     const img = event.target as HTMLImageElement;
     img.src = this.getDefaultAvatarUrl();
   }
+
+  onVinculacionesClick() {
+    this.onMenuItemClick();
+    if (this.vinculacionesModal) {
+      this.vinculacionesModal.open();
+    }
+  }
+
 }

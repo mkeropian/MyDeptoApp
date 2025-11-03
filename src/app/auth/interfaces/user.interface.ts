@@ -9,9 +9,14 @@ export interface User {
   activo: number;
   avatarUrl?: string;
   tema?: string;
+
+  propietarioId?: number;
+  propietarioNombre?: string;
+
+  rolId?: number;
+  rolNombre?: string;
 }
 
-// NUEVA: Interfaz para crear usuario con rol
 export interface CreateUserRequest {
   usuario: string;
   nombreCompleto: string;
@@ -20,7 +25,7 @@ export interface CreateUserRequest {
   activo: number;
   avatarUrl?: string;
   tema?: string;
-  rolId: number; // El campo del rol
+  rolId: number;
 }
 
 export interface UserTema {

@@ -41,4 +41,9 @@ export class DepartamentosService {
     return this.http.patch<{ id: number; activo: number }>(`${baseUrl}/departamentos/${id}/toggle-activo`, {});
   }
 
+  // NUEVO: Obtener departamentos por propietario
+  getDepartamentosByPropietario(idPropietario: number): Observable<Departamento[]> {
+    return this.http.get<Departamento[]>(`${baseUrl}/departamentos/by-propietario/${idPropietario}`);
+  }
+
 }

@@ -27,3 +27,12 @@
 .swal-compact .swal2-actions {
   margin: 0.5em auto 0 !important;
 }
+
+/* Fix z-index para SweetAlert sobre modales */
+.swal2-container {
+  z-index: 10000 !important;
+}
+
+.swal2-backdrop-show {
+  z-index: 9999 !important;
+}

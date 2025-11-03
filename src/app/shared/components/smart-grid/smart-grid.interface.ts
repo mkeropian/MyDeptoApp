@@ -3,7 +3,7 @@ export interface TableColumn {
   label: string;
   sortable?: boolean;
   width?: string;
-  type?: 'text' | 'badge' | 'avatar' | 'date' | 'actions';
+  type?: 'text' | 'badge' | 'avatar' | 'date' | 'actions' | 'html';
 }
 
 export interface TableAction {

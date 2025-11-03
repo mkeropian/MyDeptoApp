@@ -1,0 +1,138 @@
+<!-- Modal de Vinculación desde Propietario -->
+<dialog id="vincular_desde_propietario_modal" class="modal">
+  <div class="modal-box w-11/12 max-w-2xl bg-base-100">
+
+    <!-- Header -->
+    <div class="border-b border-base-300 pb-4 mb-4">
+      <h3 class="font-bold text-2xl flex items-center gap-2">
+        <i class="fas fa-link text-primary"></i>
+        Vincular Usuario a Propietario
+      </h3>
+      @if (propietarioSeleccionado()) {
+        <div class="mt-3 bg-base-200 rounded-lg p-3">
+          <p class="text-sm">
+            <i class="fas fa-user-tie text-success mr-2"></i>
+            <strong>Propietario:</strong> {{ propietarioSeleccionado()!.nombreApellido }}
+          </p>
+          <p class="text-sm mt-1">
+            <i class="fas fa-id-card text-success mr-2"></i>
+            <strong>DNI:</strong> {{ propietarioSeleccionado()!.dni }}
+          </p>
+
+          @if (propietarioSeleccionado()!.usuarioId) {
+            <div class="mt-2 pt-2 border-t border-base-300">
+              <p class="text-xs text-info">
+                <i class="fas fa-info-circle mr-1"></i>
+                Este propietario ya tiene un usuario vinculado
+              </p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="flex justify-center items-center py-8">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    }
+
+    <!-- Formulario -->
+    @if (!isLoading()) {
+      <form [formGroup]="vinculacionForm" (ngSubmit)="onSubmit()">
+
+        <!-- Selector de Usuario -->
+        <div class="form-control mb-4">
+          <label class="label">
+            <span class="label-text font-semibold">
+              <i class="fas fa-user mr-2"></i>
+              Seleccionar Usuario
+            </span>
+            <span class="label-text-alt text-info">
+              {{ usuariosDisponibles().length }} disponibles
+            </span>
+          </label>
+
+          @if (usuariosDisponibles().length === 0) {
+            <div class="alert alert-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span class="text-sm">
+                No hay usuarios disponibles. Todos los usuarios con roles permitidos ya están vinculados.
+              </span>
+            </div>
+          } @else {
+            <select
+              class="select select-bordered w-full"
+              formControlName="idUser">
+              <option value="" disabled selected>-- Seleccione un usuario --</option>
+              @for (usuario of usuariosDisponibles(); track usuario.id) {
+                <option [value]="usuario.id">
+                  {{ usuario.nombreCompleto }} - {{ usuario.usuario }} ({{ usuario.rolNombre }})
+                </option>
+              }
+            </select>
+
+            @if (vinculacionForm.get('idUser')?.invalid && vinculacionForm.get('idUser')?.touched) {
+              <label class="label">
+                <span class="label-text-alt text-error">
+                  <i class="fas fa-exclamation-circle mr-1"></i>
+                  Debe seleccionar un usuario
+                </span>
+              </label>
+            }
+          }
+        </div>
+
+        <!-- Info de roles permitidos -->
+        <div class="alert alert-info mb-4">
+          <i class="fas fa-info-circle"></i>
+          <div class="text-xs">
+            <p class="font-semibold">Solo usuarios con estos roles:</p>
+            <div class="flex gap-2 mt-1">
+              <span class="badge badge-sm badge-primary">Admin</span>
+              <span class="badge badge-sm badge-primary">Gerenciadora</span>
+              <span class="badge badge-sm badge-primary">Prop</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="modal-action">
+          <button
+            type="button"
+            class="btn btn-ghost"
+            (click)="close()">
+            <i class="fas fa-times mr-2"></i>
+            Cancelar
+          </button>
+
+          @if (propietarioSeleccionado()?.usuarioId) {
+            <button
+              type="button"
+              class="btn btn-warning"
+              (click)="desvincular()">
+              <i class="fas fa-unlink mr-2"></i>
+              Desvincular Actual
+            </button>
+          }
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="vinculacionForm.invalid || usuariosDisponibles().length === 0">
+            <i class="fas fa-link mr-2"></i>
+            {{ propietarioSeleccionado()?.usuarioId ? 'Cambiar Vinculación' : 'Vincular' }}
+          </button>
+        </div>
+
+      </form>
+    }
+
+  </div>
+
+  <!-- Backdrop -->
+  <form method="dialog" class="modal-backdrop">
+    <button type="button" (click)="close()">close</button>
+  </form>
+</dialog>

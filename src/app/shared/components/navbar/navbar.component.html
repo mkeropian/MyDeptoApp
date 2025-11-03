@@ -87,6 +87,8 @@
         <li class="dropdown dropdown-hover" [class.dropdown-open]="isConfigOpen">
           <div tabindex="0" role="button" (click)="toggleConfig()">Configuración</div>
           <ul class="dropdown-content menu bg-base-100 rounded-box z-[1000] w-52 p-2 shadow">
+
+            <!-- Sistema -->
             @if (tieneConfiguracionSistema()) {
               <li>
                 <a
@@ -97,6 +99,8 @@
                 </a>
               </li>
             }
+
+            <!-- Roles y Permisos -->
             @if (tieneConfiguracionRoles()) {
               <li>
                 <a
@@ -107,6 +111,8 @@
                 </a>
               </li>
             }
+
+            <!-- Calendarios -->
             @if (tieneConfiguracionCalendarios()) {
               <li>
                 <a
@@ -117,6 +123,8 @@
                 </a>
               </li>
             }
+
+            <!-- Rendiciones Aut. -->
             @if (tieneConfiguracionRendicionesAut()) {
               <li>
                 <a
@@ -127,6 +135,19 @@
                 </a>
               </li>
             }
+
+            <!-- Vinculaciones Propietarios Usuarios -->
+            @if (tieneConfiguracionUsuarios()) {
+              <li>
+                <a
+                  (click)="onVinculacionesClick()"
+                  class="cursor-pointer"
+                >... de Vinculaciones Propietarios-Usuarios
+                </a>
+              </li>
+            }
+
+            <!-- Usuarios -->
             @if (tieneConfiguracionUsuarios()) {
               <li>
                 <a
@@ -257,3 +278,6 @@
 
 <!-- Modal para la expo de las rendiciones -->
 <rendiciones-admin-page></rendiciones-admin-page>
+
+<!-- NUEVO: Modal de vinculaciones -->
+<app-vinculaciones-modal></app-vinculaciones-modal>

@@ -56,10 +56,6 @@ export class PropietariosService {
     return this.http.post<{ id: number; activo: number }>(`${baseUrl}/propietarios/activo/${id}`, {});
   }
 
-  /**
-   * Obtiene URL completa del avatar de propietario
-   * VALIDANDO que las rutas de assets sean válidas
-   */
   getAvatarUrl(avatarUrl: string | null | undefined): string {
     // Si no hay avatarUrl o está vacío, devolver default
     if (!avatarUrl || avatarUrl.trim() === '') {
@@ -119,6 +115,11 @@ export class PropietariosService {
 
   updatePropietario(id: number, propietario: Partial<Propietario>): Observable<any> {
     return this.http.post<any>(`${baseUrl}/propietarios/${id}`, propietario);
+  }
+
+  // NUEVO: Obtener usuario vinculado a un propietario
+  getUsuarioByPropietario(idPropietario: number): Observable<any> {
+    return this.http.get(`${baseUrl}/propietarios/${idPropietario}/usuario`);
   }
 
 }

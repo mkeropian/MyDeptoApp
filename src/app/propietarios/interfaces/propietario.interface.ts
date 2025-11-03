@@ -11,4 +11,8 @@ export interface Propietario {
   cuenta_nro: string;
   avatarUrl: string;
   activo: number;
+
+  usuarioId?: number;
+  usuarioNombre?: string;
+  usuarioNombreCompleto?: string;
 }

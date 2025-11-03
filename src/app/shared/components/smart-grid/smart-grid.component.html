@@ -71,6 +71,11 @@
 
               <!-- Celda normal -->
               <ng-template #normalCell>
+                <!-- HTML renderizado (NUEVO) -->
+                <span *ngIf="column.type === 'html'"
+                      [innerHTML]="getValue(item, column.key)">
+                </span>
+
                 <!-- Badge -->
                 <span *ngIf="column.type === 'badge'"
                       class="badge badge-ghost badge-sm">
@@ -89,8 +94,8 @@
                     {{ formatDate(getValue(item, column.key)) }}
                   </span>
                 </span>
-
               </ng-template>
+
             </td>
 
           <!-- Acciones -->

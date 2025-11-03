@@ -213,7 +213,7 @@ export class RendicionesAdminPropPageComponent implements OnInit {
         }
       });
     } else {
-      // admin o gestionadora: cargar todos los departamentos activos
+      // admin o gerenciadora: cargar todos los departamentos activos
       this.departamentosService.getDepartamentosActivos().subscribe({
         next: (deps) => {
           this.departamentos.set(deps);

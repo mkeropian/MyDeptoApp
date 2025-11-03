@@ -94,4 +94,24 @@ export class UsuariosService {
   getRolesDeUsuario(usuarioId: number): Observable<Rol[]> {
     return this.http.get<Rol[]>(`${baseUrl}/usuarios/${usuarioId}/roles`);
   }
+
+  // NUEVO: Obtener propietario vinculado a un usuario
+  getPropietarioByUsuario(idUser: number): Observable<{ idPropietario: number }> {
+    return this.http.get<{ idPropietario: number }>(`${baseUrl}/usuarios/${idUser}/propietario`);
+  }
+
+  // NUEVO: Vincular usuario a propietario
+  vincularPropietario(idUser: number, idPropietario: number): Observable<any> {
+    return this.http.post(`${baseUrl}/usuarios/${idUser}/vincular-propietario`, { idPropietario });
+  }
+
+  // NUEVO: Desvincular usuario de propietario
+  desvincularPropietario(idUser: number): Observable<any> {
+    return this.http.delete(`${baseUrl}/usuarios/${idUser}/propietario`);
+  }
+
+  // NUEVO: Obtener todas las vinculaciones
+  getVinculaciones(): Observable<any> {
+    return this.http.get(`${baseUrl}/usuarios/vinculaciones/all`);
+  }
 }

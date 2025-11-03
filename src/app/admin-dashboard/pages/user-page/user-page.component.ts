@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ViewChild } from '@angular/core';
 import { FormComponent } from './form/form.component';
 import { UsuariosService } from '../../../auth/services/users.service';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -7,22 +7,26 @@ import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-
 import { TableAction, TableColumn } from '../../../shared/components/smart-grid/smart-grid.interface';
 
 import { User } from '../../../auth/interfaces/user.interface';
+import { VincularDesdeUsuarioModalComponent } from './vincular-desde-usuario-modal/vincular-desde-usuario-modal.component';
+import Swal from 'sweetalert2';
+import { getRoleBadgeColor, formatRoleName } from '../../../shared/utils/role-colors.util';
 
 @Component({
   selector: 'users-page',
-  imports: [FormComponent, SmartGridComponent],
+  imports: [FormComponent, SmartGridComponent, VincularDesdeUsuarioModalComponent],
   templateUrl: './user-page.component.html',
 })
 export class UserPageComponent {
 
   usersService = inject(UsuariosService);
 
+  @ViewChild(VincularDesdeUsuarioModalComponent) vincularModal?: VincularDesdeUsuarioModalComponent;
+
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   refreshTrigger = signal(0);
   selectedUsuarios = signal<User[]>([]);
 
-  // MODIFICADO: Ahora el resource depende del refreshTrigger
   usersResource = rxResource({
     request: () => ({ refresh: this.refreshTrigger() }),
     loader: () => this.usersService.getUsuarios()
@@ -33,10 +37,14 @@ export class UserPageComponent {
     const column = this.sortColumn();
     const direction = this.sortDirection();
 
-    // Transforma los datos para incluir activoTexto
     const transformedData = data.map(user => ({
       ...user,
-      activoTexto: user.activo === 1 ? 'Sí' : 'No'
+      activoTexto: user.activo === 1 ? 'Sí' : 'No',
+      propietarioNombre: user.propietarioNombre || '-',
+      // NUEVO: Agregar badge de rol con color dinámico
+      rolBadge: user.rolNombre
+        ? `<span class="badge ${getRoleBadgeColor(user.rolNombre, user.rolId)} badge-sm">${formatRoleName(user.rolNombre)}</span>`
+        : '<span class="badge bg-gray-500 text-white badge-sm">Sin rol</span>'
     }));
 
     if (!column) return transformedData;
@@ -84,6 +92,20 @@ export class UserPageComponent {
       type: 'text'
     },
     {
+      key: 'rolBadge',
+      label: 'Rol',
+      sortable: false,
+      width: '120px',
+      type: 'html'
+    },
+    {
+      key: 'propietarioNombre',
+      label: 'Propietario',
+      sortable: true,
+      width: '150px',
+      type: 'badge'
+    },
+    {
       key: 'activoTexto',
       label: 'Estado',
       sortable: true,
@@ -100,29 +122,43 @@ export class UserPageComponent {
       action: (usuario) => this.editar(usuario)
     },
     {
-      label: 'Activar/Desactivar',
-      icon: 'fas fa-edit',
-      class: 'btn-primary btn-xs',
-      action: (usuario) => this.toggleActivo(usuario)
+      label: '',
+      icon: '',
+      class: 'btn-xs',
+      action: (usuario) => this.toggleActivo(usuario),
+      getIcon: (usuario: any) => usuario.activo === 1 ? 'fas fa-toggle-off' : 'fas fa-toggle-on',
+      getClass: (usuario: any) => usuario.activo === 1 ? 'btn-error btn-xs' : 'btn-success btn-xs',
+    },
+    {
+      label: '',
+      icon: 'fas fa-link',
+      class: 'btn-info btn-xs',
+      action: (usuario) => this.vincularPropietario(usuario),
+      getIcon: (usuario: any) => usuario.propietarioId ? 'fas fa-unlink' : 'fas fa-link',
+      getClass: (usuario: any) => usuario.propietarioId ? 'btn-warning btn-xs' : 'btn-info btn-xs'
     }
   ];
 
-  toggleActivo(usuario: any) {
-    usuario.activo = !usuario.activo;
-    usuario.activoTexto = usuario.activo ? 'Sí' : 'No';
+  vincularPropietario(usuario: any) {
+    if (this.vincularModal) {
+      this.vincularModal.openFromUser(usuario);
+    }
+  }
 
-    this.usersService.updateUsuarioActivo(usuario.id, { activo: usuario.activo }).subscribe(
-      response => {
+  toggleActivo(usuario: any) {
+    const nuevoEstado = usuario.activo === 1 ? 0 : 1;
+
+    this.usersService.updateUsuarioActivo(usuario.id, { activo: nuevoEstado }).subscribe({
+      next: (response) => {
         this.showSuccessToast(`Usuario ${usuario.usuario} actualizado correctamente.`);
+        // NUEVO: Refrescar solo la grilla
+        this.refreshTrigger.update(v => v + 1);
       },
-      error => {
-        // Revertir el cambio en caso de error
-        usuario.activo = !usuario.activo;
-        usuario.activoTexto = usuario.activo ? 'Sí' : 'No';
+      error: (error) => {
         console.error('Error al actualizar el usuario:', error);
         this.showErrorToast(`Error al actualizar el usuario ${usuario.usuario}.`);
       }
-    );
+    });
   }
 
   editar(usuario: any) {
@@ -138,8 +174,11 @@ export class UserPageComponent {
     this.sortDirection.set(event.direction);
   }
 
-  // NUEVO: Método para refrescar la lista de usuarios
   onUsuarioCreado(): void {
+    this.refreshTrigger.update(v => v + 1);
+  }
+
+  onVinculacionRealizada(): void {
     this.refreshTrigger.update(v => v + 1);
   }
 
@@ -167,14 +206,8 @@ export class UserPageComponent {
         </div>
       </div>
     `;
-
     document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
+    setTimeout(() => toast.parentNode?.removeChild(toast), 4000);
   }
 
   private showErrorToast(message: string): void {
@@ -190,13 +223,7 @@ export class UserPageComponent {
         </div>
       </div>
     `;
-
     document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
+    setTimeout(() => toast.parentNode?.removeChild(toast), 4000);
   }
 }

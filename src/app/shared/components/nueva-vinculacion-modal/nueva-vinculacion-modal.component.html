@@ -1,0 +1,233 @@
+<!-- Modal de Nueva Vinculación -->
+<dialog #dialogEl id="nueva_vinculacion_modal" class="modal">
+  <div class="modal-box w-11/12 max-w-6xl max-h-[90vh] bg-base-100 p-0 flex flex-col">
+
+    <!-- Header - Fixed -->
+    <div class="border-b border-base-300 p-6 flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-2xl flex items-center gap-2">
+            <i class="fas fa-plus-circle text-primary"></i>
+            Crear Nueva Vinculación
+          </h3>
+          <p class="text-sm opacity-70 mt-1">
+            Seleccione un usuario y un propietario para vincular
+          </p>
+        </div>
+        <button class="btn btn-sm btn-circle btn-ghost" (click)="close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="flex justify-center items-center py-12 flex-1">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    }
+
+    <!-- Contenido Principal -->
+    @if (!isLoading()) {
+      <div class="flex-1 overflow-hidden p-6 relative">
+
+        <!-- Canvas para la línea (posición absoluta) -->
+        <canvas
+          #canvasLine
+          class="absolute top-0 left-0 pointer-events-none"
+          [width]="1200"
+          [height]="600"
+          style="z-index: 1;">
+        </canvas>
+
+        <!-- Grid de 2 columnas -->
+        <div class="grid grid-cols-2 gap-8 h-full relative" style="z-index: 2;">
+
+          <!-- Columna USUARIOS -->
+          <div class="flex flex-col">
+            <div class="bg-primary/10 rounded-t-lg p-3 border-b-2 border-primary">
+              <h4 class="font-bold text-lg flex items-center gap-2">
+                <i class="fas fa-users text-primary"></i>
+                Usuarios Disponibles
+                <span class="badge badge-primary badge-sm">{{ usuariosDisponibles().length }}</span>
+              </h4>
+              <p class="text-xs opacity-70 mt-1">Solo con roles: Admin, Gerenciadora, Prop</p>
+            </div>
+
+            <div #usuariosContainer class="flex-1 overflow-y-auto bg-base-200 rounded-b-lg p-3 space-y-2">
+              @if (usuariosDisponibles().length === 0) {
+                <div class="text-center py-8 text-base-content/50">
+                  <i class="fas fa-user-slash text-4xl mb-3 opacity-30"></i>
+                  <p class="text-sm">No hay usuarios disponibles</p>
+                </div>
+              }
+
+              @for (usuario of usuariosDisponibles(); track usuario.id) {
+                <div
+                  [id]="'usuario-' + usuario.id"
+                  (click)="seleccionarUsuario(usuario)"
+                  class="card bg-base-100 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                  [class.ring-4]="usuarioSeleccionado()?.id === usuario.id"
+                  [class.ring-primary]="usuarioSeleccionado()?.id === usuario.id"
+                  [class.scale-105]="usuarioSeleccionado()?.id === usuario.id">
+                  <div class="card-body p-3 flex-row items-center gap-3">
+                    <!-- Avatar -->
+                    <div class="avatar">
+                      <div class="w-14 h-14 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                        <img
+                          [src]="getUsuarioAvatar(usuario)"
+                          [alt]="usuario.nombreCompleto"
+                          (error)="onAvatarError($event)"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Info -->
+                    <div class="flex-1 min-w-0">
+                      <p class="font-bold text-sm truncate">{{ usuario.nombreCompleto }}</p>
+                      <p class="text-xs opacity-70 truncate">{{ usuario.usuario }}</p>
+                      <span
+                        class="badge badge-sm mt-1"
+                        [ngClass]="getRoleBadgeColor(usuario.rolNombre || '', usuario.rolId)">
+                        {{ formatRoleName(usuario.rolNombre || 'Sin rol') }}
+                      </span>
+                    </div>
+
+                    <!-- Indicador de selección -->
+                    @if (usuarioSeleccionado()?.id === usuario.id) {
+                      <div class="flex-shrink-0">
+                        <i class="fas fa-check-circle text-primary text-2xl"></i>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Columna PROPIETARIOS -->
+          <div class="flex flex-col">
+            <div class="bg-success/10 rounded-t-lg p-3 border-b-2 border-success">
+              <h4 class="font-bold text-lg flex items-center gap-2">
+                <i class="fas fa-user-tie text-success"></i>
+                Propietarios Disponibles
+                <span class="badge badge-success badge-sm">{{ propietariosDisponibles().length }}</span>
+              </h4>
+              <p class="text-xs opacity-70 mt-1">Sin usuario vinculado</p>
+            </div>
+
+            <div #propietariosContainer class="flex-1 overflow-y-auto bg-base-200 rounded-b-lg p-3 space-y-2">
+              @if (propietariosDisponibles().length === 0) {
+                <div class="text-center py-8 text-base-content/50">
+                  <i class="fas fa-user-slash text-4xl mb-3 opacity-30"></i>
+                  <p class="text-sm">No hay propietarios disponibles</p>
+                </div>
+              }
+
+              @for (propietario of propietariosDisponibles(); track propietario.id) {
+                <div
+                  [id]="'propietario-' + propietario.id"
+                  (click)="seleccionarPropietario(propietario)"
+                  class="card bg-base-100 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                  [class.ring-4]="propietarioSeleccionado()?.id === propietario.id"
+                  [class.ring-success]="propietarioSeleccionado()?.id === propietario.id"
+                  [class.scale-105]="propietarioSeleccionado()?.id === propietario.id">
+                  <div class="card-body p-3 flex-row items-center gap-3">
+                    <!-- Avatar -->
+                    <div class="avatar">
+                      <div class="w-14 h-14 rounded-full ring ring-success ring-offset-base-100 ring-offset-2">
+                        <img
+                          [src]="getPropietarioAvatar(propietario)"
+                          [alt]="propietario.nombreApellido"
+                          (error)="onAvatarError($event)"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Info -->
+                    <div class="flex-1 min-w-0">
+                      <p class="font-bold text-sm truncate">{{ propietario.nombreApellido }}</p>
+                      <p class="text-xs opacity-70 truncate">DNI: {{ propietario.dni }}</p>
+
+                      <!-- Badges de departamentos -->
+                      <div class="flex flex-wrap gap-1 mt-1">
+                        @if (propietario.departamentos && propietario.departamentos.length > 0) {
+                          @for (depto of propietario.departamentos.slice(0, 3); track depto.id) {
+                            <span class="badge badge-xs badge-accent">
+                              {{ depto.nombre }}
+                            </span>
+                          }
+                          @if (propietario.departamentos.length > 3) {
+                            <span class="badge badge-xs badge-ghost">
+                              +{{ propietario.departamentos.length - 3 }}
+                            </span>
+                          }
+                        } @else {
+                          <span class="badge badge-xs badge-ghost opacity-60">
+                            Sin departamentos
+                          </span>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Indicador de selección -->
+                    @if (propietarioSeleccionado()?.id === propietario.id) {
+                      <div class="flex-shrink-0">
+                        <i class="fas fa-check-circle text-success text-2xl"></i>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+        </div>
+      </div>
+    }
+
+    <!-- Footer - Fixed -->
+    <div class="border-t border-base-300 p-4 flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <!-- Info de selección -->
+        <div class="text-sm">
+          @if (usuarioSeleccionado() && propietarioSeleccionado()) {
+            <div class="flex items-center gap-2 text-success">
+              <i class="fas fa-check-circle"></i>
+              <span class="font-semibold">Listo para vincular</span>
+            </div>
+          } @else {
+            <div class="flex items-center gap-2 text-base-content/50">
+              <i class="fas fa-info-circle"></i>
+              <span>Seleccione un usuario y un propietario</span>
+            </div>
+          }
+        </div>
+
+        <!-- Botones -->
+        <div class="flex gap-3">
+          <button
+            class="btn btn-ghost"
+            (click)="close()">
+            <i class="fas fa-times mr-2"></i>
+            Cancelar
+          </button>
+
+          <button
+            class="btn btn-primary"
+            [disabled]="!usuarioSeleccionado() || !propietarioSeleccionado()"
+            (click)="vincular()">
+            <i class="fas fa-link mr-2"></i>
+            Vincular
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Backdrop -->
+  <form method="dialog" class="modal-backdrop">
+    <button type="button" (click)="close()">close</button>
+  </form>
+</dialog>
