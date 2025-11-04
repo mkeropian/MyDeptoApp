@@ -124,14 +124,25 @@ export class VinculacionesModalComponent implements OnInit {
 
   // Nueva vinculación
   nuevaVinculacion() {
-    if (this.nuevaVinculacionModal) {
-      this.nuevaVinculacionModal.open();
-    }
+    // Cerrar el modal principal primero
+    this.close();
+
+    // Pequeño delay antes de abrir el nuevo modal
+    setTimeout(() => {
+      if (this.nuevaVinculacionModal) {
+        this.nuevaVinculacionModal.open();
+      }
+    }, 100);
   }
 
   // Callback cuando se crea una vinculación
   onVinculacionCreada(): void {
     this.loadVinculaciones();
+
+    // Reabrir el modal principal después de crear vinculación
+    setTimeout(() => {
+      this.open();
+    }, 300);
   }
 
   // Cambiar vinculación

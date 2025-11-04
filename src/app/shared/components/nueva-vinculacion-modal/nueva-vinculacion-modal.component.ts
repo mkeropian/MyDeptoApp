@@ -139,14 +139,28 @@ export class NuevaVinculacionModalComponent implements OnInit, AfterViewInit {
 
   // Seleccionar usuario
   seleccionarUsuario(usuario: User): void {
-    this.usuarioSeleccionado.set(usuario);
-    setTimeout(() => this.dibujarLinea(), 50);
+    // Si clickeo el mismo que ya está seleccionado → Deseleccionar
+    if (this.usuarioSeleccionado()?.id === usuario.id) {
+      this.usuarioSeleccionado.set(null);
+      this.limpiarLinea();
+    } else {
+      // Si clickeo otro → Seleccionar el nuevo
+      this.usuarioSeleccionado.set(usuario);
+      setTimeout(() => this.dibujarLinea(), 50);
+    }
   }
 
   // Seleccionar propietario
   seleccionarPropietario(propietario: PropietarioConDepartamentos): void {
-    this.propietarioSeleccionado.set(propietario);
-    setTimeout(() => this.dibujarLinea(), 50);
+    // Si clickeo el mismo que ya está seleccionado → Deseleccionar
+    if (this.propietarioSeleccionado()?.id === propietario.id) {
+      this.propietarioSeleccionado.set(null);
+      this.limpiarLinea();
+    } else {
+      // Si clickeo otro → Seleccionar el nuevo
+      this.propietarioSeleccionado.set(propietario);
+      setTimeout(() => this.dibujarLinea(), 50);
+    }
   }
 
   // Dibujar línea de conexión
@@ -187,19 +201,32 @@ export class NuevaVinculacionModalComponent implements OnInit, AfterViewInit {
     const endX = propietarioRect.left - canvasRect.left;
     const endY = propietarioRect.top + (propietarioRect.height / 2) - canvasRect.top;
 
-    // Dibujar línea con estilo
+    // Calcular el punto medio horizontal para el quiebre de 90 grados
+    // Esto crea una línea de 3 segmentos (Z/C-shape)
+    const midX = startX + (endX - startX) / 2;
+
+    // Dibujar línea con estilo (cuadrada/recta)
     ctx.beginPath();
     ctx.moveTo(startX, startY);
+
+    // Segmento 1: Horizontal hacia el centro
+    ctx.lineTo(midX, startY);
+
+    // Segmento 2: Vertical hacia la altura del propietario
+    ctx.lineTo(midX, endY);
+
+    // Segmento 3: Horizontal hacia el propietario
     ctx.lineTo(endX, endY);
-    ctx.strokeStyle = '#3b82f6'; // Color primary
+
+    ctx.strokeStyle = '#3b82f6'; // Color primary (Azul)
     ctx.lineWidth = 3;
-    ctx.setLineDash([8, 4]); // Línea punteada
+    ctx.setLineDash([6, 3]); // Línea punteada/guion
     ctx.stroke();
 
     // Dibujar puntos en los extremos
     ctx.beginPath();
     ctx.arc(startX, startY, 6, 0, 2 * Math.PI);
-    ctx.fillStyle = '#3b82f6';
+    ctx.fillStyle = '#3b82f6'; // Color primary
     ctx.fill();
 
     ctx.beginPath();
@@ -226,6 +253,14 @@ export class NuevaVinculacionModalComponent implements OnInit, AfterViewInit {
       this.showErrorToast('Debe seleccionar un usuario y un propietario');
       return;
     }
+
+    // CRÍTICO: Cerrar el modal ANTES de mostrar SweetAlert
+    if (this.dialogEl && this.dialogEl.nativeElement) {
+      this.dialogEl.nativeElement.close();
+    }
+
+    // Pequeño delay para que el modal se cierre completamente
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Confirmación
     const result = await Swal.fire({
@@ -275,7 +310,13 @@ export class NuevaVinculacionModalComponent implements OnInit, AfterViewInit {
       }
     });
 
-    if (!result.isConfirmed) return;
+    if (!result.isConfirmed) {
+      // Si cancela, reabrir el modal
+      if (this.dialogEl && this.dialogEl.nativeElement) {
+        this.dialogEl.nativeElement.showModal();
+      }
+      return;
+    }
 
     // Mostrar loading
     Swal.fire({
@@ -291,7 +332,10 @@ export class NuevaVinculacionModalComponent implements OnInit, AfterViewInit {
       next: (response) => {
         Swal.close();
         this.showSuccessToast('Vinculación creada exitosamente');
-        this.close();
+        // Limpiar selecciones
+        this.usuarioSeleccionado.set(null);
+        this.propietarioSeleccionado.set(null);
+        this.limpiarLinea();
         this.vinculacionCreada.emit();
       },
       error: (error) => {
@@ -317,6 +361,11 @@ export class NuevaVinculacionModalComponent implements OnInit, AfterViewInit {
           customClass: {
             popup: 'rounded-2xl shadow-2xl',
             title: 'text-xl font-bold text-red-700'
+          }
+        }).then(() => {
+          // Reabrir modal después del error
+          if (this.dialogEl && this.dialogEl.nativeElement) {
+            this.dialogEl.nativeElement.showModal();
           }
         });
       }

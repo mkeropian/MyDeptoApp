@@ -1,8 +1,6 @@
-<!-- Modal de Nueva Vinculación -->
 <dialog #dialogEl id="nueva_vinculacion_modal" class="modal">
   <div class="modal-box w-11/12 max-w-6xl max-h-[90vh] bg-base-100 p-0 flex flex-col">
 
-    <!-- Header - Fixed -->
     <div class="border-b border-base-300 p-6 flex-shrink-0">
       <div class="flex items-center justify-between">
         <div>
@@ -20,30 +18,25 @@
       </div>
     </div>
 
-    <!-- Loading -->
     @if (isLoading()) {
       <div class="flex justify-center items-center py-12 flex-1">
         <span class="loading loading-spinner loading-lg text-primary"></span>
       </div>
     }
 
-    <!-- Contenido Principal -->
     @if (!isLoading()) {
       <div class="flex-1 overflow-hidden p-6 relative">
 
-        <!-- Canvas para la línea (posición absoluta) -->
         <canvas
           #canvasLine
           class="absolute top-0 left-0 pointer-events-none"
-          [width]="1200"
-          [height]="600"
+          [width]="1400"
+          [height]="700"
           style="z-index: 1;">
         </canvas>
 
-        <!-- Grid de 2 columnas -->
-        <div class="grid grid-cols-2 gap-8 h-full relative" style="z-index: 2;">
+        <div class="grid grid-cols-2 gap-12 h-full relative" style="z-index: 2;">
 
-          <!-- Columna USUARIOS -->
           <div class="flex flex-col">
             <div class="bg-primary/10 rounded-t-lg p-3 border-b-2 border-primary">
               <h4 class="font-bold text-lg flex items-center gap-2">
@@ -66,12 +59,12 @@
                 <div
                   [id]="'usuario-' + usuario.id"
                   (click)="seleccionarUsuario(usuario)"
-                  class="card bg-base-100 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                  class="card bg-base-100 shadow-sm transition-all cursor-pointer transform hover:scale-[1.01]"
                   [class.ring-4]="usuarioSeleccionado()?.id === usuario.id"
                   [class.ring-primary]="usuarioSeleccionado()?.id === usuario.id"
-                  [class.scale-105]="usuarioSeleccionado()?.id === usuario.id">
+                  [class.scale-[1.04]]="usuarioSeleccionado()?.id === usuario.id"
+                  [class.shadow-xl]="usuarioSeleccionado()?.id === usuario.id">
                   <div class="card-body p-3 flex-row items-center gap-3">
-                    <!-- Avatar -->
                     <div class="avatar">
                       <div class="w-14 h-14 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
                         <img
@@ -82,7 +75,6 @@
                       </div>
                     </div>
 
-                    <!-- Info -->
                     <div class="flex-1 min-w-0">
                       <p class="font-bold text-sm truncate">{{ usuario.nombreCompleto }}</p>
                       <p class="text-xs opacity-70 truncate">{{ usuario.usuario }}</p>
@@ -93,7 +85,6 @@
                       </span>
                     </div>
 
-                    <!-- Indicador de selección -->
                     @if (usuarioSeleccionado()?.id === usuario.id) {
                       <div class="flex-shrink-0">
                         <i class="fas fa-check-circle text-primary text-2xl"></i>
@@ -105,7 +96,6 @@
             </div>
           </div>
 
-          <!-- Columna PROPIETARIOS -->
           <div class="flex flex-col">
             <div class="bg-success/10 rounded-t-lg p-3 border-b-2 border-success">
               <h4 class="font-bold text-lg flex items-center gap-2">
@@ -128,12 +118,12 @@
                 <div
                   [id]="'propietario-' + propietario.id"
                   (click)="seleccionarPropietario(propietario)"
-                  class="card bg-base-100 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                  class="card bg-base-100 shadow-sm transition-all cursor-pointer transform hover:scale-[1.01]"
                   [class.ring-4]="propietarioSeleccionado()?.id === propietario.id"
                   [class.ring-success]="propietarioSeleccionado()?.id === propietario.id"
-                  [class.scale-105]="propietarioSeleccionado()?.id === propietario.id">
+                  [class.scale-[1.04]]="propietarioSeleccionado()?.id === propietario.id"
+                  [class.shadow-xl]="propietarioSeleccionado()?.id === propietario.id">
                   <div class="card-body p-3 flex-row items-center gap-3">
-                    <!-- Avatar -->
                     <div class="avatar">
                       <div class="w-14 h-14 rounded-full ring ring-success ring-offset-base-100 ring-offset-2">
                         <img
@@ -144,33 +134,30 @@
                       </div>
                     </div>
 
-                    <!-- Info -->
                     <div class="flex-1 min-w-0">
                       <p class="font-bold text-sm truncate">{{ propietario.nombreApellido }}</p>
                       <p class="text-xs opacity-70 truncate">DNI: {{ propietario.dni }}</p>
 
-                      <!-- Badges de departamentos -->
                       <div class="flex flex-wrap gap-1 mt-1">
                         @if (propietario.departamentos && propietario.departamentos.length > 0) {
                           @for (depto of propietario.departamentos.slice(0, 3); track depto.id) {
-                            <span class="badge badge-xs badge-accent">
+                            <span class="badge badge-sm badge-accent">
                               {{ depto.nombre }}
                             </span>
                           }
                           @if (propietario.departamentos.length > 3) {
-                            <span class="badge badge-xs badge-ghost">
+                            <span class="badge badge-sm badge-ghost">
                               +{{ propietario.departamentos.length - 3 }}
                             </span>
                           }
                         } @else {
-                          <span class="badge badge-xs badge-ghost opacity-60">
+                          <span class="badge badge-sm badge-ghost opacity-60">
                             Sin departamentos
                           </span>
                         }
                       </div>
                     </div>
 
-                    <!-- Indicador de selección -->
                     @if (propietarioSeleccionado()?.id === propietario.id) {
                       <div class="flex-shrink-0">
                         <i class="fas fa-check-circle text-success text-2xl"></i>
@@ -186,10 +173,8 @@
       </div>
     }
 
-    <!-- Footer - Fixed -->
     <div class="border-t border-base-300 p-4 flex-shrink-0">
       <div class="flex items-center justify-between">
-        <!-- Info de selección -->
         <div class="text-sm">
           @if (usuarioSeleccionado() && propietarioSeleccionado()) {
             <div class="flex items-center gap-2 text-success">
@@ -204,7 +189,6 @@
           }
         </div>
 
-        <!-- Botones -->
         <div class="flex gap-3">
           <button
             class="btn btn-ghost"
@@ -226,7 +210,6 @@
 
   </div>
 
-  <!-- Backdrop -->
   <form method="dialog" class="modal-backdrop">
     <button type="button" (click)="close()">close</button>
   </form>
