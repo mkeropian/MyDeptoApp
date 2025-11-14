@@ -1,0 +1,182 @@
+<!-- src/app/shared/components/rendicion-logs-modal/rendicion-logs-modal.component.html -->
+<dialog #dialogEl id="rendicion_logs_modal" class="modal">
+  <div class="modal-box w-11/12 max-w-6xl max-h-[85vh] bg-base-100 p-0 flex flex-col">
+
+    <!-- Header - Fixed -->
+    <div class="border-b border-base-300 p-6 flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-2xl flex items-center gap-2">
+            <i class="fas fa-history text-primary"></i>
+            Historial de Envíos
+          </h3>
+          <p class="text-sm opacity-70 mt-1">
+            {{ propietarioNombre() }} - Logs de rendiciones automáticas
+          </p>
+        </div>
+        <button class="btn btn-sm btn-circle btn-ghost" (click)="close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Estadísticas -->
+      <div class="grid grid-cols-3 gap-4 mt-4">
+        <div class="text-center p-3 bg-base-200 rounded-lg">
+          <div class="text-2xl font-bold text-primary">{{ getTotalLogs() }}</div>
+          <div class="text-xs opacity-70">Total Envíos</div>
+        </div>
+        <div class="text-center p-3 bg-base-200 rounded-lg">
+          <div class="text-2xl font-bold text-success">{{ getExitosos() }}</div>
+          <div class="text-xs opacity-70">Exitosos</div>
+        </div>
+        <div class="text-center p-3 bg-base-200 rounded-lg">
+          <div class="text-2xl font-bold text-error">{{ getConError() }}</div>
+          <div class="text-xs opacity-70">Con Error</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros - Fixed -->
+    <div class="px-6 pt-4 pb-3 border-b border-base-200 flex-shrink-0">
+      <div class="relative max-w-md">
+        <input
+          type="text"
+          placeholder="Buscar por email, estado, fecha..."
+          class="input input-bordered w-full pl-10"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="searchTerm.set($event); filterLogs()"
+        />
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"></i>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="flex justify-center items-center py-12 flex-1">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    }
+
+    <!-- Lista de Logs - Scrollable -->
+    @if (!isLoading()) {
+      <div class="flex-1 overflow-y-auto px-6 py-4">
+
+        @if (filteredLogs().length === 0 && !isLoading()) {
+          <div class="text-center py-16 text-base-content/50">
+            <i class="fas fa-inbox text-5xl mb-4 opacity-30"></i>
+            <p class="text-lg font-medium">
+              {{ searchTerm() ? 'No hay logs que coincidan con la búsqueda' : 'No hay historial de envíos' }}
+            </p>
+            @if (!searchTerm()) {
+              <p class="text-sm mt-2 opacity-60">Los logs aparecerán aquí cuando se ejecuten rendiciones</p>
+            }
+          </div>
+        }
+
+        <div class="space-y-3">
+          @for (log of filteredLogs(); track log.id) {
+            @let estadoBadge = getEstadoBadge(log.exitoso);
+            <div class="card bg-base-200 shadow-sm hover:shadow-md transition-all">
+              <div class="card-body p-4">
+
+                <div class="flex items-start gap-4">
+
+                  <!-- Información Principal -->
+                  <div class="flex-1 space-y-2">
+
+                    <!-- Primera fila: Estado + Fecha -->
+                    <div class="flex items-center gap-3 flex-wrap">
+                      <span [class]="'badge ' + estadoBadge.class">
+                        <i [class]="estadoBadge.icon + ' mr-1'"></i>
+                        {{ estadoBadge.label }}
+                      </span>
+
+                      <div class="flex items-center gap-2 text-sm">
+                        <i class="fas fa-calendar text-primary"></i>
+                        <span class="font-medium">{{ formatearFecha(log.fecha_envio) }}</span>
+                      </div>
+
+                      <div class="flex items-center gap-2 text-sm">
+                        <i class="fas fa-clock text-success"></i>
+                        <span>{{ getPeriodoLabel(log) }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Segunda fila: Email + Registros -->
+                    <div class="flex items-center gap-4 flex-wrap text-sm">
+                      <div class="flex items-center gap-2">
+                        <i class="fas fa-envelope text-blue-500"></i>
+                        <span>{{ log.email_destino }}</span>
+                      </div>
+
+                      <div class="flex items-center gap-2">
+                        <i class="fas fa-database text-purple-500"></i>
+                        <span>{{ log.total_registros }} movimientos</span>
+                      </div>
+
+                      @if (log.archivo_generado) {
+                        <div class="flex items-center gap-2">
+                          <i class="fas fa-file text-green-500"></i>
+                          <span class="font-mono text-xs truncate max-w-48">{{ log.archivo_generado }}</span>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Tercera fila: Error (si existe) -->
+                    @if (log.exitoso === 0 && log.error_mensaje) {
+                      <div class="bg-error/10 border border-error/20 rounded-lg p-3">
+                        <div class="flex items-start gap-2">
+                          <i class="fas fa-exclamation-triangle text-error mt-0.5"></i>
+                          <div class="flex-1">
+                            <div class="font-medium text-error text-sm mb-1">Error en el envío:</div>
+                            <div class="text-xs font-mono text-error/80">{{ log.error_mensaje }}</div>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Indicador Visual de Estado -->
+                  <div class="flex-shrink-0">
+                    @if (log.exitoso === 1) {
+                      <div class="w-12 h-12 rounded-full bg-success/20 flex items-center justify-center">
+                        <i class="fas fa-check text-success text-xl"></i>
+                      </div>
+                    } @else {
+                      <div class="w-12 h-12 rounded-full bg-error/20 flex items-center justify-center">
+                        <i class="fas fa-times text-error text-xl"></i>
+                      </div>
+                    }
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+      </div>
+    }
+
+    <!-- Footer - Fixed -->
+    <div class="border-t border-base-300 p-4 flex-shrink-0">
+      <div class="flex justify-between items-center">
+        <div class="text-sm text-base-content/70">
+          @if (filteredLogs().length > 0) {
+            Mostrando {{ filteredLogs().length }} de {{ getTotalLogs() }} envíos
+          }
+        </div>
+        <button class="btn btn-neutral" (click)="close()">
+          <i class="fas fa-times mr-2"></i>
+          Cerrar
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Backdrop -->
+  <form method="dialog" class="modal-backdrop">
+    <button type="button" (click)="close()">close</button>
+  </form>
+</dialog>

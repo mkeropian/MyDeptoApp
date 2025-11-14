@@ -1,0 +1,451 @@
+<!-- src/app/shared/components/rendicion-automatica-modal/rendicion-automatica-modal.component.html -->
+<dialog #dialogEl id="rendicion_automatica_modal" class="modal">
+  <div class="modal-box w-11/12 max-w-4xl max-h-[90vh] bg-base-100 p-0 flex flex-col">
+
+    <!-- Header COMPACTO -->
+    <div class="bg-gradient-to-r from-primary/10 to-primary/5 border-b-2 border-primary/20 p-4 flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="bg-primary/20 p-2 rounded-lg">
+            <i class="fas fa-cog text-primary text-lg"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-xl">{{ isEditMode() ? 'Editar Configuración' : 'Nueva Configuración' }}</h3>
+            <p class="text-xs opacity-70 mt-0.5">Configura una rendición automática paso a paso</p>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-circle btn-ghost hover:bg-error/10 hover:text-error" (click)="close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Steps COMPACTO -->
+      <div class="flex items-center justify-center mt-4">
+        <div class="steps steps-horizontal w-full max-w-xl text-xs">
+          <div class="step step-primary" [class.step-accent]="currentStep() >= 1">
+            <span class="hidden sm:inline">Propietario</span>
+            <span class="sm:hidden">1</span>
+          </div>
+          <div class="step" [class.step-primary]="currentStep() >= 2" [class.step-accent]="currentStep() >= 2">
+            <span class="hidden sm:inline">Frecuencia</span>
+            <span class="sm:hidden">2</span>
+          </div>
+          <div class="step" [class.step-primary]="currentStep() >= 3" [class.step-accent]="currentStep() >= 3">
+            <span class="hidden sm:inline">Email</span>
+            <span class="sm:hidden">3</span>
+          </div>
+          <div class="step" [class.step-primary]="currentStep() >= 4" [class.step-accent]="currentStep() >= 4">
+            <span class="hidden sm:inline">Opciones</span>
+            <span class="sm:hidden">4</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="flex justify-center items-center py-12 flex-1">
+        <div class="flex flex-col items-center gap-3">
+          <span class="loading loading-spinner loading-md text-primary"></span>
+          <p class="text-sm opacity-70">Cargando datos...</p>
+        </div>
+      </div>
+    } @else {
+
+      <!-- Form -->
+      <form [formGroup]="wizardForm" (ngSubmit)="onSubmit()" class="flex-1 flex flex-col min-h-0">
+
+        <!-- Content con SCROLL -->
+        <div class="flex-1 overflow-y-auto">
+          <div class="p-5">
+
+            <!-- Paso 1: Propietario COMPACTO -->
+            @if (currentStep() === 1) {
+              <div class="space-y-4 max-w-2xl mx-auto">
+                <div class="text-center mb-4">
+                  <div class="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-user-tie text-primary text-lg"></i>
+                  </div>
+                  <h4 class="text-lg font-bold text-base-content">Seleccionar Propietario</h4>
+                  <p class="text-xs opacity-70 mt-1">Elige el propietario para la rendición automática</p>
+                </div>
+
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text font-semibold text-sm">
+                      <i class="fas fa-user mr-2 text-primary"></i>
+                      Propietario *
+                    </span>
+                  </label>
+                  <select class="select select-bordered w-full" formControlName="idPropietario">
+                    <option value="">-- Seleccione un propietario --</option>
+                    @for (propietario of propietarios(); track propietario.id) {
+                      <option [value]="propietario.id">
+                        {{ propietario.nombreApellido }} - {{ propietario.dni }}
+                      </option>
+                    }
+                  </select>
+                </div>
+
+                <div class="divider my-3 text-xs">Alcance de la Rendición</div>
+
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text font-semibold text-sm">
+                      <i class="fas fa-bullseye mr-2 text-primary"></i>
+                      Alcance *
+                    </span>
+                  </label>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div class="cursor-pointer" (click)="wizardForm.get('alcance')?.setValue('todos')">
+                      <input type="radio" name="alcance" value="todos" class="radio radio-primary hidden" formControlName="alcance">
+                      <div class="card bg-base-200 border-2 hover:border-primary hover:shadow-md transition-all h-full"
+                        [ngClass]="{
+                          'border-primary shadow-md': wizardForm.get('alcance')?.value === 'todos',
+                          'bg-primary/10': wizardForm.get('alcance')?.value === 'todos'
+                        }"
+                      >
+                        <div class="card-body items-center text-center p-4">
+                          <div class="bg-primary/20 w-12 h-12 rounded-full flex items-center justify-center mb-2">
+                            <i class="fas fa-building text-primary text-lg"></i>
+                          </div>
+                          <h5 class="font-bold text-sm">Todos los Departamentos</h5>
+                          <p class="text-xs opacity-70 mt-1">Un solo archivo con todos</p>
+                          @if (wizardForm.get('alcance')?.value === 'todos') {
+                            <div class="badge badge-primary badge-sm mt-2">
+                              <i class="fas fa-check mr-1"></i> Seleccionado
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="cursor-pointer" (click)="wizardForm.get('alcance')?.setValue('especifico')">
+                      <input type="radio" name="alcance" value="especifico" class="radio radio-primary hidden" formControlName="alcance">
+                      <div class="card bg-base-200 border-2 hover:border-primary hover:shadow-md transition-all h-full"
+                        [ngClass]="{
+                          'border-primary shadow-md': wizardForm.get('alcance')?.value === 'especifico',
+                          'bg-primary/10': wizardForm.get('alcance')?.value === 'especifico'
+                        }"
+                      >
+                        <div class="card-body items-center text-center p-4">
+                          <div class="bg-accent/20 w-12 h-12 rounded-full flex items-center justify-center mb-2">
+                            <i class="fas fa-home text-accent text-lg"></i>
+                          </div>
+                          <h5 class="font-bold text-sm">Departamento Específico</h5>
+                          <p class="text-xs opacity-70 mt-1">Solo un departamento</p>
+                          @if (wizardForm.get('alcance')?.value === 'especifico') {
+                            <div class="badge badge-primary badge-sm mt-2">
+                              <i class="fas fa-check mr-1"></i> Seleccionado
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                @if (wizardForm.get('alcance')?.value === 'especifico') {
+                  <div class="form-control animate-fade-in">
+                    <label class="label py-1">
+                      <span class="label-text font-semibold text-sm">
+                        <i class="fas fa-home mr-2 text-accent"></i>
+                        Departamento *
+                      </span>
+                    </label>
+                    <select class="select select-bordered w-full" formControlName="idDepartamento">
+                      <option value="">-- Seleccione departamento --</option>
+                      @for (departamento of departamentosDisponibles(); track departamento.id) {
+                        <option [value]="departamento.id">{{ departamento.nombre }}</option>
+                      }
+                    </select>
+                    @if (departamentosDisponibles().length === 0 && wizardForm.get('idPropietario')?.value) {
+                      <label class="label">
+                        <span class="label-text-alt text-warning">
+                          <i class="fas fa-exclamation-triangle mr-1"></i>
+                          No hay departamentos para este propietario
+                        </span>
+                      </label>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Paso 2: Frecuencia COMPACTO -->
+            @if (currentStep() === 2) {
+              <div class="space-y-4 max-w-2xl mx-auto">
+                <div class="text-center mb-4">
+                  <div class="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-calendar-alt text-primary text-lg"></i>
+                  </div>
+                  <h4 class="text-lg font-bold text-base-content">Configurar Frecuencia</h4>
+                  <p class="text-xs opacity-70 mt-1">Define cuándo se enviarán las rendiciones</p>
+                </div>
+
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text font-semibold text-sm">
+                      <i class="fas fa-repeat mr-2 text-primary"></i>
+                      Frecuencia *
+                    </span>
+                  </label>
+                  <select class="select select-bordered w-full" formControlName="frecuencia">
+                    <option value="">-- Seleccione frecuencia --</option>
+                    @for (frecuencia of FRECUENCIAS; track frecuencia.value) {
+                      <option [value]="frecuencia.value">
+                        {{ frecuencia.label }} - {{ frecuencia.descripcion }}
+                      </option>
+                    }
+                  </select>
+                </div>
+
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text font-semibold text-sm">
+                      <i class="fas fa-clock mr-2 text-success"></i>
+                      Hora de Envío *
+                    </span>
+                  </label>
+                  <input
+                    type="time"
+                    class="input input-bordered w-full font-mono"
+                    formControlName="hora_envio"
+                  >
+                  <label class="label py-0">
+                    <span class="label-text-alt opacity-70">
+                      <i class="fas fa-info-circle mr-1"></i>
+                      Formato 24 horas
+                    </span>
+                  </label>
+                </div>
+
+                @if (proximoEnvioCalculado()) {
+                  <div class="alert alert-info shadow-md animate-fade-in py-3">
+                    <div class="flex items-start gap-2">
+                      <i class="fas fa-info-circle text-lg flex-shrink-0 mt-0.5"></i>
+                      <div class="flex-1">
+                        <div class="font-bold text-sm">Próximo Envío Programado</div>
+                        <div class="text-xs mt-0.5">{{ proximoEnvioCalculado() }}</div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Paso 3: Email COMPACTO -->
+            @if (currentStep() === 3) {
+              <div class="space-y-4 max-w-2xl mx-auto">
+                <div class="text-center mb-4">
+                  <div class="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-envelope text-primary text-lg"></i>
+                  </div>
+                  <h4 class="text-lg font-bold text-base-content">Configurar Email</h4>
+                  <p class="text-xs opacity-70 mt-1">Define destinatarios y formato del archivo</p>
+                </div>
+
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text font-semibold text-sm">
+                      <i class="fas fa-at mr-2 text-primary"></i>
+                      Email de Destino *
+                    </span>
+                  </label>
+                  <input
+                    type="email"
+                    class="input input-bordered w-full"
+                    placeholder="ejemplo@correo.com"
+                    formControlName="email_destino"
+                  >
+                  <label class="label py-0">
+                    <span class="label-text-alt opacity-70">
+                      <i class="fas fa-info-circle mr-1"></i>
+                      Se enviará la rendición a este email
+                    </span>
+                  </label>
+                </div>
+
+                <div class="divider my-3 text-xs">Formato del Archivo</div>
+
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text font-semibold text-sm">
+                      <i class="fas fa-file-export mr-2 text-primary"></i>
+                      Formato de Archivo *
+                    </span>
+                  </label>
+                  <select class="select select-bordered w-full" formControlName="formato_archivo">
+                    @for (formato of FORMATOS_ARCHIVO; track formato.value) {
+                      <option [value]="formato.value">
+                        {{ formato.label }} - {{ formato.descripcion }}
+                      </option>
+                    }
+                  </select>
+                </div>
+              </div>
+            }
+
+            <!-- Paso 4: Opciones COMPACTO -->
+            @if (currentStep() === 4) {
+              <div class="space-y-4 max-w-2xl mx-auto">
+                <div class="text-center mb-4">
+                  <div class="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-sliders-h text-primary text-lg"></i>
+                  </div>
+                  <h4 class="text-lg font-bold text-base-content">Opciones Finales</h4>
+                  <p class="text-xs opacity-70 mt-1">Personaliza las opciones de envío</p>
+                </div>
+
+                <div class="card bg-base-200 border border-base-300">
+                  <div class="card-body p-3">
+                    <div class="form-control">
+                      <label class="cursor-pointer flex items-start gap-3 p-2 rounded-lg hover:bg-base-300 transition-colors">
+                        <input type="checkbox" class="checkbox checkbox-primary mt-0.5" formControlName="incluir_resumen_email">
+                        <div class="flex-1">
+                          <span class="font-semibold text-sm block">Incluir resumen en el email</span>
+                          <span class="text-xs opacity-70 mt-0.5 block">Agrega un resumen ejecutivo en el cuerpo del correo</span>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="divider my-3 text-xs">Personalización (Opcional)</div>
+
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text font-semibold text-sm">
+                      <i class="fas fa-heading mr-2 text-accent"></i>
+                      Asunto Personalizado
+                    </span>
+                    <span class="label-text-alt badge badge-ghost badge-xs">Opcional</span>
+                  </label>
+                  <input
+                    type="text"
+                    class="input input-bordered w-full"
+                    placeholder="Ej: Rendición Mensual - Propietario"
+                    formControlName="asunto_personalizado"
+                  >
+                </div>
+
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text font-semibold text-sm">
+                      <i class="fas fa-comment-alt mr-2 text-accent"></i>
+                      Mensaje Personalizado
+                    </span>
+                    <span class="label-text-alt badge badge-ghost badge-xs">Opcional</span>
+                  </label>
+                  <textarea
+                    class="textarea textarea-bordered w-full h-20 text-sm leading-relaxed"
+                    placeholder="Estimado propietario, adjunto encontrará su rendición..."
+                    formControlName="mensaje_personalizado"
+                  ></textarea>
+                  <label class="label py-0">
+                    <span class="label-text-alt opacity-70">
+                      <i class="fas fa-info-circle mr-1"></i>
+                      Este mensaje se incluirá en el cuerpo del email
+                    </span>
+                  </label>
+                </div>
+
+                @if (proximoEnvioCalculado()) {
+                  <div class="alert alert-success shadow-md animate-fade-in py-3">
+                    <div class="flex items-start gap-2">
+                      <i class="fas fa-check-circle text-xl flex-shrink-0 mt-0.5"></i>
+                      <div class="flex-1">
+                        <div class="font-bold text-sm">✅ Configuración Lista</div>
+                        <div class="text-xs mt-0.5">Próximo envío: {{ proximoEnvioCalculado() }}</div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+          </div>
+        </div>
+
+        <!-- Footer COMPACTO -->
+        <div class="border-t-2 border-base-300 bg-base-200/50 p-3 flex-shrink-0">
+          <div class="flex items-center justify-between max-w-2xl mx-auto">
+            <div class="flex items-center gap-2">
+              <div class="badge badge-primary">
+                Paso {{ currentStep() }} / 4
+              </div>
+              @if (currentStep() < 4) {
+                <span class="text-xs opacity-70 hidden sm:inline">
+                  <i class="fas fa-arrow-right mr-1"></i>
+                  {{ ['Frecuencia', 'Email', 'Opciones'][currentStep() - 1] }}
+                </span>
+              }
+            </div>
+
+            <div class="flex gap-2">
+              @if (currentStep() > 1) {
+                <button type="button" class="btn btn-ghost btn-sm" (click)="previousStep()">
+                  <i class="fas fa-arrow-left mr-1"></i>
+                  Anterior
+                </button>
+              }
+              @if (currentStep() === 1) {
+                <button type="button" class="btn btn-ghost btn-sm" (click)="close()">
+                  <i class="fas fa-times mr-1"></i>
+                  Cancelar
+                </button>
+              }
+              @if (!isLastStep()) {
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  [disabled]="!canProceed()"
+                  (click)="nextStep()"
+                >
+                  Siguiente
+                  <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+              }
+              @if (isLastStep()) {
+                <button
+                  type="submit"
+                  class="btn btn-success btn-sm"
+                  [disabled]="!wizardForm.valid"
+                >
+                  <i class="fas fa-check mr-1"></i>
+                  {{ isEditMode() ? 'Actualizar' : 'Crear' }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+      </form>
+    }
+
+  </div>
+
+  <form method="dialog" class="modal-backdrop">
+    <button type="button" (click)="close()">close</button>
+  </form>
+</dialog>
+
+<!-- Estilos adicionales para animaciones -->
+<style>
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+</style>

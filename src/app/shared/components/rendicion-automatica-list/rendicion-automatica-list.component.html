@@ -1,0 +1,311 @@
+<!-- src/app/shared/components/rendicion-automatica-list/rendicion-automatica-list.component.html -->
+
+<!-- Contenedor Principal con Padding -->
+<div class="p-6 space-y-6">
+
+  <!-- Header Section -->
+  <div class="flex items-center justify-between flex-wrap gap-4">
+    <div>
+      <h2 class="text-2xl font-bold flex items-center gap-2">
+        <i class="fas fa-cog text-primary"></i>
+        Rendiciones Automáticas
+      </h2>
+      <p class="text-sm opacity-70 mt-1">
+        Gestión de configuraciones de envío automático de rendiciones
+      </p>
+    </div>
+
+    <button
+      class="btn btn-primary"
+      (click)="nuevaConfiguracion()"
+      title="Crear nueva configuración de rendición automática">
+      <i class="fas fa-plus"></i>
+      Nueva Configuración
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="stat bg-base-200 rounded-lg shadow-sm">
+      <div class="stat-figure text-primary">
+        <i class="fas fa-list text-2xl"></i>
+      </div>
+      <div class="stat-title">Total Configuraciones</div>
+      <div class="stat-value text-primary">{{ totalConfigs() }}</div>
+    </div>
+
+    <div class="stat bg-base-200 rounded-lg shadow-sm">
+      <div class="stat-figure text-success">
+        <i class="fas fa-play text-2xl"></i>
+      </div>
+      <div class="stat-title">Activas</div>
+      <div class="stat-value text-success">{{ activasCount() }}</div>
+    </div>
+
+    <div class="stat bg-base-200 rounded-lg shadow-sm">
+      <div class="stat-figure text-warning">
+        <i class="fas fa-pause text-2xl"></i>
+      </div>
+      <div class="stat-title">Pausadas</div>
+      <div class="stat-value text-warning">{{ pausadasCount() }}</div>
+    </div>
+  </div>
+
+  <!-- Filtros y Búsqueda -->
+  <div class="card bg-base-200 shadow-sm">
+    <div class="card-body p-4">
+      <div class="flex items-center gap-3 flex-wrap">
+
+        <!-- Búsqueda -->
+        <div class="relative flex-1 min-w-64">
+          <input
+            type="text"
+            placeholder="Buscar por propietario, email, frecuencia..."
+            class="input input-bordered w-full pl-10"
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="searchTerm.set($event)"
+          />
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"></i>
+        </div>
+
+        <!-- Filtro por Propietario -->
+        <select
+          class="select select-bordered min-w-48"
+          [value]="filtros().propietario"
+          (change)="onPropietarioChange($event)">
+          <option value="">Todos los propietarios</option>
+          @for (propietario of propietariosUnicos(); track propietario) {
+            <option [value]="propietario">{{ propietario }}</option>
+          }
+        </select>
+
+        <!-- Filtro por Frecuencia -->
+        <select
+          class="select select-bordered min-w-36"
+          [value]="filtros().frecuencia"
+          (change)="onFrecuenciaChange($event)">
+          <option value="">Todas las frecuencias</option>
+          @for (frecuencia of frecuenciasUnicas(); track frecuencia) {
+            <option [value]="frecuencia">{{ rendicionService.getFrequencyLabel(frecuencia) }}</option>
+          }
+        </select>
+
+        <!-- Filtro por Estado -->
+        <select
+          class="select select-bordered min-w-32"
+          [value]="filtros().estado"
+          (change)="onEstadoChange($event)">
+          <option value="todos">Todos</option>
+          <option value="activo">Activas</option>
+          <option value="pausado">Pausadas</option>
+        </select>
+
+        <!-- Limpiar Filtros -->
+        @if (searchTerm() || filtros().propietario || filtros().frecuencia || filtros().estado !== 'todos') {
+          <button
+            class="btn btn-ghost btn-sm"
+            (click)="clearFiltros()"
+            title="Limpiar todos los filtros">
+            <i class="fas fa-times"></i>
+            Limpiar
+          </button>
+        }
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="flex justify-center items-center py-12">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  }
+
+  <!-- Lista de Configuraciones con SCROLL -->
+  @if (!isLoading()) {
+    <!-- CORREGIDO: Contenedor con altura ajustada y más padding-bottom para última card -->
+    <div class="max-h-[calc(100vh-500px)] overflow-y-auto pr-2 pb-8 space-y-4">
+
+      @if (configsAgrupadas().length === 0) {
+        <div class="text-center py-16 text-base-content/50">
+          <i class="fas fa-cog text-5xl mb-4 opacity-30"></i>
+          <p class="text-lg font-medium">
+            {{ searchTerm() || filtros().propietario || filtros().frecuencia || filtros().estado !== 'todos'
+              ? 'No hay configuraciones que coincidan con los filtros'
+              : 'No hay configuraciones registradas'
+            }}
+          </p>
+          @if (!searchTerm() && !filtros().propietario && !filtros().frecuencia && filtros().estado === 'todos') {
+            <p class="text-sm mt-2 opacity-60">Crea una nueva configuración para comenzar</p>
+          }
+        </div>
+      }
+
+      @for (grupo of configsAgrupadas(); track grupo.propietario) {
+        <!-- CORREGIDO: Card con fondo blanco, sombra y bordes redondeados -->
+        <div class="card bg-white shadow-lg border border-base-300 rounded-xl overflow-hidden">
+
+          <!-- Header del Grupo - OPTIMIZADO con más contraste y bordes redondeados superiores -->
+          <div class="bg-primary/15 border-l-4 border-primary p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <i class="fas fa-user-tie text-primary text-xl"></i>
+                <div>
+                  <h3 class="font-bold text-lg">{{ grupo.propietario }}</h3>
+                  <p class="text-xs opacity-70">
+                    {{ grupo.configs.length }} configuración{{ grupo.configs.length > 1 ? 'es' : '' }}
+                  </p>
+                </div>
+              </div>
+              <div class="badge badge-primary badge-lg">
+                {{ getConfigsActivas(grupo.configs) }} activas
+              </div>
+            </div>
+          </div>
+
+          <!-- Configuraciones del Grupo - OPTIMIZADAS -->
+          <div class="p-4 space-y-3 bg-base-100">
+            @for (config of grupo.configs; track config.id) {
+              @let estado = getConfigEstado(config);
+
+              <!-- CORREGIDO: Card con fondo gris claro, mejor contraste y bordes redondeados -->
+              <div class="card bg-base-200 border-2 border-base-300 hover:shadow-lg hover:border-primary/30 transition-all rounded-lg">
+                <div class="card-body p-4">
+
+                  <div class="flex items-start justify-between gap-4">
+
+                    <!-- Información Principal - OPTIMIZADA -->
+                    <div class="flex-1 min-w-0">
+
+                      <!-- Primera fila: Departamento + Estado + Frecuencia -->
+                      <div class="flex items-center gap-3 flex-wrap mb-2">
+                        <div class="flex items-center gap-2 font-medium">
+                          <i class="fas fa-building text-accent"></i>
+                          <span class="truncate">
+                            {{ config.departamentoNombre || 'Todos los departamentos' }}
+                          </span>
+                        </div>
+
+                        <span [class]="'badge badge-sm ' + getEstadoBadgeColor(estado.estado)">
+                          {{ getEstadoLabel(estado.estado) }}
+                        </span>
+
+                        <div class="flex items-center gap-1 text-sm">
+                          <i class="fas fa-calendar-alt text-primary"></i>
+                          <span>{{ rendicionService.getFrequencyLabel(config.frecuencia) }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Segunda fila: Email + Horario + Formato -->
+                      <div class="flex items-center gap-4 flex-wrap text-sm mb-2">
+                        <div class="flex items-center gap-2">
+                          <i class="fas fa-envelope text-blue-500"></i>
+                          <span class="truncate max-w-xs">{{ config.email_destino }}</span>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                          <i class="fas fa-clock text-green-500"></i>
+                          <span>{{ config.hora_envio }}</span>
+                          @if (shouldShowDay(config)) {
+                            <span class="text-base-content/60 text-xs">
+                              - {{ rendicionService.getDayLabel(config.frecuencia, config.dia_envio) }}
+                            </span>
+                          }
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                          <i class="fas fa-file text-purple-500"></i>
+                          <span class="badge badge-sm badge-outline">{{ config.formato_archivo.toUpperCase() }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Tercera fila: Próximo envío + Último envío -->
+                      <div class="flex items-center gap-4 flex-wrap text-xs opacity-80">
+                        <div class="flex items-center gap-2">
+                          <i class="fas fa-arrow-right text-info"></i>
+                          <span>
+                            Próximo: <strong>{{ rendicionService.formatearFecha(estado.proximoEnvio) }}</strong>
+                            <span class="text-base-content/60">({{ estado.tiempoRestante }})</span>
+                          </span>
+                        </div>
+
+                        @if (config.ultimo_envio) {
+                          <div class="flex items-center gap-2">
+                            <i [class]="getUltimoEnvioIconClass(estado)"></i>
+                            <span>
+                              Último: {{ formatearUltimoEnvio(config.ultimo_envio) }}
+                            </span>
+                          </div>
+                        }
+                      </div>
+
+                    </div>
+
+                    <!-- CORREGIDO: Botones de Acción HORIZONTALES -->
+                    <div class="flex items-center gap-2 flex-shrink-0">
+
+                      <!-- Editar -->
+                      <button
+                        class="btn btn-sm btn-outline btn-primary"
+                        (click)="editarConfiguracion(config)"
+                        title="Editar configuración">
+                        <i class="fas fa-edit"></i>
+                      </button>
+
+                      <!-- Play/Pause -->
+                      <button
+                        [class]="getButtonClass(config)"
+                        (click)="toggleActivo(config)"
+                        [title]="getButtonTitle(config)">
+                        <i [class]="getIconClass(config)"></i>
+                      </button>
+
+                      <!-- Forzar Envío -->
+                      <button
+                        class="btn btn-sm btn-outline btn-success"
+                        (click)="forzarEnvio(config)"
+                        title="Forzar envío inmediato de rendición">
+                        <i class="fas fa-bolt"></i>
+                      </button>
+
+                      <!-- Logs -->
+                      <button
+                        class="btn btn-sm btn-outline btn-accent"
+                        (click)="verLogs(config)"
+                        title="Ver historial de envíos">
+                        <i class="fas fa-history"></i>
+                      </button>
+
+                      <!-- Eliminar -->
+                      <button
+                        class="btn btn-sm btn-outline btn-error"
+                        (click)="eliminarConfiguracion(config)"
+                        title="Eliminar configuración">
+                        <i class="fas fa-trash"></i>
+                      </button>
+
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+        </div>
+      }
+
+    </div>
+  }
+
+</div>
+
+<!-- Modal de Configuración -->
+<app-rendicion-automatica-modal
+  (configCreated)="onConfigCreated()"
+  (configUpdated)="onConfigUpdated()">
+</app-rendicion-automatica-modal>
+
+<!-- Modal de Logs -->
+<app-rendicion-logs-modal></app-rendicion-logs-modal>

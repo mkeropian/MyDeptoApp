@@ -7,7 +7,7 @@ import { UserProfilePageComponent } from "../../../web-front/pages/user-profile-
 import { AboutPageComponent } from '../../../web-front/pages/about-page/about-page.component';
 import { RendicionesAdminPageComponent } from '../../../admin-dashboard/pages/rendiciones-admin-page/rendiciones-admin-page.component';
 import { VinculacionesModalComponent } from '../vinculaciones-modal/vinculaciones-modal.component';
-
+import { RendicionAutomaticaListComponent  } from '../rendicion-automatica-list/rendicion-automatica-list.component';
 @Component({
   selector: 'app-navbar',
   imports: [
@@ -17,7 +17,8 @@ import { VinculacionesModalComponent } from '../vinculaciones-modal/vinculacione
     UserProfilePageComponent,
     RendicionesAdminPageComponent,
     AboutPageComponent,
-    VinculacionesModalComponent
+    VinculacionesModalComponent,
+    RendicionAutomaticaListComponent
   ],
   templateUrl: './navbar.component.html',
 })
@@ -29,6 +30,7 @@ export class NavbarComponent {
   @ViewChild(RendicionesAdminPageComponent, { static: false }) rendicionesModal!: RendicionesAdminPageComponent;
   @ViewChild(AboutPageComponent, { static: false }) aboutModal!: AboutPageComponent;
   @ViewChild(VinculacionesModalComponent, { static: false }) vinculacionesModal!: VinculacionesModalComponent;
+  @ViewChild(RendicionAutomaticaListComponent) rendicionAutomaticaModal!: RendicionAutomaticaListComponent;
 
   isDashboard = false;
   isAdminOpen = false;
@@ -189,4 +191,13 @@ export class NavbarComponent {
     }
   }
 
+  onRendicionAutomaticaClick() {
+    this.onMenuItemClick();
+
+    // Abrir el modal usando el DOM nativo (patrón DaisyUI)
+    const modal = document.getElementById('rendicion_automatica_main_modal') as HTMLDialogElement;
+    if (modal) {
+      modal.showModal();
+    }
+  }
 }

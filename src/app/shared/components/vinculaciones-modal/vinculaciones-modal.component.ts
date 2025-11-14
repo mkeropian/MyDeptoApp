@@ -71,20 +71,37 @@ export class VinculacionesModalComponent implements OnInit {
     if (modal) modal.close();
   }
 
-  // Cargar vinculaciones con departamentos
+  // CORREGIDO: Cargar vinculaciones con manejo correcto de la respuesta
   loadVinculaciones() {
     this.isLoading.set(true);
 
     this.usuariosService.getVinculaciones().subscribe({
       next: (response) => {
-        const vinculaciones = response.data || response;
+        console.log('📥 Respuesta de getVinculaciones:', response);
 
-        if (!vinculaciones || vinculaciones.length === 0) {
+        // CRÍTICO: El backend retorna un array directo, NO un objeto {ok, data}
+        // Verificar que la respuesta sea un array
+        if (!Array.isArray(response)) {
+          console.error('❌ La respuesta del servicio no es un array:', response);
+          this.showErrorToast('Error: formato de datos incorrecto');
           this.vinculaciones.set([]);
           this.isLoading.set(false);
           return;
         }
 
+        const vinculaciones = response;
+
+        // Si no hay vinculaciones, terminar aquí
+        if (!vinculaciones || vinculaciones.length === 0) {
+          console.log('ℹ️ No hay vinculaciones registradas');
+          this.vinculaciones.set([]);
+          this.isLoading.set(false);
+          return;
+        }
+
+        console.log(`✅ ${vinculaciones.length} vinculaciones obtenidas`);
+
+        // Cargar departamentos para cada vinculación
         const departamentosRequests = vinculaciones.map((v: Vinculacion) =>
           this.departamentosService.getDepartamentosByPropietario(v.propietarioId)
         );
@@ -100,11 +117,13 @@ export class VinculacionesModalComponent implements OnInit {
               }))
             }));
 
+            console.log('✅ Vinculaciones con departamentos cargadas:', vinculacionesConDeptos.length);
             this.vinculaciones.set(vinculacionesConDeptos);
             this.isLoading.set(false);
           },
           error: (error) => {
-            console.error('Error cargando departamentos:', error);
+            console.error('⚠️ Error cargando departamentos:', error);
+            // Si falla la carga de departamentos, mostrar vinculaciones sin departamentos
             const vinculacionesSinDeptos = vinculaciones.map((v: Vinculacion) => ({
               ...v,
               departamentos: []
@@ -115,9 +134,26 @@ export class VinculacionesModalComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error cargando vinculaciones:', error);
+        console.error('❌ Error cargando vinculaciones:', error);
+        console.error('Detalles del error:', {
+          status: error.status,
+          statusText: error.statusText,
+          message: error.message,
+          error: error.error
+        });
+
         this.isLoading.set(false);
-        this.showErrorToast('Error al cargar vinculaciones');
+
+        // Mostrar mensaje más descriptivo según el tipo de error
+        if (error.status === 500) {
+          this.showErrorToast('Error en el servidor al cargar vinculaciones');
+        } else if (error.status === 0) {
+          this.showErrorToast('No se puede conectar con el servidor');
+        } else {
+          this.showErrorToast('Error al cargar vinculaciones');
+        }
+
+        this.vinculaciones.set([]);
       }
     });
   }
@@ -225,31 +261,31 @@ export class VinculacionesModalComponent implements OnInit {
           `,
           input: 'select',
           inputOptions: inputOptions,
-          inputPlaceholder: '-- Seleccione un propietario --',
+          inputPlaceholder: 'Seleccione un propietario',
           showCancelButton: true,
-          confirmButtonText: '<i class="fas fa-check mr-2"></i>Cambiar Vinculación',
+          confirmButtonText: '<i class="fas fa-check mr-2"></i>Confirmar Cambio',
           cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar',
-          confirmButtonColor: '#3b82f6',
+          confirmButtonColor: '#10b981',
           cancelButtonColor: '#6b7280',
-          width: '600px',
+          width: '700px',
           padding: '2rem',
-          customClass: {
-            popup: 'rounded-2xl shadow-2xl',
-            title: 'text-2xl font-bold text-gray-800',
-            htmlContainer: 'text-base',
-            confirmButton: 'px-6 py-3 rounded-lg font-semibold',
-            cancelButton: 'px-6 py-3 rounded-lg font-semibold'
-          },
           inputValidator: (value) => {
             if (!value) {
               return 'Debe seleccionar un propietario';
             }
             return null;
+          },
+          customClass: {
+            popup: 'rounded-2xl shadow-2xl',
+            title: 'text-2xl font-bold text-gray-800',
+            confirmButton: 'px-6 py-3 rounded-lg font-semibold',
+            cancelButton: 'px-6 py-3 rounded-lg font-semibold'
           }
         });
 
         if (result.isConfirmed && result.value) {
           const nuevoPropietarioId = parseInt(result.value);
+          const nuevoPropietario = propietariosDisponibles.find(p => p.id === nuevoPropietarioId);
 
           Swal.fire({
             title: 'Procesando...',
@@ -259,51 +295,41 @@ export class VinculacionesModalComponent implements OnInit {
             allowEscapeKey: false
           });
 
-          this.usuariosService.vincularPropietario(vinculacion.usuarioId, nuevoPropietarioId).subscribe({
-            next: (response) => {
-              Swal.close();
-              this.loadVinculaciones();
-              this.showSuccessToast('Vinculación actualizada exitosamente');
-              setTimeout(() => {
-                if (modal) modal.showModal();
-              }, 300);
+          this.usuariosService.desvincularPropietario(vinculacion.usuarioId).subscribe({
+            next: () => {
+              this.usuariosService.vincularPropietario(vinculacion.usuarioId, nuevoPropietarioId).subscribe({
+                next: () => {
+                  Swal.close();
+                  this.loadVinculaciones();
+                  this.showSuccessToast(`Vinculación actualizada a ${nuevoPropietario?.nombreApellido}`);
+                  setTimeout(() => {
+                    if (modal) modal.showModal();
+                  }, 300);
+                },
+                error: (error) => {
+                  console.error('Error vinculando nuevo propietario:', error);
+                  Swal.close();
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error al vincular',
+                    text: error.error?.msg || 'No se pudo crear la nueva vinculación',
+                    confirmButtonText: 'Cerrar',
+                    confirmButtonColor: '#ef4444'
+                  }).then(() => {
+                    if (modal) modal.showModal();
+                  });
+                }
+              });
             },
             error: (error) => {
-              console.error('Error cambiando vinculación:', error);
+              console.error('Error desvinculando propietario anterior:', error);
               Swal.close();
-
               Swal.fire({
                 icon: 'error',
-                title: 'No se pudo cambiar la vinculación',
-                html: `
-                  <div class="text-left space-y-3 px-2">
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <p class="text-sm text-red-800 font-medium">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>
-                        ${error.error?.msg || error.message || 'Error desconocido'}
-                      </p>
-                    </div>
-
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p class="text-xs text-blue-800">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        <strong>Posibles causas:</strong>
-                      </p>
-                      <ul class="text-xs text-blue-800 mt-2 ml-4 list-disc">
-                        <li>El propietario ya está vinculado a otro usuario</li>
-                        <li>El usuario no tiene permisos suficientes</li>
-                      </ul>
-                    </div>
-                  </div>
-                `,
-                confirmButtonText: 'Entendido',
-                confirmButtonColor: '#ef4444',
-                width: '600px',
-                customClass: {
-                  popup: 'rounded-2xl shadow-2xl',
-                  title: 'text-xl font-bold text-red-700',
-                  htmlContainer: 'text-base'
-                }
+                title: 'Error al desvincular',
+                text: error.error?.msg || 'No se pudo eliminar la vinculación anterior',
+                confirmButtonText: 'Cerrar',
+                confirmButtonColor: '#ef4444'
               }).then(() => {
                 if (modal) modal.showModal();
               });
