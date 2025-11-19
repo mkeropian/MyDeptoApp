@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, throwError } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
+import { map, catchError, tap, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 // Interfaces alineadas con el backend
@@ -442,8 +442,6 @@ export class CalendarioService {
     this.eventosSubject.next([]);
   }
 
-
-
   // ==================== GESTIÓN DE TIPOS DE CALENDARIO ====================
 
   obtenerTiposCalendario(): Observable<TipoCalendario[]> {
@@ -555,6 +553,138 @@ export class CalendarioService {
       catchError(error => {
         console.error('Error al revocar calendario de usuario:', error);
         return throwError(() => error);
+      })
+    );
+  }
+
+  // ==================== EXPORTACIÓN DE CALENDARIO ====================
+
+  /**
+  * Descargar calendario en formato Excel
+  */
+  descargarCalendario(
+    filtros: FiltrosCalendario,
+    tipoArchivo: 'excel' | 'pdf' | 'imagen',
+    userRole: string,
+    userId: number
+  ): Observable<Blob> {
+    const url = `${this.apiUrl}/export`;
+
+    const body = {
+      filtros,
+      tipoArchivo,
+      userRole,
+      userId
+    };
+
+    console.log('📥 Descargando calendario...', body);
+
+    return this.http.post(url, body, {
+      responseType: 'blob',
+      observe: 'response',
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    }).pipe(
+      map(response => {
+        const blob = response.body;
+
+        if (!blob || blob.size === 0) {
+          throw new Error('No se recibieron datos del servidor');
+        }
+
+        // Validar que NO sea un error JSON
+        if (blob.type === 'application/json') {
+          throw new Error('CORRUPT_BLOB_FOR_JSON_ERROR');
+        }
+
+        console.log(`✅ Blob recibido: ${blob.size} bytes, tipo: ${blob.type}`);
+        return blob;
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('❌ Error al descargar calendario:', error);
+
+        // Manejar error JSON dentro de Blob
+        if (error.error instanceof Blob && error.error.type === 'application/json') {
+          return new Observable<never>(observer => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                const errorResponse = JSON.parse(reader.result as string);
+                observer.error(new Error(errorResponse.msg || 'Error desconocido'));
+              } catch (e) {
+                observer.error(new Error('Error al procesar respuesta del servidor'));
+              }
+            };
+            reader.readAsText(error.error);
+          });
+        }
+
+        const errorMessage = error.error?.msg || error.message || 'Error desconocido al descargar';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+  }
+
+  /**
+ * Descargar archivo al navegador
+ */
+  downloadFile(blob: Blob, fileName: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    console.log(`✅ Archivo descargado: ${fileName}`);
+  }
+
+  /**
+  * Enviar calendario por email
+  */
+  enviarCalendarioPorEmail(
+    filtros: FiltrosCalendario,
+    tipoArchivo: 'excel' | 'pdf' | 'imagen',
+    emailDestino: string,
+    userRole: string,
+    userId: number
+  ): Observable<any> {
+    const url = `${this.apiUrl}/send-email`;
+
+    const body = {
+      filtros,
+      tipoArchivo,
+      emailDestino,
+      userRole,
+      userId
+    };
+
+    console.log('📧 Enviando calendario por email...', body);
+
+    return this.http.post<any>(url, body, {
+      headers: this.getHeaders()
+    }).pipe(
+      tap(response => {
+        console.log('✅ Email enviado:', response);
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('❌ Error al enviar email:', error);
+
+        let errorMessage = 'Error al enviar calendario por email';
+
+        if (error.error?.msg) {
+          errorMessage = error.error.msg;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        return throwError(() => ({
+          message: errorMessage,
+          detalle: error.error?.detalle || error.message
+        }));
       })
     );
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +18,7 @@ import { AuthService } from '../../../auth/services/auth.service';
 
 import { MiniMapComponent } from '../../../shared/components/mini-map/mini-map.component';
 import { DepartamentosService } from '../../../departamentos/services/departamentos.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-calendario-empleados-page',
@@ -68,6 +69,14 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   esEmpleado = false;
   usuarioLogueadoId: number | null = null;
   tiposCalendarioPermitidos: number[] = [];
+
+  // ==================== NUEVAS PROPIEDADES PARA EXPORTACIÓN ====================
+  mostrarModalExport = false;
+  accionExport: 'descargar' | 'enviar' = 'descargar';
+  tipoArchivoExport: 'excel' | 'pdf' | 'imagen' = 'excel';
+  emailDestinoExport = '';
+
+  isDownloading = signal<boolean>(false);
 
   constructor(
     private fb: FormBuilder,
@@ -573,7 +582,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     if (!evento.idDepartamento) {
       return null;
     }
-    
+
     // Buscar en el Map de departamentos con coordenadas
     return this.departamentosConMapa.get(evento.idDepartamento) || null;
   }
@@ -668,7 +677,271 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     return this.calendarioService.formatearHora(hora);
   }
 
-  mostrarNotificacion(mensaje: string, tipo: 'success' | 'error' | 'warning' = 'success'): void {
-    console.log(`[${tipo.toUpperCase()}] ${mensaje}`);
+  private mostrarNotificacion(titulo: string, tipo: 'success' | 'error' | 'warning' | 'info', mensaje?: string): void {
+    const config: any = {
+      title: titulo,
+      icon: tipo,
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true
+    };
+
+    if (mensaje) {
+      config.text = mensaje;
+    }
+
+    Swal.fire(config);
   }
+
+  // ==================== EXPORTACIÓN Y ENVÍO ====================
+
+  abrirModalDescarga(): void {
+    this.accionExport = 'descargar';
+    this.tipoArchivoExport = 'excel';
+    this.mostrarModalExport = true;
+  }
+
+  abrirModalEnvio(): void {
+    this.accionExport = 'enviar';
+    this.tipoArchivoExport = 'excel';
+
+    // Obtener email del usuario logueado
+    const user = this.authService.user();
+    this.emailDestinoExport = user?.email || '';
+
+    this.mostrarModalExport = true;
+  }
+
+  cerrarModalExport(): void {
+    this.mostrarModalExport = false;
+    this.tipoArchivoExport = 'excel';
+    this.emailDestinoExport = '';
+  }
+
+  confirmarExportacion(): void {
+    if (this.accionExport === 'descargar') {
+      this.confirmarDescarga();
+    } else {
+      this.confirmarEnvio();
+    }
+  }
+
+  private confirmarDescarga(): void {
+    Swal.fire({
+      title: '¿Descargar calendario?',
+      html: `
+        <p>Se descargará el calendario en formato <strong>${this.tipoArchivoExport.toUpperCase()}</strong></p>
+        <p class="text-sm text-gray-600 mt-2">
+          Eventos a exportar: <strong>${this.eventosFiltrados.length}</strong>
+        </p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#4F46E5',
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: 'Sí, descargar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.ejecutarDescarga();
+      }
+    });
+  }
+
+  private confirmarEnvio(): void {
+    console.log('🔵 [1] confirmarEnvio() INICIADO');
+    console.log('🔵 Email actual:', this.emailDestinoExport);
+
+    // ✅ VALIDAR EMAIL ANTES DE MOSTRAR EL MODAL
+    if (!this.emailDestinoExport || this.emailDestinoExport.trim() === '') {
+      console.log('❌ [2] Email vacío');
+      this.mostrarNotificacion('Debe ingresar un email válido', 'warning');
+      return;
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.emailDestinoExport)) {
+      console.log('❌ [3] Email con formato inválido');
+      this.mostrarNotificacion('El formato del email no es válido', 'warning');
+      return;
+    }
+
+    console.log('✅ [4] Email válido, mostrando SweetAlert');
+
+    Swal.fire({
+      title: '¿Enviar calendario por email?',
+      html: `
+        <p>Se enviará el calendario en formato <strong>${this.tipoArchivoExport.toUpperCase()}</strong> a:</p>
+        <p class="text-indigo-600 font-semibold mt-2">${this.emailDestinoExport}</p>
+        <p class="text-sm text-gray-600 mt-2">
+          Eventos a enviar: <strong>${this.eventosFiltrados.length}</strong>
+        </p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#4F46E5',
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: 'Sí, enviar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      console.log('🔵 [5] SweetAlert resultado:', result);
+
+      if (result.isConfirmed) {
+        console.log('✅ [6] Usuario confirmó - ejecutando envío');
+        this.ejecutarEnvio();
+      } else {
+        console.log('❌ [7] Usuario canceló');
+      }
+    });
+  }
+
+  private ejecutarDescarga(): void {
+    this.cargando = true;
+
+    // ⚠️ NO cerrar el modal todavía - necesitamos tipoArchivoExport
+    this.mostrarModalExport = false;
+
+    const filtros = this.obtenerFiltrosActuales();
+    const user = this.authService.user();
+    const userRole = this.esEmpleado ? 'emp' : 'admin';
+    const userId = user?.id || 0;
+
+    console.log('📥 Descargando calendario...');
+    console.log('Tipo de archivo:', this.tipoArchivoExport);  // ← Agregado para debug
+
+    this.calendarioService.descargarCalendario(
+      filtros,
+      this.tipoArchivoExport,
+      userRole,
+      userId
+    ).subscribe({
+      next: (blob) => {
+        this.cargando = false;
+        console.log(`✅ Blob recibido: ${blob.size} bytes, tipo: ${blob.type}`);
+
+        // Determinar extensión según tipo
+        let extension = 'xlsx';
+        if (this.tipoArchivoExport === 'pdf') {
+          extension = 'pdf';
+        } else if (this.tipoArchivoExport === 'imagen') {
+          extension = 'png';
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `calendario_${Date.now()}.${extension}`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+
+        this.mostrarNotificacion('Calendario descargado correctamente', 'success');
+
+        // ✅ AHORA SÍ resetear el tipo de archivo
+        this.tipoArchivoExport = 'excel';
+      },
+      error: (error) => {
+        this.cargando = false;
+        console.error('❌ Error al descargar calendario:', error);
+        this.mostrarNotificacion('Error al descargar el calendario', 'error');
+
+        // ✅ Resetear también en caso de error
+        this.tipoArchivoExport = 'excel';
+      }
+    });
+  }
+
+  private descargarArchivo(blob: Blob, filtros: FiltrosCalendario): void {
+    const extension = this.tipoArchivoExport === 'excel' ? 'xlsx' :
+                     this.tipoArchivoExport === 'pdf' ? 'pdf' : 'png';
+
+    const timestamp = new Date().getTime();
+    const fileName = `calendario_${timestamp}.${extension}`;
+
+    // Crear link y forzar descarga
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Liberar memoria
+    window.URL.revokeObjectURL(url);
+  }
+
+  private ejecutarEnvio(): void {
+    console.log('🟢 [8] ejecutarEnvio() INICIADO');
+
+    this.cargando = true;
+    this.mostrarModalExport = false;
+
+    const filtros = this.obtenerFiltrosActuales();
+    const user = this.authService.user();
+    const userRole = this.esEmpleado ? 'emp' : 'admin';
+    const userId = user?.id || 0;
+
+    console.log('🟢 [9] Datos preparados:');
+    console.log('  - Email destino:', this.emailDestinoExport);
+    console.log('  - Tipo archivo:', this.tipoArchivoExport);
+    console.log('  - Filtros:', filtros);
+    console.log('  - Rol:', userRole);
+    console.log('  - User ID:', userId);
+
+    console.log('📧 [10] Llamando al servicio...');
+
+    this.calendarioService.enviarCalendarioPorEmail(
+      filtros,
+      this.tipoArchivoExport,
+      this.emailDestinoExport,
+      userRole,
+      userId
+    ).subscribe({
+      next: (response) => {
+        console.log('✅ [11] Respuesta recibida:', response);
+
+        this.cargando = false;
+        this.mostrarNotificacion('Calendario enviado por email correctamente', 'success');
+        this.emailDestinoExport = '';
+      },
+      error: (error) => {
+        console.error('❌ [12] Error recibido:', error);
+
+        this.cargando = false;
+        this.mostrarNotificacion('Error al enviar el calendario por email', 'error');
+        this.emailDestinoExport = '';
+      }
+    });
+  }
+
+  private obtenerFiltrosActuales(): FiltrosCalendario {
+    const tipoCalendarioSeleccionado = this.filtrosForm.get('idTipoCalendario')?.value
+      ? Number(this.filtrosForm.get('idTipoCalendario')?.value)
+      : null;
+
+    const filtros: FiltrosCalendario = {
+      idsTipoCalendario: tipoCalendarioSeleccionado
+        ? [tipoCalendarioSeleccionado]
+        : (this.tiposCalendarioPermitidos.length > 0
+            ? this.tiposCalendarioPermitidos
+            : undefined),
+
+      idUsuario: this.esEmpleado && this.usuarioLogueadoId
+        ? this.usuarioLogueadoId
+        : (this.filtrosForm.get('idUsuario')?.value
+          ? Number(this.filtrosForm.get('idUsuario')?.value)
+          : undefined),
+
+      idDepartamento: this.filtrosForm.get('idDepartamento')?.value
+        ? Number(this.filtrosForm.get('idDepartamento')?.value)
+        : undefined
+    };
+
+    return filtros;
+  }
+
 }

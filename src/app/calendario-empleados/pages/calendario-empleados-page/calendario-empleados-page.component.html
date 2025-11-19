@@ -41,16 +41,46 @@
           </button>
         </div>
 
-        <!-- Contador de eventos -->
-        <div class="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-md border border-indigo-200">
-          <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-          </svg>
-          <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-4 py-2 rounded-lg shadow-sm">
-            <div class="text-xs uppercase tracking-wide opacity-90">Eventos</div>
-            <div class="text-lg font-bold">{{ eventosFiltrados.length }} <span class="text-sm font-normal opacity-75">/ {{ eventos.length }}</span></div>
+        <!-- Contador de eventos y botones de acción -->
+        <div class="flex items-center gap-2">
+          <!-- Contador de eventos -->
+          <div class="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-md border border-indigo-200">
+            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-4 py-2 rounded-lg shadow-sm">
+              <div class="text-xs uppercase tracking-wide opacity-90">Eventos</div>
+              <div class="text-lg font-bold">{{ eventosFiltrados.length }} <span class="text-sm font-normal opacity-75">/ {{ eventos.length }}</span></div>
+            </div>
           </div>
+
+          <!-- Botones de acción apilados -->
+          <div class="flex flex-col gap-2">
+            <!-- Botón Descargar -->
+            <button type="button"
+                    (click)="abrirModalDescarga()"
+                    class="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm transition-colors whitespace-nowrap min-w-[160px]"
+                    title="Descargar calendario">
+              <svg class="w-5 h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+              <span>Descargar</span>
+            </button>
+
+            <!-- Botón Enviar Email -->
+            <button type="button"
+                    (click)="abrirModalEnvio()"
+                    class="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm transition-colors whitespace-nowrap min-w-[160px]"
+                    title="Enviar por email">
+              <svg class="w-5 h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+              <span>Enviar Email</span>
+            </button>
+          </div>
+
         </div>
+
       </div>
     </form>
   </div>
@@ -113,8 +143,8 @@
                     <div class="flex items-center gap-1">
                       <div class="font-semibold text-xs text-gray-900 truncate leading-tight flex-1">{{ evento.nombreCompletoUsuario }}</div>
                       <!-- ✅ NUEVO - Ícono de ubicación -->
-                      <i *ngIf="tieneUbicacion(evento)" 
-                         class="fas fa-map-marker-alt location-icon" 
+                      <i *ngIf="tieneUbicacion(evento)"
+                         class="fas fa-map-marker-alt location-icon"
                          (click)="abrirModalMapa(evento, $event)"
                          aria-label="Ver ubicación en el mapa"></i>
                     </div>
@@ -172,8 +202,8 @@
                 <div class="flex items-start justify-between gap-1">
                   <div class="font-semibold text-gray-900 truncate flex-1">{{ evento.nombreCompletoUsuario }}</div>
                   <!-- ✅ NUEVO - Ícono de ubicación -->
-                  <i *ngIf="tieneUbicacion(evento)" 
-                     class="fas fa-map-marker-alt location-icon" 
+                  <i *ngIf="tieneUbicacion(evento)"
+                     class="fas fa-map-marker-alt location-icon"
                      (click)="abrirModalMapa(evento, $event)"
                      aria-label="Ver ubicación en el mapa"></i>
                 </div>
@@ -222,8 +252,8 @@
                       <div class="text-gray-600 truncate leading-tight text-[10px] mt-0.5">{{ evento.nombreDepartamento }}</div>
                     </div>
                     <!-- ✅ NUEVO - Ícono de ubicación -->
-                    <i *ngIf="tieneUbicacion(evento)" 
-                       class="fas fa-map-marker-alt location-icon flex-shrink-0" 
+                    <i *ngIf="tieneUbicacion(evento)"
+                       class="fas fa-map-marker-alt location-icon flex-shrink-0"
                        (click)="abrirModalMapa(evento, $event)"
                        aria-label="Ver ubicación en el mapa"></i>
                   </div>
@@ -356,8 +386,8 @@
                   <div class="flex items-center justify-between">
                     <div class="text-base text-gray-900">{{ eventoEditando.nombreDepartamento }}</div>
                     <!-- ✅ NUEVO - Botón para ver ubicación en el modal de detalles -->
-                    <button *ngIf="tieneUbicacion(eventoEditando)" 
-                            type="button" 
+                    <button *ngIf="tieneUbicacion(eventoEditando)"
+                            type="button"
                             (click)="abrirModalMapa(eventoEditando)"
                             class="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-md text-sm font-medium transition-colors">
                       <i class="fas fa-map-marker-alt"></i>
@@ -391,7 +421,7 @@
   <div *ngIf="mostrarModalMapa && eventoEditando" class="fixed inset-0 z-[90] overflow-y-auto" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" (click)="cerrarModalMapa()" aria-label="Cerrar mapa" role="button" tabindex="0"></div>
-      
+
       <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
         <!-- Header del modal -->
         <div class="bg-indigo-600 px-6 py-4">
@@ -403,8 +433,8 @@
                 <p class="text-indigo-100 text-sm">{{ eventoEditando.nombreDepartamento }}</p>
               </div>
             </div>
-            <button (click)="cerrarModalMapa()" 
-                    class="text-white hover:text-indigo-200 transition-colors" 
+            <button (click)="cerrarModalMapa()"
+                    class="text-white hover:text-indigo-200 transition-colors"
                     aria-label="Cerrar mapa">
               <i class="fas fa-times text-xl"></i>
             </button>
@@ -421,7 +451,7 @@
               </label>
               <p class="text-gray-900">{{ eventoEditando.nombreCompletoUsuario }}</p>
             </div>
-            
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 <i class="fas fa-calendar text-indigo-600 mr-2"></i>Fecha y Hora
@@ -436,7 +466,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">
               <i class="fas fa-map text-indigo-600 mr-2"></i>Mapa de Ubicación
             </label>
-            
+
             <!-- ✅ INTEGRACIÓN CON MINI-MAP COMPONENT -->
             <ng-container *ngIf="obtenerCoordenadasDepartamento(eventoEditando) as coordenadas; else noCoords">
               <mini-map
@@ -446,7 +476,7 @@
                 width="100%"
                 class="rounded-lg shadow-lg"
               />
-              
+
               <!-- Botón para abrir en Google Maps -->
               <div class="mt-3 flex justify-end">
                 <a [href]="'https://www.google.com/maps/search/?api=1&query=' + coordenadas.lat + ',' + coordenadas.lng"
@@ -457,7 +487,7 @@
                 </a>
               </div>
             </ng-container>
-            
+
             <ng-template #noCoords>
               <!-- Fallback cuando no hay coordenadas -->
               <div class="bg-gray-100 rounded-lg h-96 flex items-center justify-center">
@@ -476,13 +506,133 @@
 
         <!-- Footer del modal -->
         <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2">
-          <button (click)="cerrarModalMapa()" 
+          <button (click)="cerrarModalMapa()"
                   class="px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors border border-gray-300">
             Cerrar
           </button>
-          <button (click)="abrirModalDetalles(eventoEditando); cerrarModalMapa()" 
+          <button (click)="abrirModalDetalles(eventoEditando); cerrarModalMapa()"
                   class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
             <i class="fas fa-info-circle mr-2"></i>Ver detalles del evento
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL DE EXPORTACIÓN (NUEVO) ==================== -->
+  <div *ngIf="mostrarModalExport" class="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModalExport()"></div>
+
+      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <!-- Header del modal -->
+        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <svg *ngIf="accionExport === 'descargar'" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+              <svg *ngIf="accionExport === 'enviar'" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+              <h3 class="text-lg font-medium text-white">
+                {{ accionExport === 'descargar' ? 'Descargar Calendario' : 'Enviar Calendario por Email' }}
+              </h3>
+            </div>
+            <button (click)="cerrarModalExport()"
+                    class="text-white hover:text-indigo-200 transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido del modal -->
+        <div class="bg-white px-6 py-4">
+          <!-- Información de eventos -->
+          <div class="mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span class="text-gray-700">
+                Se {{ accionExport === 'descargar' ? 'descargará' : 'enviará' }} un total de
+                <strong class="text-indigo-600">{{ eventosFiltrados.length }}</strong> eventos
+              </span>
+            </div>
+          </div>
+
+          <!-- Selector de tipo de archivo -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Tipo de archivo
+            </label>
+            <div class="grid grid-cols-3 gap-3">
+              <!-- Opción Excel -->
+              <button type="button"
+                      (click)="tipoArchivoExport = 'excel'"
+                      [class.ring-2]="tipoArchivoExport === 'excel'"
+                      [class.ring-indigo-500]="tipoArchivoExport === 'excel'"
+                      [class.bg-indigo-50]="tipoArchivoExport === 'excel'"
+                      class="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer">
+                <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12.9,14.5L15.8,19H14L12,15.6L10,19H8.2L11.1,14.5L8.2,10H10L12,13.4L14,10H15.8L12.9,14.5Z" />
+                </svg>
+                <span class="text-xs font-medium text-gray-700">Excel</span>
+              </button>
+
+              <!-- Opción PDF -->
+              <button type="button"
+                      (click)="tipoArchivoExport = 'pdf'"
+                      [class.ring-2]="tipoArchivoExport === 'pdf'"
+                      [class.ring-indigo-500]="tipoArchivoExport === 'pdf'"
+                      [class.bg-indigo-50]="tipoArchivoExport === 'pdf'"
+                      class="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer">
+                <svg class="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M10.5,11.5C10.5,11.5 11.5,11.5 12,11.5C13,11.5 13.5,12 13.5,13C13.5,14 13,14.5 12,14.5H10.5V11.5M10.5,15.5H12C13,15.5 13.5,16 13.5,17C13.5,18 13,18.5 12,18.5C11.5,18.5 10.5,18.5 10.5,18.5V15.5M9.5,10.5V19.5H12C13.5,19.5 14.5,18.5 14.5,17C14.5,16.5 14.5,16 14,15.5C14.5,15 14.5,14 14.5,13C14.5,11.5 13.5,10.5 12,10.5H9.5Z" />
+                </svg>
+                <span class="text-xs font-medium text-gray-700">PDF</span>
+              </button>
+
+              <!-- Opción Imagen -->
+              <button type="button"
+                      (click)="tipoArchivoExport = 'imagen'"
+                      [class.ring-2]="tipoArchivoExport === 'imagen'"
+                      [class.ring-indigo-500]="tipoArchivoExport === 'imagen'"
+                      [class.bg-indigo-50]="tipoArchivoExport === 'imagen'"
+                      class="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer">
+                <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z" />
+                </svg>
+                <span class="text-xs font-medium text-gray-700">Imagen</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Campo de email (solo para envío) -->
+          <div *ngIf="accionExport === 'enviar'" class="mb-4">
+            <label for="emailDestino" class="block text-sm font-medium text-gray-700 mb-2">
+              Email destinatario
+            </label>
+            <input type="email"
+                   id="emailDestino"
+                   [(ngModel)]="emailDestinoExport"
+                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                   placeholder="correo@ejemplo.com">
+          </div>
+        </div>
+
+        <!-- Footer del modal -->
+        <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+          <button (click)="cerrarModalExport()"
+                  class="px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors border border-gray-300">
+            Cancelar
+          </button>
+          <button (click)="confirmarExportacion()"
+                  class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors shadow-sm">
+            <span *ngIf="accionExport === 'descargar'">Descargar</span>
+            <span *ngIf="accionExport === 'enviar'">Enviar Email</span>
           </button>
         </div>
       </div>
