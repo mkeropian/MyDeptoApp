@@ -548,6 +548,7 @@
           </div>
         </div>
 
+        <!-- BLOQUE CORREGIDO DEL MODAL DE DESCARGA -->
         <!-- Contenido del modal -->
         <div class="bg-white px-6 py-4">
           <!-- Información de eventos -->
@@ -568,6 +569,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Tipo de archivo
             </label>
+            <!-- GRID DE 3 BOTONES PRINCIPALES -->
             <div class="grid grid-cols-3 gap-3">
               <!-- Opción Excel -->
               <button type="button"
@@ -608,6 +610,57 @@
                 <span class="text-xs font-medium text-gray-700">Imagen</span>
               </button>
             </div>
+            <!-- FIN GRID DE 3 BOTONES PRINCIPALES -->
+
+            <!-- SELECTOR DE SUBTIPO DE IMAGEN (CENTRADO, FUERA DEL GRID) -->
+            <div *ngIf="tipoArchivoExport === 'imagen'" class="mt-6">
+              <label class="block text-sm font-medium text-gray-700 mb-3 text-center">
+                Estilo de imagen
+              </label>
+              <div class="flex justify-center gap-4">
+
+                <!-- Lista/Timeline -->
+                <button type="button"
+                        (click)="subtipoImagen = 'lista'"
+                        [class.ring-2]="subtipoImagen === 'lista'"
+                        [class.ring-indigo-500]="subtipoImagen === 'lista'"
+                        [class.bg-indigo-50]="subtipoImagen === 'lista'"
+                        class="flex flex-col items-center justify-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer w-24">
+                  <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                  </svg>
+                  <span class="text-xs font-medium text-gray-700">Lista</span>
+                </button>
+
+                <!-- Vista Calendario -->
+                <button type="button"
+                        (click)="subtipoImagen = 'calendario'"
+                        [class.ring-2]="subtipoImagen === 'calendario'"
+                        [class.ring-indigo-500]="subtipoImagen === 'calendario'"
+                        [class.bg-indigo-50]="subtipoImagen === 'calendario'"
+                        class="flex flex-col items-center justify-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer w-24">
+                  <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                  <span class="text-xs font-medium text-gray-700 text-center leading-tight">Calendario</span>
+                </button>
+
+                <!-- Resumen Visual / Gráficos -->
+                <button type="button"
+                        (click)="subtipoImagen = 'resumen'"
+                        [class.ring-2]="subtipoImagen === 'resumen'"
+                        [class.ring-indigo-500]="subtipoImagen === 'resumen'"
+                        [class.bg-indigo-50]="subtipoImagen === 'resumen'"
+                        class="flex flex-col items-center justify-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer w-24">
+                  <svg class="w-6 h-6 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                  </svg>
+                  <span class="text-xs font-medium text-gray-700 text-center">Gráficos</span>
+                </button>
+
+              </div>
+            </div>
+            <!-- FIN SELECTOR DE SUBTIPO DE IMAGEN -->
           </div>
 
           <!-- Campo de email (solo para envío) -->
@@ -616,12 +669,13 @@
               Email destinatario
             </label>
             <input type="email"
-                   id="emailDestino"
-                   [(ngModel)]="emailDestinoExport"
-                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                   placeholder="correo@ejemplo.com">
+              id="emailDestino"
+              [(ngModel)]="emailDestinoExport"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              placeholder="correo@ejemplo.com">
           </div>
         </div>
+        <!-- FIN BLOQUE CORREGIDO DEL MODAL DE DESCARGA -->
 
         <!-- Footer del modal -->
         <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3">

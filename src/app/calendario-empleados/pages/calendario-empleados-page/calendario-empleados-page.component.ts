@@ -45,6 +45,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
   mostrarModalEvento = false;
   mostrarModalDetalles = false;
+
   // ✅ NUEVO - Modal para mostrar el mapa
   mostrarModalMapa = false;
   eventoEditando: EventoCalendarioExtendido | null = null;
@@ -74,6 +75,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   mostrarModalExport = false;
   accionExport: 'descargar' | 'enviar' = 'descargar';
   tipoArchivoExport: 'excel' | 'pdf' | 'imagen' = 'excel';
+  subtipoImagen: 'lista' | 'calendario' | 'resumen' = 'lista';
   emailDestinoExport = '';
 
   isDownloading = signal<boolean>(false);
@@ -717,6 +719,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   cerrarModalExport(): void {
     this.mostrarModalExport = false;
     this.tipoArchivoExport = 'excel';
+    this.subtipoImagen = 'lista';
     this.emailDestinoExport = '';
   }
 
@@ -816,7 +819,8 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       filtros,
       this.tipoArchivoExport,
       userRole,
-      userId
+      userId,
+      this.tipoArchivoExport === 'imagen' ? this.subtipoImagen : undefined
     ).subscribe({
       next: (blob) => {
         this.cargando = false;
@@ -899,7 +903,8 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       this.tipoArchivoExport,
       this.emailDestinoExport,
       userRole,
-      userId
+      userId,
+      this.tipoArchivoExport === 'imagen' ? this.subtipoImagen : undefined
     ).subscribe({
       next: (response) => {
         console.log('✅ [11] Respuesta recibida:', response);

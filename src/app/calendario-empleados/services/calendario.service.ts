@@ -566,18 +566,20 @@ export class CalendarioService {
     filtros: FiltrosCalendario,
     tipoArchivo: 'excel' | 'pdf' | 'imagen',
     userRole: string,
-    userId: number
+    userId: number,
+    subtipoImagen?: 'lista' | 'calendario' | 'resumen'
   ): Observable<Blob> {
     const url = `${this.apiUrl}/export`;
 
     const body = {
       filtros,
       tipoArchivo,
+      subtipoImagen,
       userRole,
       userId
     };
 
-    console.log('📥 Descargando calendario...', body);
+    console.log('📥 Descargando calendario...', { filtros, tipoArchivo, subtipoImagen, userRole, userId });
 
     return this.http.post(url, body, {
       responseType: 'blob',
@@ -650,19 +652,21 @@ export class CalendarioService {
     tipoArchivo: 'excel' | 'pdf' | 'imagen',
     emailDestino: string,
     userRole: string,
-    userId: number
+    userId: number,
+    subtipoImagen?: 'lista' | 'calendario' | 'resumen'
   ): Observable<any> {
     const url = `${this.apiUrl}/send-email`;
 
     const body = {
       filtros,
       tipoArchivo,
+      subtipoImagen,
       emailDestino,
       userRole,
       userId
     };
 
-    console.log('📧 Enviando calendario por email...', body);
+    console.log('📧 Enviando calendario por email...', { ...body, subtipoImagen });
 
     return this.http.post<any>(url, body, {
       headers: this.getHeaders()
