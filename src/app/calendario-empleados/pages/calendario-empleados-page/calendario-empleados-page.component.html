@@ -559,10 +559,115 @@
               </svg>
               <span class="text-gray-700">
                 Se {{ accionExport === 'descargar' ? 'descargará' : 'enviará' }} un total de
-                <strong class="text-indigo-600">{{ eventosFiltrados.length }}</strong> eventos
+                <strong class="text-indigo-600">{{ eventosSegunRango }}</strong> eventos
               </span>
             </div>
           </div>
+
+          <!-- ==================== SELECTOR DE RANGO DE FECHAS ==================== -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-3">
+              Rango de fechas
+            </label>
+
+            <!-- Opción 1: Vista Actual -->
+            <div class="mb-3 border-2 rounded-lg transition-all cursor-pointer"
+                 [class.border-indigo-500]="rangoExport === 'vistaActual'"
+                 [class.bg-indigo-50]="rangoExport === 'vistaActual'"
+                 [class.border-gray-200]="rangoExport !== 'vistaActual'">
+              <div class="p-4">
+                <div class="flex items-center gap-3">
+                  <input type="radio"
+                         name="rangoExport"
+                         [value]="'vistaActual'"
+                         [(ngModel)]="rangoExport"
+                         (change)="onRangoExportChange()"
+                         class="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                  <label (click)="rangoExport = 'vistaActual'; onRangoExportChange()" class="flex-1 cursor-pointer">
+                    <div class="font-medium text-gray-900">Vista Actual</div>
+                    <div class="text-xs text-gray-600 mt-1">
+                      Solo eventos visibles en el calendario ({{ vistaActual === 'dia' ? 'día actual' : vistaActual === 'semana' ? 'semana actual' : 'mes actual' }})
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Opción 2: Rango Personalizado -->
+            <div class="mb-3 border-2 rounded-lg transition-all cursor-pointer"
+                 [class.border-indigo-500]="rangoExport === 'rangoPersonalizado'"
+                 [class.bg-indigo-50]="rangoExport === 'rangoPersonalizado'"
+                 [class.border-gray-200]="rangoExport !== 'rangoPersonalizado'">
+              <div class="p-4">
+                <div class="flex items-center gap-3 mb-3">
+                  <input type="radio"
+                         name="rangoExport"
+                         [value]="'rangoPersonalizado'"
+                         [(ngModel)]="rangoExport"
+                         (change)="onRangoExportChange()"
+                         class="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                  <label (click)="rangoExport = 'rangoPersonalizado'; onRangoExportChange()" class="flex-1 cursor-pointer">
+                    <div class="font-medium text-gray-900">Rango Personalizado</div>
+                    <div class="text-xs text-gray-600 mt-1">
+                      Selecciona un rango de fechas específico (máx. 60 días)
+                    </div>
+                  </label>
+                </div>
+
+                <!-- Inputs de fecha (solo visibles cuando está seleccionado) -->
+                <div *ngIf="rangoExport === 'rangoPersonalizado'" class="mt-3 pl-7 space-y-3">
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Fecha inicial</label>
+                      <input type="date"
+                             [(ngModel)]="fechaInicioPersonalizada"
+                             (change)="onFechaPersonalizadaChange()"
+                             class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Fecha final</label>
+                      <input type="date"
+                             [(ngModel)]="fechaFinPersonalizada"
+                             (change)="onFechaPersonalizadaChange()"
+                             class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                  </div>
+
+                  <!-- Mensaje de error -->
+                  <div *ngIf="errorRangoPersonalizado" class="flex items-center gap-2 text-xs text-red-600 bg-red-50 px-3 py-2 rounded-md">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>{{ errorRangoPersonalizado }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Opción 3: Historial Completo -->
+            <div class="border-2 rounded-lg transition-all cursor-pointer"
+                 [class.border-indigo-500]="rangoExport === 'historial'"
+                 [class.bg-indigo-50]="rangoExport === 'historial'"
+                 [class.border-gray-200]="rangoExport !== 'historial'">
+              <div class="p-4">
+                <div class="flex items-center gap-3">
+                  <input type="radio"
+                         name="rangoExport"
+                         [value]="'historial'"
+                         [(ngModel)]="rangoExport"
+                         (change)="onRangoExportChange()"
+                         class="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                  <label (click)="rangoExport = 'historial'; onRangoExportChange()" class="flex-1 cursor-pointer">
+                    <div class="font-medium text-gray-900">Historial Completo</div>
+                    <div class="text-xs text-gray-600 mt-1">
+                      Todos los eventos registrados sin filtro de fechas
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- ==================== FIN SELECTOR DE RANGO DE FECHAS ==================== -->
 
           <!-- Selector de tipo de archivo -->
           <div class="mb-4">
@@ -678,16 +783,44 @@
         <!-- FIN BLOQUE CORREGIDO DEL MODAL DE DESCARGA -->
 
         <!-- Footer del modal -->
-        <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3">
-          <button (click)="cerrarModalExport()"
-                  class="px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors border border-gray-300">
-            Cancelar
-          </button>
-          <button (click)="confirmarExportacion()"
-                  class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors shadow-sm">
-            <span *ngIf="accionExport === 'descargar'">Descargar</span>
-            <span *ngIf="accionExport === 'enviar'">Enviar Email</span>
-          </button>
+        <div class="bg-gray-50 px-6 py-4">
+          <!-- Mensaje de advertencia cuando no hay eventos -->
+          <div *ngIf="eventosSegunRango === 0" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-yellow-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-yellow-800">No hay eventos para exportar</p>
+                <p class="text-xs text-yellow-700 mt-1">
+                  <span *ngIf="rangoExport === 'vistaActual'">No se encontraron eventos en {{ vistaActual === 'dia' ? 'el día actual' : vistaActual === 'semana' ? 'la semana actual' : 'el mes actual' }}.</span>
+                  <span *ngIf="rangoExport === 'rangoPersonalizado'">No se encontraron eventos en el rango seleccionado.</span>
+                  <span *ngIf="rangoExport === 'historial'">No hay eventos registrados en el sistema.</span>
+                  <span class="block mt-1">Intenta seleccionar otro rango de fechas.</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones -->
+          <div class="flex justify-end gap-3">
+            <button (click)="cerrarModalExport()"
+                    class="px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors border border-gray-300">
+              Cancelar
+            </button>
+            <button (click)="confirmarExportacion()"
+                    [disabled]="eventosSegunRango === 0"
+                    [class.opacity-50]="eventosSegunRango === 0"
+                    [class.cursor-not-allowed]="eventosSegunRango === 0"
+                    [class.bg-gray-400]="eventosSegunRango === 0"
+                    [class.hover:bg-gray-400]="eventosSegunRango === 0"
+                    [class.bg-indigo-600]="eventosSegunRango > 0"
+                    [class.hover:bg-indigo-700]="eventosSegunRango > 0"
+                    class="px-4 py-2 text-white rounded-md transition-colors shadow-sm">
+              <span *ngIf="accionExport === 'descargar'">Descargar</span>
+              <span *ngIf="accionExport === 'enviar'">Enviar Email</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

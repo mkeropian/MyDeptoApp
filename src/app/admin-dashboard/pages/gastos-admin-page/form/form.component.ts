@@ -6,6 +6,7 @@ import { GastosService } from '../../../../gastos/services/gastos.service';
 import { DepartamentosService } from '../../../../departamentos/services/departamentos.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormErrorLabelComponent } from '../../../../shared/components/form-error-label/form-error-label.component';
+import { NotificationService } from '../../../../shared/services/notification.service';
 import Swal from 'sweetalert2';
 import { forkJoin } from 'rxjs';
 
@@ -34,6 +35,7 @@ export class FormComponent implements OnInit {
   fb = inject(FormBuilder);
   gastosService = inject(GastosService);
   departamentosService = inject(DepartamentosService);
+  notificationService = inject(NotificationService);
 
   departamentosResource = rxResource({
     request: () => ({}),
@@ -86,7 +88,7 @@ export class FormComponent implements OnInit {
 
     // Validar que haya al menos 1 departamento seleccionado
     if (selectedDepartments.length === 0) {
-      this.showErrorToast('Debe seleccionar al menos un departamento');
+      this.notificationService.mostrarNotificacion('Debe seleccionar al menos un departamento', 'error');
       return;
     }
 
@@ -151,68 +153,20 @@ export class FormComponent implements OnInit {
         this.gastoCreado.emit();
 
         // Mostrar mensaje de éxito
-        this.showSuccessToast(
-          `${resultados.length} gasto(s) creado(s) exitosamente ($${montoPorDepartamento.toLocaleString()} c/u)`
+        this.notificationService.mostrarNotificacion(
+          `${resultados.length} gasto(s) creado(s) exitosamente`,
+          'success',
+          `$${montoPorDepartamento.toLocaleString()} por departamento`
         );
       },
       error: (error) => {
         console.error('Error al crear gastos:', error);
-        this.showErrorToast(
-          `Error al crear los gastos. Algunos registros pueden no haberse guardado.`
+        this.notificationService.mostrarNotificacion(
+          'Error al crear los gastos',
+          'error',
+          'Algunos registros pueden no haberse guardado'
         );
       }
     });
-  }
-
-  /**
-   * Muestra un toast de éxito
-   */
-  private showSuccessToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-success shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
-  }
-
-  /**
-   * Muestra un toast de error
-   */
-  private showErrorToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-error shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
   }
 }

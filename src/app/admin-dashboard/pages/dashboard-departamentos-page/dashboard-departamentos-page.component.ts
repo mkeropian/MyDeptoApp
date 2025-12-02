@@ -12,6 +12,7 @@ import { Pago } from '../../../incomes/interfaces/incomes.interface';
 import { Gasto } from '../../../gastos/interfaces/gasto.interface';
 import { Propietario } from '../../../propietarios/interfaces/propietario.interface';
 import { PropietariosService } from '../../../propietarios/services/propietarios.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 // Interface para la operación extendida con datos del propietario
 interface DepartamentoConPropietario extends Departamento {
@@ -45,6 +46,7 @@ export class DashboardDepartamentosPageComponent {
 
   pagosService = inject(PagosService);
   gastosService = inject(GastosService);
+  notificationService = inject(NotificationService);
 
   formBuilder = inject(FormBuilder);
 
@@ -261,10 +263,17 @@ export class DashboardDepartamentosPageComponent {
           observaciones: this.operacionForm.get('observaciones')?.value || undefined
         }
 
-        this.pagosService.createPago(formValue as Pago).subscribe(
-          pago => {
+        this.pagosService.createPago(formValue as Pago).subscribe({
+          next: (pago) => {
             console.log('Pago creado:', pago);
-          });
+            this.notificationService.mostrarNotificacion('Ingreso registrado exitosamente', 'success');
+            this.closeModal();
+          },
+          error: (error) => {
+            console.error('Error al crear pago:', error);
+            this.notificationService.mostrarNotificacion('Error al registrar el ingreso', 'error');
+          }
+        });
       } else if (this.tipoOperacion() === 'gastos') {
 
         const formValue: Gasto = {
@@ -276,22 +285,24 @@ export class DashboardDepartamentosPageComponent {
           observaciones: this.operacionForm.get('observaciones')?.value || undefined
         }
 
-        this.gastosService.createGasto(formValue as Gasto).subscribe(
-          gasto => {
+        this.gastosService.createGasto(formValue as Gasto).subscribe({
+          next: (gasto) => {
             console.log('Gasto creado:', gasto);
-          });
+            this.notificationService.mostrarNotificacion('Gasto registrado exitosamente', 'success');
+            this.closeModal();
+          },
+          error: (error) => {
+            console.error('Error al crear gasto:', error);
+            this.notificationService.mostrarNotificacion('Error al registrar el gasto', 'error');
+          }
+        });
       }
-
-      // Mostrar mensaje de éxito (puedes usar un servicio de notificaciones)
-      alert('Operación guardada exitosamente');
-
-      // Cerrar el modal
-      this.closeModal();
     } else {
       // Marcar todos los campos como touched para mostrar errores
       Object.keys(this.operacionForm.controls).forEach(key => {
         this.operacionForm.get(key)?.markAsTouched();
       });
+      this.notificationService.mostrarNotificacion('Complete todos los campos requeridos', 'warning');
     }
   }
 }

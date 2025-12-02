@@ -18,6 +18,7 @@ import { AuthService } from '../../../auth/services/auth.service';
 
 import { MiniMapComponent } from '../../../shared/components/mini-map/mini-map.component';
 import { DepartamentosService } from '../../../departamentos/services/departamentos.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -78,6 +79,12 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   subtipoImagen: 'lista' | 'calendario' | 'resumen' = 'lista';
   emailDestinoExport = '';
 
+  // ==================== NUEVAS PROPIEDADES PARA RANGO DE FECHAS ====================
+  rangoExport: 'vistaActual' | 'rangoPersonalizado' | 'historial' = 'vistaActual';
+  fechaInicioPersonalizada: string = '';
+  fechaFinPersonalizada: string = '';
+  errorRangoPersonalizado: string = '';
+
   isDownloading = signal<boolean>(false);
 
   constructor(
@@ -85,7 +92,8 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     public calendarioService: CalendarioService,
     private cdr: ChangeDetectorRef,
     private authService: AuthService,
-    private departamentosService: DepartamentosService
+    private departamentosService: DepartamentosService,
+    private notificationService: NotificationService
   ) {
     this.eventoForm = this.fb.group({
       idTipoCalendario: ['', Validators.required],
@@ -185,7 +193,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.cargando = false;
-          this.mostrarNotificacion('Error al cargar eventos', 'error');
+          this.notificationService.mostrarNotificacion('Error al cargar eventos', 'error');
         }
       });
 
@@ -207,7 +215,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
           this.tiposEvento = tiposEvento;
         },
         error: (error) => {
-          this.mostrarNotificacion('Error al cargar datos', 'error');
+          this.notificationService.mostrarNotificacion('Error al cargar datos', 'error');
         }
       });
   }
@@ -441,7 +449,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
   abrirModalEvento(fecha?: Date): void {
     if (this.esEmpleado) {
-      this.mostrarNotificacion('No tienes permisos para crear eventos', 'warning');
+      this.notificationService.mostrarNotificacion('No tienes permisos para crear eventos', 'warning');
       return;
     }
 
@@ -463,7 +471,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
   editarEvento(evento: EventoCalendarioExtendido): void {
     if (this.esEmpleado) {
-      this.mostrarNotificacion('No tienes permisos para editar eventos', 'warning');
+      this.notificationService.mostrarNotificacion('No tienes permisos para editar eventos', 'warning');
       return;
     }
 
@@ -501,22 +509,22 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       this.calendarioService.actualizarEvento(this.eventoEditando.id, eventoData)
         .subscribe({
           next: () => {
-            this.mostrarNotificacion('Evento actualizado correctamente', 'success');
+            this.notificationService.mostrarNotificacion('Evento actualizado correctamente', 'success');
             this.cerrarModal();
           },
           error: (error) => {
-            this.mostrarNotificacion('Error al actualizar el evento', 'error');
+            this.notificationService.mostrarNotificacion('Error al actualizar el evento', 'error');
           }
         });
     } else {
       this.calendarioService.crearEvento(eventoData)
         .subscribe({
           next: () => {
-            this.mostrarNotificacion('Evento creado correctamente', 'success');
+            this.notificationService.mostrarNotificacion('Evento creado correctamente', 'success');
             this.cerrarModal();
           },
           error: (error) => {
-            this.mostrarNotificacion('Error al crear el evento', 'error');
+            this.notificationService.mostrarNotificacion('Error al crear el evento', 'error');
           }
         });
     }
@@ -524,7 +532,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
   eliminarEvento(id: number): void {
     if (this.esEmpleado) {
-      this.mostrarNotificacion('No tienes permisos para eliminar eventos', 'warning');
+      this.notificationService.mostrarNotificacion('No tienes permisos para eliminar eventos', 'warning');
       return;
     }
 
@@ -535,11 +543,11 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.calendarioService.eliminarEvento(id)
       .subscribe({
         next: () => {
-          this.mostrarNotificacion('Evento eliminado correctamente', 'success');
+          this.notificationService.mostrarNotificacion('Evento eliminado correctamente', 'success');
           this.cerrarModal();
         },
         error: (error) => {
-          this.mostrarNotificacion('Error al eliminar el evento', 'error');
+          this.notificationService.mostrarNotificacion('Error al eliminar el evento', 'error');
         }
       });
   }
@@ -679,24 +687,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     return this.calendarioService.formatearHora(hora);
   }
 
-  private mostrarNotificacion(titulo: string, tipo: 'success' | 'error' | 'warning' | 'info', mensaje?: string): void {
-    const config: any = {
-      title: titulo,
-      icon: tipo,
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true
-    };
-
-    if (mensaje) {
-      config.text = mensaje;
-    }
-
-    Swal.fire(config);
-  }
-
   // ==================== EXPORTACIÓN Y ENVÍO ====================
 
   abrirModalDescarga(): void {
@@ -721,6 +711,11 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.tipoArchivoExport = 'excel';
     this.subtipoImagen = 'lista';
     this.emailDestinoExport = '';
+    // Resetear propiedades de rango
+    this.rangoExport = 'vistaActual';
+    this.fechaInicioPersonalizada = '';
+    this.fechaFinPersonalizada = '';
+    this.errorRangoPersonalizado = '';
   }
 
   confirmarExportacion(): void {
@@ -732,12 +727,22 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   private confirmarDescarga(): void {
+    // Validar rango personalizado si está seleccionado
+    if (this.rangoExport === 'rangoPersonalizado') {
+      if (!this.validarRangoPersonalizado()) {
+        this.notificationService.mostrarNotificacion(this.errorRangoPersonalizado, 'warning');
+        return;
+      }
+    }
+
+    const cantidadEventos = this.eventosSegunRango;
+
     Swal.fire({
       title: '¿Descargar calendario?',
       html: `
         <p>Se descargará el calendario en formato <strong>${this.tipoArchivoExport.toUpperCase()}</strong></p>
         <p class="text-sm text-gray-600 mt-2">
-          Eventos a exportar: <strong>${this.eventosFiltrados.length}</strong>
+          Eventos a exportar: <strong>${cantidadEventos}</strong>
         </p>
       `,
       icon: 'question',
@@ -754,13 +759,13 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   private confirmarEnvio(): void {
-    console.log('🔵 [1] confirmarEnvio() INICIADO');
-    console.log('🔵 Email actual:', this.emailDestinoExport);
+    // console.log('🔵 [1] confirmarEnvio() INICIADO');
+    // console.log('🔵 Email actual:', this.emailDestinoExport);
 
     // ✅ VALIDAR EMAIL ANTES DE MOSTRAR EL MODAL
     if (!this.emailDestinoExport || this.emailDestinoExport.trim() === '') {
       console.log('❌ [2] Email vacío');
-      this.mostrarNotificacion('Debe ingresar un email válido', 'warning');
+      this.notificationService.mostrarNotificacion('Debe ingresar un email válido', 'warning');
       return;
     }
 
@@ -768,11 +773,21 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.emailDestinoExport)) {
       console.log('❌ [3] Email con formato inválido');
-      this.mostrarNotificacion('El formato del email no es válido', 'warning');
+      this.notificationService.mostrarNotificacion('El formato del email no es válido', 'warning');
       return;
     }
 
-    console.log('✅ [4] Email válido, mostrando SweetAlert');
+    // Validar rango personalizado si está seleccionado
+    if (this.rangoExport === 'rangoPersonalizado') {
+      if (!this.validarRangoPersonalizado()) {
+        this.notificationService.mostrarNotificacion(this.errorRangoPersonalizado, 'warning');
+        return;
+      }
+    }
+
+    // console.log('✅ [4] Email válido, mostrando SweetAlert');
+
+    const cantidadEventos = this.eventosSegunRango;
 
     Swal.fire({
       title: '¿Enviar calendario por email?',
@@ -780,7 +795,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         <p>Se enviará el calendario en formato <strong>${this.tipoArchivoExport.toUpperCase()}</strong> a:</p>
         <p class="text-indigo-600 font-semibold mt-2">${this.emailDestinoExport}</p>
         <p class="text-sm text-gray-600 mt-2">
-          Eventos a enviar: <strong>${this.eventosFiltrados.length}</strong>
+          Eventos a enviar: <strong>${cantidadEventos}</strong>
         </p>
       `,
       icon: 'question',
@@ -790,10 +805,10 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       confirmButtonText: 'Sí, enviar',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
-      console.log('🔵 [5] SweetAlert resultado:', result);
+      // console.log('🔵 [5] SweetAlert resultado:', result);
 
       if (result.isConfirmed) {
-        console.log('✅ [6] Usuario confirmó - ejecutando envío');
+        // console.log('✅ [6] Usuario confirmó - ejecutando envío');
         this.ejecutarEnvio();
       } else {
         console.log('❌ [7] Usuario canceló');
@@ -812,8 +827,8 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     const userRole = this.esEmpleado ? 'emp' : 'admin';
     const userId = user?.id || 0;
 
-    console.log('📥 Descargando calendario...');
-    console.log('Tipo de archivo:', this.tipoArchivoExport);  // ← Agregado para debug
+    // console.log('📥 Descargando calendario...');
+    // console.log('Tipo de archivo:', this.tipoArchivoExport);
 
     this.calendarioService.descargarCalendario(
       filtros,
@@ -824,7 +839,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: (blob) => {
         this.cargando = false;
-        console.log(`✅ Blob recibido: ${blob.size} bytes, tipo: ${blob.type}`);
+        // console.log(`✅ Blob recibido: ${blob.size} bytes, tipo: ${blob.type}`);
 
         // Determinar extensión según tipo
         let extension = 'xlsx';
@@ -841,7 +856,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         link.click();
         window.URL.revokeObjectURL(url);
 
-        this.mostrarNotificacion('Calendario descargado correctamente', 'success');
+        this.notificationService.mostrarNotificacion('Calendario descargado correctamente', 'success');
 
         // ✅ AHORA SÍ resetear el tipo de archivo
         this.tipoArchivoExport = 'excel';
@@ -849,7 +864,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.cargando = false;
         console.error('❌ Error al descargar calendario:', error);
-        this.mostrarNotificacion('Error al descargar el calendario', 'error');
+        this.notificationService.mostrarNotificacion('Error al descargar el calendario', 'error');
 
         // ✅ Resetear también en caso de error
         this.tipoArchivoExport = 'excel';
@@ -879,7 +894,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   private ejecutarEnvio(): void {
-    console.log('🟢 [8] ejecutarEnvio() INICIADO');
+    // console.log('🟢 [8] ejecutarEnvio() INICIADO');
 
     this.cargando = true;
     this.mostrarModalExport = false;
@@ -889,8 +904,8 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     const userRole = this.esEmpleado ? 'emp' : 'admin';
     const userId = user?.id || 0;
 
-    console.log('🟢 [9] Datos preparados:');
-    console.log('  - Email destino:', this.emailDestinoExport);
+    // console.log('🟢 [9] Datos preparados:');
+    // console.log('  - Email destino:', this.emailDestinoExport);
     console.log('  - Tipo archivo:', this.tipoArchivoExport);
     console.log('  - Filtros:', filtros);
     console.log('  - Rol:', userRole);
@@ -910,14 +925,14 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         console.log('✅ [11] Respuesta recibida:', response);
 
         this.cargando = false;
-        this.mostrarNotificacion('Calendario enviado por email correctamente', 'success');
+        this.notificationService.mostrarNotificacion('Calendario enviado por email correctamente', 'success');
         this.emailDestinoExport = '';
       },
       error: (error) => {
         console.error('❌ [12] Error recibido:', error);
 
         this.cargando = false;
-        this.mostrarNotificacion('Error al enviar el calendario por email', 'error');
+        this.notificationService.mostrarNotificacion('Error al enviar el calendario por email', 'error');
         this.emailDestinoExport = '';
       }
     });
@@ -946,7 +961,133 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         : undefined
     };
 
+    // ==================== AGREGAR FILTROS DE FECHA SEGÚN RANGO SELECCIONADO ====================
+    if (this.rangoExport === 'vistaActual') {
+      const rango = this.calcularRangoVistaActual();
+      filtros.fechaInicio = rango.fechaInicio;
+      filtros.fechaFin = rango.fechaFin;
+    } else if (this.rangoExport === 'rangoPersonalizado') {
+      filtros.fechaInicio = this.fechaInicioPersonalizada;
+      filtros.fechaFin = this.fechaFinPersonalizada;
+    }
+    // Si rangoExport === 'historial', no agregamos fechaInicio ni fechaFin
+
     return filtros;
+  }
+
+  // ==================== FUNCIONES PARA RANGO DE FECHAS ====================
+
+  /**
+   * Calcula el rango de fechas según la vista actual del calendario
+   */
+  private calcularRangoVistaActual(): { fechaInicio: string; fechaFin: string } {
+    let fechaInicio: Date;
+    let fechaFin: Date;
+
+    if (this.vistaActual === 'dia') {
+      // Vista diaria: mismo día
+      fechaInicio = new Date(this.fechaSeleccionada);
+      fechaFin = new Date(this.fechaSeleccionada);
+    } else if (this.vistaActual === 'semana') {
+      // Vista semanal: lunes a domingo de la semana visible
+      const rango = this.obtenerRangoFechas();
+      fechaInicio = rango.inicio;
+      fechaFin = rango.fin;
+    } else {
+      // Vista mensual: primer día al último día del mes visible
+      fechaInicio = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth(), 1);
+      fechaFin = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth() + 1, 0);
+    }
+
+    return {
+      fechaInicio: this.calendarioService.formatearFechaParaBackend(fechaInicio),
+      fechaFin: this.calendarioService.formatearFechaParaBackend(fechaFin)
+    };
+  }
+
+  /**
+   * Calcula el número de eventos según el rango seleccionado
+   */
+  get eventosSegunRango(): number {
+    if (this.rangoExport === 'historial') {
+      return this.eventosFiltrados.length;
+    }
+
+    let fechaInicio: string;
+    let fechaFin: string;
+
+    if (this.rangoExport === 'vistaActual') {
+      const rango = this.calcularRangoVistaActual();
+      fechaInicio = rango.fechaInicio;
+      fechaFin = rango.fechaFin;
+    } else if (this.rangoExport === 'rangoPersonalizado') {
+      if (!this.fechaInicioPersonalizada || !this.fechaFinPersonalizada) {
+        return 0;
+      }
+      fechaInicio = this.fechaInicioPersonalizada;
+      fechaFin = this.fechaFinPersonalizada;
+    } else {
+      return this.eventosFiltrados.length;
+    }
+
+    return this.eventosFiltrados.filter(evento => {
+      const fechaEvento = evento.fecha.split('T')[0];
+      return fechaEvento >= fechaInicio && fechaEvento <= fechaFin;
+    }).length;
+  }
+
+  /**
+   * Valida el rango personalizado
+   */
+  validarRangoPersonalizado(): boolean {
+    this.errorRangoPersonalizado = '';
+
+    if (!this.fechaInicioPersonalizada || !this.fechaFinPersonalizada) {
+      this.errorRangoPersonalizado = 'Debe seleccionar ambas fechas';
+      return false;
+    }
+
+    const fechaInicio = new Date(this.fechaInicioPersonalizada);
+    const fechaFin = new Date(this.fechaFinPersonalizada);
+
+    if (fechaFin < fechaInicio) {
+      this.errorRangoPersonalizado = 'La fecha final debe ser mayor o igual a la fecha inicial';
+      return false;
+    }
+
+    // Calcular diferencia en días
+    const diffTime = Math.abs(fechaFin.getTime() - fechaInicio.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 60) {
+      this.errorRangoPersonalizado = 'El rango no puede superar los 60 días';
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Maneja el cambio de rango de exportación
+   */
+  onRangoExportChange(): void {
+    this.errorRangoPersonalizado = '';
+
+    // Si cambia a rango personalizado, inicializar con fechas de la vista actual
+    if (this.rangoExport === 'rangoPersonalizado') {
+      const rango = this.calcularRangoVistaActual();
+      this.fechaInicioPersonalizada = rango.fechaInicio;
+      this.fechaFinPersonalizada = rango.fechaFin;
+    }
+  }
+
+  /**
+   * Maneja cambios en las fechas personalizadas
+   */
+  onFechaPersonalizadaChange(): void {
+    if (this.fechaInicioPersonalizada && this.fechaFinPersonalizada) {
+      this.validarRangoPersonalizado();
+    }
   }
 
 }
