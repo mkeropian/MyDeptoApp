@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { UsuariosService } from '../../../../auth/services/users.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
+import { NotificationService } from '../../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-settings-page',
@@ -15,6 +16,7 @@ export class ThemesSettingsPageComponent {
   private usuariosService = inject(UsuariosService);
   private authService = inject(AuthService);
   private themeService = inject(ThemeService);
+  private notificationService = inject(NotificationService);
 
   // Signals
   selectedTheme = signal<string>('');
@@ -81,14 +83,14 @@ export class ThemesSettingsPageComponent {
     const user = this.currentUser();
 
     if (!user || !user.id) {
-      this.showErrorToast('No hay usuario autenticado');
+      this.notificationService.mostrarNotificacion('No hay usuario autenticado', 'error');
       return;
     }
 
     const themeToSave = this.selectedTheme();
 
     if (!themeToSave) {
-      this.showErrorToast('Por favor selecciona un tema');
+      this.notificationService.mostrarNotificacion('Por favor selecciona un tema', 'error');
       return;
     }
 
@@ -99,70 +101,18 @@ export class ThemesSettingsPageComponent {
       .subscribe({
         next: () => {
           this.isSaving.set(false);
-          this.showSuccessToast(
-            `Tema "${themeToSave}" guardado correctamente`
+          this.notificationService.mostrarNotificacion(
+            `Tema "${themeToSave}" guardado correctamente`,
+            'success'
           );
         },
         error: () => {
           this.isSaving.set(false);
-          this.showErrorToast(
-            'Error al guardar la configuración. Inténtalo nuevamente.'
+          this.notificationService.mostrarNotificacion(
+            'Error al guardar la configuración. Inténtalo nuevamente.',
+            'error'
           );
         },
       });
-  }
-
-  /**
-   * Método para mostrar toast de éxito
-   */
-  private showSuccessToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText =
-      'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-success shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
-  }
-
-  /**
-   * Método para mostrar toast de error
-   */
-  private showErrorToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText =
-      'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-error shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
   }
 }

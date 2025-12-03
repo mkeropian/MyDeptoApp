@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, Validati
 import { PropietariosService } from '../../../../propietarios/services/propietarios.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormErrorLabelComponent } from '../../../../shared/components/form-error-label/form-error-label.component';
+import { NotificationService } from '../../../../shared/services/notification.service';
 import Swal from 'sweetalert2';
 import { Propietario } from '../../../../propietarios/interfaces/propietario.interface';
 import { CommonModule } from '@angular/common';
@@ -22,6 +23,7 @@ export class EditModalComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   private propietariosService = inject(PropietariosService);
+  private notificationService = inject(NotificationService);
 
   isOpen = signal(false);
   propietarioActual = signal<Propietario | null>(null);
@@ -82,7 +84,7 @@ export class EditModalComponent implements OnInit {
     this.editForm.markAllAsTouched();
 
     if (!isValid) {
-      this.showErrorToast('Por favor complete todos los campos requeridos');
+      this.notificationService.mostrarNotificacion('Por favor complete todos los campos requeridos', 'error');
       return;
     }
 
@@ -149,62 +151,16 @@ export class EditModalComponent implements OnInit {
 
     this.propietariosService.updatePropietario(propietarioActual.id, propietarioActualizado).subscribe({
       next: (response) => {
-        this.showSuccessToast('Propietario actualizado exitosamente');
+        this.notificationService.mostrarNotificacion('Propietario actualizado exitosamente', 'success');
         this.propietarioActualizado.emit();
         this.close();
       },
       error: (error) => {
-        this.showErrorToast('Error al actualizar el propietario');
+        this.notificationService.mostrarNotificacion('Error al actualizar el propietario', 'error');
         if (modal) {
           modal.showModal();
         }
       }
     });
-  }
-
-  private showSuccessToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-success shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
-  }
-
-  private showErrorToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-error shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
   }
 }

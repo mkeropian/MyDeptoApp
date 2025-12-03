@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Permiso } from '../../../../auth/interfaces/roles-permisos.interface';
 import { Rol } from '../../../../auth/interfaces/user.interface';
 import { RolesPermisosService } from '../../../../auth/services/roles-permisos.service';
+import { NotificationService } from '../../../../shared/services/notification.service';
 
 type SeccionActiva = 'roles' | 'permisos' | 'asignacion';
 
@@ -16,6 +17,7 @@ type SeccionActiva = 'roles' | 'permisos' | 'asignacion';
 })
 export class RolesSettingsPageComponent implements OnInit {
   private rolesPermisosService = inject(RolesPermisosService);
+  private notificationService = inject(NotificationService);
 
   // Signals para estado reactivo
   seccionActiva = signal<SeccionActiva>('roles');
@@ -114,7 +116,7 @@ export class RolesSettingsPageComponent implements OnInit {
     const rol = this.rolForm();
 
     if (!rol.nombre?.trim()) {
-      alert('El nombre del rol es obligatorio');
+      this.notificationService.mostrarNotificacion('El nombre del rol es obligatorio', 'error');
       return;
     }
 
@@ -124,10 +126,11 @@ export class RolesSettingsPageComponent implements OnInit {
       next: () => {
         this.cargarRoles();
         this.cerrarModalRol();
+        this.notificationService.mostrarNotificacion('Rol creado exitosamente', 'success');
       },
       error: (error) => {
         console.error('Error guardando rol:', error);
-        alert('Error al guardar el rol');
+        this.notificationService.mostrarNotificacion('Error al guardar el rol', 'error');
         this.cargando.set(false);
       }
     });
@@ -149,7 +152,7 @@ export class RolesSettingsPageComponent implements OnInit {
     const permiso = this.permisoForm();
 
     if (!permiso.nombre_vista?.trim() || !permiso.desc_vista?.trim()) {
-      alert('Todos los campos son obligatorios');
+      this.notificationService.mostrarNotificacion('Todos los campos son obligatorios', 'error');
       return;
     }
 
@@ -159,10 +162,11 @@ export class RolesSettingsPageComponent implements OnInit {
       next: () => {
         this.cargarPermisos();
         this.cerrarModalPermiso();
+        this.notificationService.mostrarNotificacion('Permiso creado exitosamente', 'success');
       },
       error: (error) => {
         console.error('Error guardando permiso:', error);
-        alert('Error al guardar el permiso');
+        this.notificationService.mostrarNotificacion('Error al guardar el permiso', 'error');
         this.cargando.set(false);
       }
     });
@@ -190,7 +194,7 @@ export class RolesSettingsPageComponent implements OnInit {
   guardarAsignacion(): void {
     const rol = this.rolSeleccionado();
     if (!rol) {
-      alert('Seleccione un rol');
+      this.notificationService.mostrarNotificacion('Seleccione un rol', 'error');
       return;
     }
 
@@ -199,12 +203,12 @@ export class RolesSettingsPageComponent implements OnInit {
     this.cargando.set(true);
     this.rolesPermisosService.asignarPermisosARol(rol.id, permisosIds).subscribe({
       next: () => {
-        alert('Permisos asignados correctamente');
+        this.notificationService.mostrarNotificacion('Permisos asignados correctamente', 'success');
         this.cargando.set(false);
       },
       error: (error) => {
         console.error('Error asignando permisos:', error);
-        alert('Error al asignar permisos');
+        this.notificationService.mostrarNotificacion('Error al asignar permisos', 'error');
         this.cargando.set(false);
       }
     });

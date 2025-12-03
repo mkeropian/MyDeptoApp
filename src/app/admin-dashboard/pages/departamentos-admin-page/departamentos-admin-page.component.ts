@@ -8,6 +8,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { TableAction, TableColumn } from '../../../shared/components/smart-grid/smart-grid.interface';
 import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-grid.component";
 import { EditModalComponent } from './edit-modal/edit-modal.component';
+import { NotificationService } from '../../../shared/services/notification.service';
 import mapboxgl from 'mapbox-gl';
 import { last } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -30,6 +31,7 @@ interface Marker {
 })
 export class DepartamentosAdminPageComponent implements AfterViewInit {
   departamentosService = inject(DepartamentosService);
+  notificationService = inject(NotificationService);
 
   // NUEVO: ViewChild para el modal de edición
   @ViewChild(EditModalComponent) editModal?: EditModalComponent;
@@ -381,12 +383,12 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
     this.departamentosService.toggleActivo(departamento.id).subscribe({
       next: (response) => {
         const nuevoEstado = response.activo === 1 ? 'activado' : 'desactivado';
-        this.showSuccessToast(`Departamento ${nuevoEstado} exitosamente`);
+        this.notificationService.mostrarNotificacion(`Departamento ${nuevoEstado} exitosamente`, 'success');
         this.refreshTrigger.update(v => v + 1);
       },
       error: (error) => {
         console.error('Error al cambiar estado:', error);
-        this.showErrorToast('Error al cambiar el estado del departamento');
+        this.notificationService.mostrarNotificacion('Error al cambiar el estado del departamento', 'error');
       }
     });
   }
@@ -459,52 +461,5 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
     }
 
     this.markers.set([ newMarker, ...this.markers()]);
-  }
-
-  // Métodos de toast
-  private showSuccessToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-success shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
-  }
-
-  private showErrorToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-error shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
   }
 }

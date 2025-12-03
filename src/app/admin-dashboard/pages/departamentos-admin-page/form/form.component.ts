@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { DepartamentosService } from '../../../../departamentos/services/departamentos.service';
 import { PropietariosService } from '../../../../propietarios/services/propietarios.service';
+import { NotificationService } from '../../../../shared/services/notification.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common'
 
@@ -39,6 +40,7 @@ export class FormComponent implements OnInit {
   fb = inject(FormBuilder);
   departamentosService = inject(DepartamentosService);
   propietariosService = inject(PropietariosService);
+  notificationService = inject(NotificationService);
 
   propietariosResource = rxResource({
     request: () => ({}),
@@ -254,38 +256,15 @@ export class FormComponent implements OnInit {
 
         // NUEVO: Emitir evento para refrescar la lista
         this.departamentoCreado.emit();
+
+        // Notificación de éxito
+        this.notificationService.mostrarNotificacion('Departamento creado exitosamente', 'success');
       },
       error: (error) => {
         console.error('Error al crear departamento:', error);
-        this.showErrorToast('Error al crear el departamento');
+        this.notificationService.mostrarNotificacion('Error al crear el departamento', 'error');
       }
     });
-  }
-
-  /**
-   * Muestra un toast de error
-   */
-  private showErrorToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-error shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
   }
 
   getPropietarioNombre(id: number): string {

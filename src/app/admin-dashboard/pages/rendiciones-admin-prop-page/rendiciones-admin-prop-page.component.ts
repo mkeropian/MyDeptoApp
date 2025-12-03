@@ -1,5 +1,3 @@
-
-
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -8,6 +6,7 @@ import { Departamento } from '../../../departamentos/interfaces/departamento.int
 import { RendicionesService } from '../../../shared/services/rendiciones.service';
 import { RendicionFiltros, RendicionMovimiento, RendicionResumen } from '../../../shared/interfaces/rendicion.interface';
 import { DepartamentosService } from '../../../departamentos/services/departamentos.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 interface GrupoMovimientos {
   departamento: string;
@@ -28,6 +27,7 @@ export class RendicionesAdminPropPageComponent implements OnInit {
   private authService = inject(AuthService);
   private rendicionesService = inject(RendicionesService);
   private departamentosService = inject(DepartamentosService);
+  private notificationService = inject(NotificationService);
 
   // Signals
   departamentos = signal<Departamento[]>([]);
@@ -312,11 +312,12 @@ export class RendicionesAdminPropPageComponent implements OnInit {
       next: (blob) => {
         this.rendicionesService.downloadExcel(blob, filtros);
         this.loadingExport.set(false);
+        this.notificationService.mostrarNotificacion('Archivo exportado exitosamente', 'success');
       },
       error: (error) => {
         console.error('Error exportando:', error);
         this.loadingExport.set(false);
-        alert('Error al exportar: ' + error.message);
+        this.notificationService.mostrarNotificacion('Error al exportar el archivo', 'error');
       }
     });
   }
@@ -332,7 +333,7 @@ export class RendicionesAdminPropPageComponent implements OnInit {
     );
 
     if (!depSeleccionado) {
-      alert('No se pudo identificar el departamento');
+      this.notificationService.mostrarNotificacion('No se pudo identificar el departamento', 'error');
       return;
     }
 
@@ -346,11 +347,12 @@ export class RendicionesAdminPropPageComponent implements OnInit {
       next: (blob) => {
         this.rendicionesService.downloadExcel(blob, filtros);
         this.loadingExportDep.set(null);
+        this.notificationService.mostrarNotificacion('Departamento exportado exitosamente', 'success');
       },
       error: (error) => {
         console.error('Error exportando departamento:', error);
         this.loadingExportDep.set(null);
-        alert('Error al exportar: ' + error.message);
+        this.notificationService.mostrarNotificacion('Error al exportar el departamento', 'error');
       }
     });
   }
