@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CalendarioService, CalendarioUsuario, TipoCalendario, TipoEventoCalendario, Usuario } from '../../../../calendario-empleados/services/calendario.service';
+import { NotificationService } from '../../../../shared/services/notification.service';
 
 
 interface PermisoUsuario {
@@ -51,7 +52,10 @@ export class CalendarSettingsPageComponent implements OnInit {
   error: string | null = null;
   successMessage: string | null = null;
 
-  constructor(private calendarioService: CalendarioService) {}
+  constructor(
+    private calendarioService: CalendarioService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit(): void {
     this.cargarDatos();
@@ -411,6 +415,8 @@ export class CalendarSettingsPageComponent implements OnInit {
   private showSuccess(message: string): void {
     this.successMessage = message;
     this.error = null;
+    // También mostrar toast unificado
+    this.notificationService.mostrarNotificacion(message, 'success');
     setTimeout(() => {
       this.successMessage = null;
     }, 3000);
@@ -419,6 +425,8 @@ export class CalendarSettingsPageComponent implements OnInit {
   private showError(message: string): void {
     this.error = message;
     this.successMessage = null;
+    // También mostrar toast unificado
+    this.notificationService.mostrarNotificacion(message, 'error');
     setTimeout(() => {
       this.error = null;
     }, 5000);

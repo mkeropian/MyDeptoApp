@@ -7,6 +7,7 @@ import { RendicionAutomaticaConfig } from '../../interfaces/rendicion-automatica
 import { RendicionAutomaticaModalComponent } from '../rendicion-automatica-modal/rendicion-automatica-modal.component';
 import { RendicionLogsModalComponent } from '../rendicion-logs-modal/rendicion-logs-modal.component';
 import Swal from 'sweetalert2';
+import { NotificationService } from '../../services/notification.service';
 
 interface ConfigEstado {
   estado: 'activo' | 'pausado' | 'error' | 'pendiente';
@@ -45,6 +46,7 @@ export class RendicionAutomaticaListComponent implements OnInit {
 
   // Services
   rendicionService = inject(RendicionAutomaticaService);
+  private notificationService = inject(NotificationService);
 
   // ViewChild
   @ViewChild(RendicionAutomaticaModalComponent) modal!: RendicionAutomaticaModalComponent;
@@ -199,7 +201,7 @@ export class RendicionAutomaticaListComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error cargando configuraciones:', error);
-        this.showErrorToast('Error al cargar configuraciones');
+        this.notificationService.mostrarNotificacion('Error al cargar configuraciones', 'error');
         // CORREGIDO: Asegurar que configs sea un array en caso de error
         this.configs.set([]);
         this.isLoading.set(false);
@@ -241,14 +243,20 @@ export class RendicionAutomaticaListComponent implements OnInit {
         // 3a. Usuario confirmó → Ejecutar acción
         this.rendicionService.toggleActivo(config.id).subscribe({
           next: () => {
-            this.showSuccessToast(`Configuración ${accion === 'activar' ? 'activada' : 'pausada'} exitosamente`);
+            this.notificationService.mostrarNotificacion(
+              `Configuración ${accion === 'activar' ? 'activada' : 'pausada'} exitosamente`,
+              'success'
+            );
             // Recargar datos y reabrir modal
             this.loadConfigs();
             setTimeout(() => dialogEl?.showModal(), 100);
           },
           error: (error) => {
             console.error(`Error al ${accion} configuración:`, error);
-            this.showErrorToast(`Error al ${accion} configuración`);
+            this.notificationService.mostrarNotificacion(
+              `Error al ${accion} configuración`,
+              'error'
+            );
             // Reabrir modal incluso si hay error
             setTimeout(() => dialogEl?.showModal(), 100);
           }
@@ -280,14 +288,20 @@ export class RendicionAutomaticaListComponent implements OnInit {
         // 3a. Usuario confirmó → Ejecutar acción
         this.rendicionService.forzarEnvio(config.id).subscribe({
           next: () => {
-            this.showSuccessToast('Rendición enviada exitosamente');
+            this.notificationService.mostrarNotificacion(
+              'Rendición enviada exitosamente',
+              'success'
+            );
             // Recargar datos y reabrir modal
             this.loadConfigs();
             setTimeout(() => dialogEl?.showModal(), 100);
           },
           error: (error) => {
             console.error('Error forzando envío:', error);
-            this.showErrorToast('Error al forzar envío');
+            this.notificationService.mostrarNotificacion(
+              'Error al forzar envío',
+              'error'
+            );
             // Reabrir modal incluso si hay error
             setTimeout(() => dialogEl?.showModal(), 100);
           }
@@ -319,14 +333,20 @@ export class RendicionAutomaticaListComponent implements OnInit {
         // 3a. Usuario confirmó → Ejecutar acción
         this.rendicionService.delete(config.id).subscribe({
           next: () => {
-            this.showSuccessToast('Configuración eliminada exitosamente');
+            this.notificationService.mostrarNotificacion(
+              'Configuración eliminada exitosamente',
+              'success'
+            );
             // Recargar datos y reabrir modal
             this.loadConfigs();
             setTimeout(() => dialogEl?.showModal(), 100);
           },
           error: (error) => {
             console.error('Error eliminando configuración:', error);
-            this.showErrorToast('Error al eliminar configuración');
+            this.notificationService.mostrarNotificacion(
+              'Error al eliminar configuración',
+              'error'
+            );
             // Reabrir modal incluso si hay error
             setTimeout(() => dialogEl?.showModal(), 100);
           }
@@ -483,40 +503,5 @@ export class RendicionAutomaticaListComponent implements OnInit {
 
   onConfigUpdated(): void {
     this.loadConfigs();
-  }
-
-  // Toast notifications
-  private showSuccessToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-success shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.parentNode?.removeChild(toast), 4000);
-  }
-
-  private showErrorToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-error shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.parentNode?.removeChild(toast), 4000);
   }
 }

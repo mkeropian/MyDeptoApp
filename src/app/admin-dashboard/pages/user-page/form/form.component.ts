@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { UsuariosService } from '../../../../auth/services/users.service';
 import { CreateUserRequest, User } from '../../../../auth/interfaces/user.interface';
+import { NotificationService } from '../../../../shared/services/notification.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -41,6 +42,7 @@ export class FormComponent {
 
   router = inject(Router);
   usersService = inject(UsuariosService);
+  private notificationService = inject(NotificationService);
 
   rolesResource = rxResource({
     request:() => ({}),
@@ -74,7 +76,10 @@ export class FormComponent {
       // Validar tipo de archivo
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.type)) {
-        this.showErrorToast('Tipo de archivo no permitido. Use JPG, PNG o GIF.');
+        this.notificationService.mostrarNotificacion(
+          'Tipo de archivo no permitido. Use JPG, PNG o GIF.',
+          'error'
+        );
         input.value = '';
         this.selectedFile.set(null);
         this.avatarPreview.set('');
@@ -84,7 +89,10 @@ export class FormComponent {
       // Validar tamaño (4MB máximo)
       const maxSize = 4 * 1024 * 1024;
       if (file.size > maxSize) {
-        this.showErrorToast('El archivo es demasiado grande. Máximo 4MB permitido.');
+        this.notificationService.mostrarNotificacion(
+          'El archivo es demasiado grande. Máximo 4MB permitido.',
+          'error'
+        );
         input.value = '';
         this.selectedFile.set(null);
         this.avatarPreview.set('');
@@ -153,7 +161,10 @@ export class FormComponent {
         },
         error: (error) => {
           console.error('Error al crear usuario:', error);
-          this.showErrorToast('Error al crear el usuario');
+          this.notificationService.mostrarNotificacion(
+            'Error al crear el usuario',
+            'error'
+          );
           this.isUploading.set(false);
         }
       });
@@ -187,7 +198,7 @@ export class FormComponent {
    */
   private handleSuccess(message: string): void {
     this.resetForm();
-    this.showSuccessToast(message);
+    this.notificationService.mostrarNotificacion(message, 'success');
     this.usuarioCreado.emit();
     this.isUploading.set(false);
   }
@@ -217,58 +228,6 @@ export class FormComponent {
     if (fileInput) {
       fileInput.value = '';
     }
-  }
-
-  /**
-   * Muestra un toast de éxito
-   */
-  private showSuccessToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-success shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
-  }
-
-  /**
-   * Muestra un toast de error
-   */
-  private showErrorToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 70; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-error shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 4000);
   }
 
   /**

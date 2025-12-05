@@ -5,6 +5,7 @@ import { UsuariosService } from '../../../../auth/services/users.service';
 import { PropietariosService } from '../../../../propietarios/services/propietarios.service';
 import { User } from '../../../../auth/interfaces/user.interface';
 import { Propietario } from '../../../../propietarios/interfaces/propietario.interface';
+import { NotificationService } from '../../../../shared/services/notification.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -18,6 +19,7 @@ export class VincularDesdeUsuarioModalComponent implements OnInit {
   private fb = inject(FormBuilder);
   private usuariosService = inject(UsuariosService);
   private propietariosService = inject(PropietariosService);
+  private notificationService = inject(NotificationService);
 
   vinculacionRealizada = output<void>();
 
@@ -135,13 +137,19 @@ export class VincularDesdeUsuarioModalComponent implements OnInit {
   // Submit del formulario
   async onSubmit(): Promise<void> {
     if (this.vinculacionForm.invalid) {
-      this.showErrorToast('Debe seleccionar un propietario');
+      this.notificationService.mostrarNotificacion(
+        'Debe seleccionar un propietario',
+        'error'
+      );
       return;
     }
 
     const usuario = this.usuarioSeleccionado();
     if (!usuario) {
-      this.showErrorToast('No hay usuario seleccionado');
+      this.notificationService.mostrarNotificacion(
+        'No hay usuario seleccionado',
+        'error'
+      );
       return;
     }
 
@@ -222,7 +230,10 @@ export class VincularDesdeUsuarioModalComponent implements OnInit {
     this.usuariosService.vincularPropietario(usuario.id, idPropietario).subscribe({
       next: (response) => {
         Swal.close();
-        this.showSuccessToast('Vinculación realizada exitosamente');
+        this.notificationService.mostrarNotificacion(
+          'Vinculación realizada exitosamente',
+          'success'
+        );
         this.close();
         this.vinculacionRealizada.emit();
         this.cargarDatos(); // Recargar para actualizar disponibilidad
@@ -270,7 +281,10 @@ export class VincularDesdeUsuarioModalComponent implements OnInit {
   async desvincular(): Promise<void> {
     const usuario = this.usuarioSeleccionado();
     if (!usuario || !usuario.propietarioId) {
-      this.showErrorToast('No hay propietario vinculado');
+      this.notificationService.mostrarNotificacion(
+        'No hay propietario vinculado',
+        'error'
+      );
       return;
     }
 
@@ -335,7 +349,10 @@ export class VincularDesdeUsuarioModalComponent implements OnInit {
     this.usuariosService.desvincularPropietario(usuario.id).subscribe({
       next: () => {
         Swal.close();
-        this.showSuccessToast('Propietario desvinculado exitosamente');
+        this.notificationService.mostrarNotificacion(
+          'Propietario desvinculado exitosamente',
+          'success'
+        );
         this.close();
         this.vinculacionRealizada.emit();
         this.cargarDatos();
@@ -343,43 +360,11 @@ export class VincularDesdeUsuarioModalComponent implements OnInit {
       error: (error) => {
         console.error('Error desvinculando:', error);
         Swal.close();
-        this.showErrorToast(error.error?.msg || 'Error al desvincular');
+        this.notificationService.mostrarNotificacion(
+          error.error?.msg || 'Error al desvincular',
+          'error'
+        );
       }
     });
-  }
-
-  // Toasts
-  private showSuccessToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-success shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.parentNode?.removeChild(toast), 4000);
-  }
-
-  private showErrorToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-error shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.parentNode?.removeChild(toast), 4000);
   }
 }

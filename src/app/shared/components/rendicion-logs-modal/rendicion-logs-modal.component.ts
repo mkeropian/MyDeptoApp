@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RendicionAutomaticaService } from '../../services/rendicion-automatica.service';
 import { RendicionEnvioLog } from '../../interfaces/rendicion-automatica.interface';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-rendicion-logs-modal',
@@ -19,6 +20,7 @@ import { RendicionEnvioLog } from '../../interfaces/rendicion-automatica.interfa
 export class RendicionLogsModalComponent {
 
   private rendicionService = inject(RendicionAutomaticaService);
+  private notificationService = inject(NotificationService);
 
   @ViewChild('dialogEl') dialogEl!: ElementRef<HTMLDialogElement>;
 
@@ -74,7 +76,7 @@ export class RendicionLogsModalComponent {
       },
       error: (error) => {
         console.error('Error cargando logs:', error);
-        this.showErrorToast('Error al cargar historial');
+        this.notificationService.mostrarNotificacion('Error al cargar historial', 'error');
         this.isLoading.set(false);
       }
     });
@@ -153,23 +155,5 @@ export class RendicionLogsModalComponent {
     const finStr = fin.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
     return `${inicioStr} - ${finStr}`;
-  }
-
-  // Toasts
-  private showErrorToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-error shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.parentNode?.removeChild(toast), 4000);
   }
 }

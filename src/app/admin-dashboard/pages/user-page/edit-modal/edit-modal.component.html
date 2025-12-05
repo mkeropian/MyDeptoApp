@@ -1,0 +1,240 @@
+<dialog id="edit_usuario_modal" class="modal">
+  <div class="modal-box w-11/12 max-w-4xl bg-blue-50 px-10 py-6">
+
+    <!-- Header con tonalidad azul -->
+    <div class="border-b border-blue-200 pb-3 mb-4">
+      <h3 class="font-bold text-xl text-blue-900">Editar Usuario</h3>
+      <p class="text-sm text-blue-700 mt-1">Modifique la información del usuario</p>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+
+      <!-- Layout: 70% izquierda + 30% derecha -->
+      <div class="flex gap-6">
+
+        <!-- COLUMNA IZQUIERDA - 70% -->
+        <div class="flex-[0_0_70%] space-y-3">
+
+          <!-- Usuario y Email en 2 columnas -->
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Usuario -->
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text font-semibold text-blue-900">Usuario (código)</span>
+              </div>
+              <input
+                type="text"
+                class="input input-bordered w-full bg-white"
+                [class.input-error]="editForm.get('usuario')?.invalid && (editForm.get('usuario')?.dirty || editForm.get('usuario')?.touched)"
+                placeholder="MK"
+                formControlName="usuario"
+              />
+              <form-error-label [control]="editForm.get('usuario')!" />
+            </label>
+
+            <!-- Email -->
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text font-semibold text-blue-900">Email</span>
+              </div>
+              <input
+                type="email"
+                class="input input-bordered w-full bg-white"
+                [class.input-error]="editForm.get('email')?.invalid && (editForm.get('email')?.dirty || editForm.get('email')?.touched)"
+                placeholder="usuario@email.com"
+                formControlName="email"
+              />
+              <form-error-label [control]="editForm.get('email')!" />
+            </label>
+          </div>
+
+          <!-- Nombre Completo - ancho completo -->
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-blue-900">Nombre Completo</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered w-full bg-white"
+              [class.input-error]="editForm.get('nombreCompleto')?.invalid && (editForm.get('nombreCompleto')?.dirty || editForm.get('nombreCompleto')?.touched)"
+              placeholder="Juan Pérez"
+              formControlName="nombreCompleto"
+            />
+            <form-error-label [control]="editForm.get('nombreCompleto')!" />
+          </label>
+
+          <!-- Rol y Tema en 2 columnas -->
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Rol -->
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text font-semibold text-blue-900">Rol</span>
+              </div>
+              <select
+                class="select select-bordered w-full bg-white"
+                [class.select-error]="editForm.get('rolId')?.invalid && (editForm.get('rolId')?.dirty || editForm.get('rolId')?.touched)"
+                formControlName="rolId"
+                title="Rol"
+              >
+                <option value="0">Seleccione el Rol</option>
+                @if (rolesResource.isLoading()) {
+                  <option disabled>Cargando Roles...</option>
+                } @else {
+                  @for (rol of roles(); track rol.id) {
+                    <option [value]="rol.id">
+                      {{ rol.nombre }}
+                      @if (rol.descripcion) {
+                        - {{ rol.descripcion }}
+                      }
+                    </option>
+                  }
+                }
+              </select>
+              <form-error-label [control]="editForm.get('rolId')!" />
+            </label>
+
+            <!-- Tema -->
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text font-semibold text-blue-900">Tema</span>
+              </div>
+              <select
+                class="select select-bordered w-full bg-white"
+                formControlName="tema"
+                title="Tema"
+              >
+                <option value="light">Light (Claro)</option>
+                <option value="dark">Dark (Oscuro)</option>
+                <option value="cupcake">Cupcake</option>
+                <option value="bumblebee">Bumblebee</option>
+                <option value="emerald">Emerald</option>
+                <option value="corporate">Corporate</option>
+                <option value="synthwave">Synthwave</option>
+                <option value="retro">Retro</option>
+                <option value="cyberpunk">Cyberpunk</option>
+                <option value="valentine">Valentine</option>
+                <option value="halloween">Halloween</option>
+                <option value="garden">Garden</option>
+                <option value="forest">Forest</option>
+                <option value="aqua">Aqua</option>
+                <option value="lofi">Lofi</option>
+                <option value="pastel">Pastel</option>
+                <option value="fantasy">Fantasy</option>
+                <option value="wireframe">Wireframe</option>
+                <option value="black">Black</option>
+                <option value="luxury">Luxury</option>
+                <option value="dracula">Dracula</option>
+                <option value="cmyk">CMYK</option>
+                <option value="autumn">Autumn</option>
+                <option value="business">Business</option>
+                <option value="acid">Acid</option>
+                <option value="lemonade">Lemonade</option>
+                <option value="night">Night</option>
+                <option value="coffee">Coffee</option>
+                <option value="winter">Winter</option>
+                <option value="dim">Dim</option>
+                <option value="nord">Nord</option>
+                <option value="sunset">Sunset</option>
+              </select>
+            </label>
+          </div>
+
+        </div>
+
+        <!-- COLUMNA DERECHA - 30% -->
+        <div class="flex-[0_0_30%] border-l-2 border-blue-200 pl-4 pr-2">
+          <div class="flex flex-col gap-4">
+            <h2 class="text-lg font-bold text-center text-blue-900">Avatar del Usuario</h2>
+
+            <!-- Preview del avatar -->
+            <div class="w-full">
+              <div class="flex justify-center mb-4">
+                <div class="avatar">
+                  <div class="w-40 h-40 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                    <img
+                      [src]="avatarPreview() || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik01MCA3NEM2MS4wNDU3IDc0IDcwIDY1LjA0NTcgNzAgNTRDNzAgNDIuOTU0MyA2MS4wNDU3IDM0IDUwIDM0QzM4Ljk1NDMgMzQgMzAgNDIuOTU0MyAzMCA1NEMzMCA2NS4wNDU3IDM4Ljk1NDMgNzQgNTAgNzRaIiBmaWxsPSIjOUI5REEwIi8+CjxwYXRoIGQ9Ik01MCA0OEM1My4zMTM3IDQ4IDU2IDQ1LjMxMzcgNTYgNDJDNTYgMzguNjg2MyA1My4zMTM3IDM2IDUwIDM2QzQ2LjY4NjMgMzYgNDQgMzguNjg2MyA0NCA0MkM0NCA0NS4zMTM3IDQ2LjY4NjMgNDggNTAgNDhaIiBmaWxsPSIjRjNGNEY2Ii8+Cjwvc3ZnPgo='"
+                      alt="Avatar preview"
+                      class="object-cover"
+                      (error)="onImageError($event)"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-center text-sm text-base-content/70 mb-4 px-2">
+                {{ selectedFile() ? selectedFile()!.name : 'Avatar actual' }}
+              </p>
+
+              <!-- Botón para seleccionar archivo -->
+              <div class="flex flex-col gap-2">
+                <label for="avatarEditInput" class="btn btn-sm btn-primary w-full">
+                  <i class="fas fa-upload mr-2"></i>
+                  Seleccionar nueva imagen
+                </label>
+
+                @if (selectedFile()) {
+                  <button type="button" class="btn btn-sm btn-error btn-outline w-full" (click)="removeAvatar()">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancelar cambio
+                  </button>
+                }
+              </div>
+
+              <input
+                id="avatarEditInput"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                (change)="onFileSelected($event)"
+                #fileInput
+              />
+            </div>
+
+            <!-- Información adicional -->
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle"></i>
+              <div>
+                <h4 class="font-bold text-sm">Consejos:</h4>
+                <div class="text-xs mt-1 leading-relaxed">
+                  • Imágenes cuadradas<br>
+                  • 200x200 píxeles<br>
+                  • Máximo 5MB<br>
+                  • Formatos: JPG, PNG, GIF
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="modal-action mt-6">
+        <button type="button" class="btn btn-ghost" (click)="close()">
+          <i class="fas fa-times mr-2"></i>
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="btn bg-blue-600 hover:bg-blue-700 text-white"
+          [disabled]="isUploading()"
+        >
+          @if (isUploading()) {
+            <span class="loading loading-spinner loading-sm mr-2"></span>
+            Guardando...
+          } @else {
+            <i class="fa-solid fa-save mr-2"></i>
+            Guardar Cambios
+          }
+        </button>
+      </div>
+    </form>
+
+  </div>
+
+  <!-- Backdrop para cerrar el modal -->
+  <form method="dialog" class="modal-backdrop">
+    <button type="button" (click)="close()">close</button>
+  </form>
+</dialog>

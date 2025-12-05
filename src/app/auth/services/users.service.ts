@@ -114,4 +114,15 @@ export class UsuariosService {
   getVinculaciones(): Observable<any> {
     return this.http.get(`${baseUrl}/usuarios/vinculaciones/all`);
   }
+
+  // Actualizar usuario completo
+  updateUsuario(id: number, usuario: Partial<User>): Observable<User> {
+    return this.http.post<User>(`${baseUrl}/usuarios/${id}`, usuario);
+  }
+
+  // Actualizar contraseña de usuario
+  updateClave(id: number, claveData: { clave: string }): Observable<any> {
+    return this.http.post(`${baseUrl}/usuarios/clave/${id}`, claveData);
+  }
+
 }

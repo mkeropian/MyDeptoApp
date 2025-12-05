@@ -6,6 +6,7 @@ import { RendicionAutomaticaService } from '../../services/rendicion-automatica.
 import { PropietariosService } from '../../../propietarios/services/propietarios.service';
 import { DepartamentosService } from '../../../departamentos/services/departamentos.service';
 import { AuthService } from '../../../auth/services/auth.service';
+import { NotificationService } from '../../services/notification.service';
 import {
   CreateRendicionAutomaticaRequest,
   UpdateRendicionAutomaticaRequest,
@@ -36,6 +37,7 @@ export class RendicionAutomaticaModalComponent implements OnInit {
   private propietariosService = inject(PropietariosService);
   private departamentosService = inject(DepartamentosService);
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
 
   @ViewChild('dialogEl') dialogEl!: ElementRef<HTMLDialogElement>;
 
@@ -148,7 +150,7 @@ export class RendicionAutomaticaModalComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error cargando datos iniciales:', error);
-        this.showErrorToast('Error al cargar datos iniciales');
+        this.notificationService.mostrarNotificacion('Error al cargar datos iniciales', 'error');
         this.isLoading.set(false);
       }
     });
@@ -170,7 +172,7 @@ export class RendicionAutomaticaModalComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error cargando departamentos por propietario:', error);
-        this.showErrorToast('Error al cargar departamentos del propietario');
+        this.notificationService.mostrarNotificacion('Error al cargar departamentos del propietario', 'error');
       }
     });
   }
@@ -283,7 +285,7 @@ export class RendicionAutomaticaModalComponent implements OnInit {
   onSubmit(): void {
     if (!this.wizardForm.valid) {
       this.markFormGroupTouched();
-      this.showErrorToast('Por favor complete todos los campos requeridos');
+      this.notificationService.mostrarNotificacion('Por favor complete todos los campos requeridos', 'error');
       return;
     }
 
@@ -333,14 +335,14 @@ export class RendicionAutomaticaModalComponent implements OnInit {
 
     this.rendicionService.create(data).subscribe({
       next: () => {
-        this.showSuccessToast('Configuración creada exitosamente');
+        this.notificationService.mostrarNotificacion('Configuración creada exitosamente', 'success');
         this.configCreated.emit();
         this.close();
         this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Error creando configuración:', error);
-        this.showErrorToast(error.error?.msg || 'Error al crear configuración');
+        this.notificationService.mostrarNotificacion(error.error?.msg || 'Error al crear configuración', 'error');
         this.isLoading.set(false);
       }
     });
@@ -355,14 +357,14 @@ export class RendicionAutomaticaModalComponent implements OnInit {
 
     this.rendicionService.update(editingConfig.id, updateData).subscribe({
       next: () => {
-        this.showSuccessToast('Configuración actualizada exitosamente');
+        this.notificationService.mostrarNotificacion('Configuración actualizada exitosamente', 'success');
         this.configUpdated.emit();
         this.close();
         this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Error actualizando configuración:', error);
-        this.showErrorToast(error.error?.msg || 'Error al actualizar configuración');
+        this.notificationService.mostrarNotificacion(error.error?.msg || 'Error al actualizar configuración', 'error');
         this.isLoading.set(false);
       }
     });
@@ -372,40 +374,5 @@ export class RendicionAutomaticaModalComponent implements OnInit {
     Object.keys(this.wizardForm.controls).forEach(key => {
       this.wizardForm.get(key)?.markAsTouched();
     });
-  }
-
-  // Toasts
-  private showSuccessToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-success shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.parentNode?.removeChild(toast), 4000);
-  }
-
-  private showErrorToast(message: string): void {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; top: 4rem; right: 1rem; z-index: 9999; max-width: 24rem;';
-    toast.innerHTML = `
-      <div class="alert alert-error shadow-lg">
-        <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm">${message}</span>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.parentNode?.removeChild(toast), 4000);
   }
 }

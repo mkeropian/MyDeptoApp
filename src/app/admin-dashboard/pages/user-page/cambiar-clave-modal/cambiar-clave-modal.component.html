@@ -1,0 +1,157 @@
+<!-- Modal de Cambio de Clave -->
+<dialog id="cambiar_clave_modal" class="modal">
+  <div class="modal-box w-11/12 max-w-md bg-base-100">
+
+    <!-- Header -->
+    <div class="border-b border-base-300 pb-4 mb-4">
+      <h3 class="font-bold text-2xl flex items-center gap-2">
+        <i class="fas fa-key text-warning"></i>
+        Cambiar Contraseña
+      </h3>
+      @if (usuarioSeleccionado()) {
+        <div class="mt-3 bg-base-200 rounded-lg p-3">
+          <p class="text-sm">
+            <i class="fas fa-user text-info mr-2"></i>
+            <strong>Usuario:</strong> {{ usuarioSeleccionado()!.nombreCompleto }}
+          </p>
+          <p class="text-sm mt-1">
+            <i class="fas fa-id-badge text-info mr-2"></i>
+            <strong>Código:</strong> {{ usuarioSeleccionado()!.usuario }}
+          </p>
+        </div>
+      }
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="claveForm" (ngSubmit)="onSubmit()">
+
+      <!-- Contraseña Nueva -->
+      <div class="form-control mb-4">
+        <label class="label">
+          <span class="label-text font-semibold">
+            <i class="fas fa-lock mr-2"></i>
+            Nueva Contraseña
+          </span>
+        </label>
+        <div class="relative">
+          <input
+            [type]="showPassword() ? 'text' : 'password'"
+            class="input input-bordered w-full pr-10"
+            [class.input-error]="claveForm.get('claveNueva')?.invalid && claveForm.get('claveNueva')?.touched"
+            placeholder="Ingrese la nueva contraseña"
+            formControlName="claveNueva"
+          />
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm btn-circle absolute right-2 top-1/2 -translate-y-1/2"
+            (click)="togglePasswordVisibility()"
+            title="Mostrar/Ocultar"
+          >
+            <i [class]="showPassword() ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+        </div>
+        @if (claveForm.get('claveNueva')?.invalid && claveForm.get('claveNueva')?.touched) {
+          <label class="label">
+            <span class="label-text-alt text-error">
+              <i class="fas fa-exclamation-circle mr-1"></i>
+              @if (claveForm.get('claveNueva')?.errors?.['required']) {
+                La contraseña es requerida
+              }
+              @if (claveForm.get('claveNueva')?.errors?.['minlength']) {
+                Mínimo 6 caracteres
+              }
+            </span>
+          </label>
+        }
+      </div>
+
+      <!-- Confirmar Contraseña -->
+      <div class="form-control mb-4">
+        <label class="label">
+          <span class="label-text font-semibold">
+            <i class="fas fa-lock mr-2"></i>
+            Confirmar Nueva Contraseña
+          </span>
+        </label>
+        <div class="relative">
+          <input
+            [type]="showConfirmPassword() ? 'text' : 'password'"
+            class="input input-bordered w-full pr-10"
+            [class.input-error]="claveForm.get('claveConfirmar')?.invalid && claveForm.get('claveConfirmar')?.touched"
+            placeholder="Confirme la nueva contraseña"
+            formControlName="claveConfirmar"
+          />
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm btn-circle absolute right-2 top-1/2 -translate-y-1/2"
+            (click)="toggleConfirmPasswordVisibility()"
+            title="Mostrar/Ocultar"
+          >
+            <i [class]="showConfirmPassword() ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+        </div>
+        @if (claveForm.get('claveConfirmar')?.invalid && claveForm.get('claveConfirmar')?.touched) {
+          <label class="label">
+            <span class="label-text-alt text-error">
+              <i class="fas fa-exclamation-circle mr-1"></i>
+              @if (claveForm.get('claveConfirmar')?.errors?.['required']) {
+                Debe confirmar la contraseña
+              }
+            </span>
+          </label>
+        }
+        @if (claveForm.errors?.['passwordMismatch'] && claveForm.get('claveConfirmar')?.touched) {
+          <label class="label">
+            <span class="label-text-alt text-error">
+              <i class="fas fa-exclamation-circle mr-1"></i>
+              Las contraseñas no coinciden
+            </span>
+          </label>
+        }
+      </div>
+
+      <!-- Información de seguridad -->
+      <div class="alert alert-warning mb-4">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div class="text-xs">
+          <p class="font-semibold">Requisitos de la contraseña:</p>
+          <ul class="list-disc list-inside mt-1">
+            <li>Mínimo 6 caracteres</li>
+            <li>Las contraseñas deben coincidir</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="modal-action">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          (click)="close()">
+          <i class="fas fa-times mr-2"></i>
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          class="btn btn-warning"
+          [disabled]="claveForm.invalid || isSubmitting()">
+          @if (isSubmitting()) {
+            <span class="loading loading-spinner loading-sm mr-2"></span>
+            Cambiando...
+          } @else {
+            <i class="fas fa-key mr-2"></i>
+            Cambiar Contraseña
+          }
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+
+  <!-- Backdrop -->
+  <form method="dialog" class="modal-backdrop">
+    <button type="button" (click)="close()">close</button>
+  </form>
+</dialog>
