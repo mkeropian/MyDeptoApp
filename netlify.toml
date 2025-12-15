@@ -10,9 +10,16 @@
 [build.environment]
   NODE_VERSION = "20"
   NPM_VERSION = "10"
-```
 
-#### **3.5 - `.npmrc` para ambos proyectos**
-```
-engine-strict=false
-legacy-peer-deps=false
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
