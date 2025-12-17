@@ -13,6 +13,7 @@ import { Gasto } from '../../../gastos/interfaces/gasto.interface';
 import { Propietario } from '../../../propietarios/interfaces/propietario.interface';
 import { PropietariosService } from '../../../propietarios/services/propietarios.service';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { DashboardDataService } from '../../../shared/services/dashboard-data.service';
 
 // Interface para la operación extendida con datos del propietario
 interface DepartamentoConPropietario extends Departamento {
@@ -47,6 +48,7 @@ export class DashboardDepartamentosPageComponent {
   pagosService = inject(PagosService);
   gastosService = inject(GastosService);
   notificationService = inject(NotificationService);
+  dashboardDataService = inject(DashboardDataService);
 
   formBuilder = inject(FormBuilder);
 
@@ -267,6 +269,10 @@ export class DashboardDepartamentosPageComponent {
           next: (pago) => {
             console.log('Pago creado:', pago);
             this.notificationService.mostrarNotificacion('Ingreso registrado exitosamente', 'success');
+
+            // NUEVO: Disparar actualización del dashboard
+            this.dashboardDataService.triggerRefresh();
+
             this.closeModal();
           },
           error: (error) => {
@@ -289,6 +295,10 @@ export class DashboardDepartamentosPageComponent {
           next: (gasto) => {
             console.log('Gasto creado:', gasto);
             this.notificationService.mostrarNotificacion('Gasto registrado exitosamente', 'success');
+
+            // NUEVO: Disparar actualización del dashboard
+            this.dashboardDataService.triggerRefresh();
+
             this.closeModal();
           },
           error: (error) => {

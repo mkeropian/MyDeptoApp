@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EstadisticasReportesService } from '../../../estadisticasReportes/services/estadisticasReportes.service';
 import { PagoGrid } from '../../../incomes/interfaces/incomes.interface';
@@ -6,6 +6,7 @@ import { GastoGrid } from '../../../gastos/interfaces/gasto.interface';
 import { rendDepGrid, rendPropGrid } from '../../../estadisticasReportes/interfaces/estadisticasReportes.interface';
 import { forkJoin } from 'rxjs';
 import { SafeCurrencyPipe } from '../../../estadisticasReportes/pipes/safe-number.pipe';
+import { DashboardDataService } from '../../services/dashboard-data.service';
 
 
 @Component({
@@ -15,7 +16,8 @@ import { SafeCurrencyPipe } from '../../../estadisticasReportes/pipes/safe-numbe
 })
 export class FooterCardComponent implements OnInit {
 
-  constructor(private estadisticasService: EstadisticasReportesService) {}
+  private estadisticasService = inject(EstadisticasReportesService);
+  private dashboardDataService = inject(DashboardDataService);
 
   // Propiedades para mostrar en el template
   topDepartmentByRevenue = {
@@ -43,7 +45,19 @@ export class FooterCardComponent implements OnInit {
   monthlyHonorarios = 0;
   loading = true;
 
+  constructor() {
+    // Effect que escucha cambios en el signal y recarga los datos
+    effect(() => {
+      // Leer el signal para registrar la dependencia
+      this.dashboardDataService.dataChange();
+
+      // Recargar datos cuando el signal cambia
+      this.loadData();
+    });
+  }
+
   ngOnInit() {
+    // Carga inicial de datos
     this.loadData();
   }
 

@@ -5,6 +5,7 @@ import { DepartamentosService } from '../../../../departamentos/services/departa
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormErrorLabelComponent } from '../../../../shared/components/form-error-label/form-error-label.component';
 import { NotificationService } from '../../../../shared/services/notification.service';
+import { DashboardDataService } from '../../../../shared/services/dashboard-data.service';
 import Swal from 'sweetalert2';
 import { GastoGrid } from '../../../../gastos/interfaces/gasto.interface';
 
@@ -24,6 +25,7 @@ export class EditModalComponent {
   private gastosService = inject(GastosService);
   private departamentosService = inject(DepartamentosService);
   private notificationService = inject(NotificationService);
+  private dashboardDataService = inject(DashboardDataService);
 
   isOpen = signal(false);
   gastoActual = signal<GastoGrid | null>(null);
@@ -164,6 +166,10 @@ export class EditModalComponent {
       next: () => {
         this.notificationService.mostrarNotificacion('Gasto actualizado exitosamente', 'success');
         this.gastoActualizado.emit();
+
+        // NUEVO: Disparar actualización del dashboard
+        this.dashboardDataService.triggerRefresh();
+
         this.close();
       },
       error: (error) => {

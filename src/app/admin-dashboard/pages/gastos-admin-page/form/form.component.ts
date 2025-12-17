@@ -7,6 +7,7 @@ import { DepartamentosService } from '../../../../departamentos/services/departa
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormErrorLabelComponent } from '../../../../shared/components/form-error-label/form-error-label.component';
 import { NotificationService } from '../../../../shared/services/notification.service';
+import { DashboardDataService } from '../../../../shared/services/dashboard-data.service';
 import Swal from 'sweetalert2';
 import { forkJoin } from 'rxjs';
 
@@ -36,6 +37,7 @@ export class FormComponent implements OnInit {
   gastosService = inject(GastosService);
   departamentosService = inject(DepartamentosService);
   notificationService = inject(NotificationService);
+  dashboardDataService = inject(DashboardDataService);
 
   departamentosResource = rxResource({
     request: () => ({}),
@@ -151,6 +153,9 @@ export class FormComponent implements OnInit {
 
         // Emitir evento para refrescar la lista
         this.gastoCreado.emit();
+
+        // NUEVO: Disparar actualización del dashboard
+        this.dashboardDataService.triggerRefresh();
 
         // Mostrar mensaje de éxito
         this.notificationService.mostrarNotificacion(

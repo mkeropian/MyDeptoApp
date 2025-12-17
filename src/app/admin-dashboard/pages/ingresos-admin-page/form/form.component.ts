@@ -2,6 +2,7 @@ import { Component, computed, inject, OnInit, Output, EventEmitter } from '@angu
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormErrorLabelComponent } from '../../../../shared/components/form-error-label/form-error-label.component';
 import { NotificationService } from '../../../../shared/services/notification.service';
+import { DashboardDataService } from '../../../../shared/services/dashboard-data.service';
 import { Pago } from '../../../../incomes/interfaces/incomes.interface';
 import { Router } from '@angular/router';
 import { PagosService } from '../../../../incomes/services/incomes.service';
@@ -33,6 +34,7 @@ export class FormComponent implements OnInit {
   pagosService = inject(PagosService);
   departamentosService = inject(DepartamentosService);
   notificationService = inject(NotificationService);
+  dashboardDataService = inject(DashboardDataService);
 
   departamentosResource = rxResource({
     request: () => ({}),
@@ -148,6 +150,9 @@ export class FormComponent implements OnInit {
 
         // Emitir evento para refrescar la lista
         this.pagoCreado.emit();
+
+        // NUEVO: Disparar actualización del dashboard
+        this.dashboardDataService.triggerRefresh();
 
         // Mostrar mensaje de éxito
         this.notificationService.mostrarNotificacion(
