@@ -41,9 +41,10 @@ export class FormComponent implements OnInit {
     loader: () => this.departamentosService.getDepartamentosActivos()
   });
 
+  // MODIFICADO: Usar getTipoPagoActivos() en lugar de getTipoPago()
   tipoPagoResource = rxResource({
     request: () => ({}),
-    loader: () => this.pagosService.getTipoPago()
+    loader: () => this.pagosService.getTipoPagoActivos()
   });
 
   tipoPagos = computed(() => this.tipoPagoResource.value() || []);

@@ -35,9 +35,10 @@ export class EditModalComponent {
     loader: () => this.departamentosService.getDepartamentosActivos()
   });
 
+  // MODIFICADO: Usar getTipoGastoActivos() en lugar de getTipoGasto()
   tipoGastoResource = rxResource({
     request: () => ({}),
-    loader: () => this.gastosService.getTipoGasto()
+    loader: () => this.gastosService.getTipoGastoActivos()
   });
 
   tipoGastos = computed(() => this.tipoGastoResource.value() || []);

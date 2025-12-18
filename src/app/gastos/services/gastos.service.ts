@@ -14,6 +14,11 @@ export class GastosService {
     return this.http.get<TipoGasto[]>(`${baseUrl}/gastos/tipos`);
   }
 
+  // NUEVO: Obtener solo tipos de gasto activos
+  getTipoGastoActivos(){
+    return this.http.get<TipoGasto[]>(`${baseUrl}/gastos/tipos/activos`);
+  }
+
   getGastos() {
     return this.http.get<GastoGrid[]>(`${baseUrl}/gastos/all`);
   }

@@ -14,6 +14,11 @@ export class PagosService {
     return this.http.get<TipoPago[]>(`${baseUrl}/pagos/tipos`);
   }
 
+  // NUEVO: Obtener solo tipos de pago activos
+  getTipoPagoActivos(){
+    return this.http.get<TipoPago[]>(`${baseUrl}/pagos/tipos/activos`);
+  }
+
   getPagos() {
     return this.http.get<PagoGrid[]>(`${baseUrl}/pagos/all`);
   }

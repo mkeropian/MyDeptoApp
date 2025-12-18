@@ -79,14 +79,16 @@ export class DashboardDepartamentosPageComponent {
     loader: () => this.propietariosService.getPropietariosActivos()
   });
 
+  // MODIFICADO: Usar getTipoPagoActivos() en lugar de getTipoPago()
   tipoPagoResource = rxResource({
     request: () => ({}),
-    loader: () => this.pagosService.getTipoPago()
+    loader: () => this.pagosService.getTipoPagoActivos()
   });
 
+  // MODIFICADO: Usar getTipoGastoActivos() en lugar de getTipoGasto()
   tipoGastoResource = rxResource({
     request: () => ({}),
-    loader: () => this.gastosService.getTipoGasto()
+    loader: () => this.gastosService.getTipoGastoActivos()
   });
 
   constructor() {
