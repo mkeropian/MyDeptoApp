@@ -1,20 +1,30 @@
+// calendario-empleados/services/calendario.service.ts
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
-import { map, catchError, tap, switchMap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
-// Interfaces alineadas con el backend
+// ==================== INTERFACES ACTUALIZADAS ====================
+
 export interface EventoCalendario {
   id?: number;
   idTipoCalendario: number;
   idTipoEventoCalendario: number;
-  idDep: number;
-  idUser: number;
-  fecha: string; // formato YYYY-MM-DD
+  idDep?: number | null;
+  idUser?: number | null;
+  fecha_inicio: string; // formato YYYY-MM-DD
+  fecha_fin?: string | null; // formato YYYY-MM-DD
   horaInicio: string; // formato HH:MM:SS o HH:MM
   horaFin: string; // formato HH:MM:SS o HH:MM
-  observaciones?: string;
+  observaciones?: string | null;
+  // Campos nuevos para estadías
+  nombre_huesped?: string | null;
+  telefono_huesped?: string | null;
+  email_huesped?: string | null;
+  cantidad_personas?: number | null;
+  monto?: number | null;
 }
 
 export interface EventoCalendarioExtendido {
@@ -27,13 +37,20 @@ export interface EventoCalendarioExtendido {
   colorTipoEvento: string;
   idDepartamento: number;
   nombreDepartamento: string;
-  idUsuario: number;
-  codUsuario: string;
-  nombreCompletoUsuario: string;
+  idUsuario: number | null;
+  codUsuario: string | null;
+  nombreCompletoUsuario: string | null;
   fecha: string;
+  fechaFin: string | null;
   horaInicio: string;
   horaFin: string;
-  observaciones: string;
+  observaciones: string | null;
+  // Campos nuevos
+  nombreHuesped: string | null;
+  telefonoHuesped: string | null;
+  emailHuesped: string | null;
+  cantidadPersonas: number | null;
+  monto: string | null;
 }
 
 export interface TipoCalendario {
@@ -48,6 +65,7 @@ export interface TipoEventoCalendario {
   duracionMinutos: number;
   color: string;
   activo: boolean;
+  id_formulario?: number | null;
 }
 
 export interface Departamento {
@@ -92,6 +110,32 @@ export interface CalendarioUsuario {
   nameUser: string;
 }
 
+// ==================== NUEVAS INTERFACES PARA FORMULARIOS ====================
+
+export interface Formulario {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  activo: boolean;
+}
+
+export interface CampoFormulario {
+  id: number;
+  id_formulario: number;
+  nombre_campo: string;
+  tipo_campo: 'text' | 'textarea' | 'number' | 'date' | 'email' | 'tel' | 'select' | 'checkbox' | 'radio';
+  label: string;
+  placeholder: string;
+  requerido: boolean;
+  orden: number;
+  opciones: any | null;
+  activo: boolean;
+}
+
+export interface FormularioCompleto extends Formulario {
+  campos: CampoFormulario[];
+}
+
 export type VistaCalendario = 'dia' | 'semana' | 'mes';
 
 @Injectable({
@@ -101,6 +145,7 @@ export class CalendarioService {
   private apiUrl = `${environment.baseUrl}/calendar`;
   private usuariosUrl = `${environment.baseUrl}/usuarios`;
   private departamentosUrl = `${environment.baseUrl}/departamentos`;
+  private formulariosUrl = `${environment.baseUrl}/formularios`;
 
   private eventosSubject = new BehaviorSubject<EventoCalendarioExtendido[]>([]);
   private cargandoSubject = new BehaviorSubject<boolean>(false);
@@ -223,6 +268,26 @@ export class CalendarioService {
     );
   }
 
+  obtenerEventosPermitidosPorCalendario(idCalendario: number): Observable<TipoEventoCalendario[]> {
+    return this.http.get<TipoEventoCalendario[]>(
+      `${this.apiUrl}/calendarios/${idCalendario}/eventos-permitidos`
+    );
+  }
+
+  // ==================== NUEVO: OBTENER FORMULARIO POR TIPO DE EVENTO ====================
+
+  obtenerFormularioPorTipoEvento(idTipoEvento: number): Observable<FormularioCompleto | null> {
+    return this.http.get<FormularioCompleto | null>(
+      `${this.apiUrl}/tipos-evento/${idTipoEvento}/formulario`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener formulario por tipo de evento:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
   // ==================== USUARIOS ====================
 
   obtenerUsuariosActivos(): Observable<Usuario[]> {
@@ -277,81 +342,6 @@ export class CalendarioService {
     );
   }
 
-
-// ==================== FILTROS ====================
-
-  filtrarEventos(
-    eventos: EventoCalendarioExtendido[],
-    filtros: FiltrosCalendario
-  ): EventoCalendarioExtendido[] {
-    let eventosFiltrados = [...eventos];
-
-    // ✅ NUEVO - Filtrar por tipos de calendario permitidos
-    if (filtros.idsTipoCalendario && filtros.idsTipoCalendario.length > 0) {
-      eventosFiltrados = eventosFiltrados.filter(
-        evento => filtros.idsTipoCalendario!.includes(evento.idTipoCalendario)
-      );
-    }
-
-    if (filtros.idUsuario) {
-      eventosFiltrados = eventosFiltrados.filter(
-        evento => Number(evento.idUsuario) === Number(filtros.idUsuario)
-      );
-    }
-
-    if (filtros.idDepartamento) {
-      eventosFiltrados = eventosFiltrados.filter(
-        evento => Number(evento.idDepartamento) === Number(filtros.idDepartamento)
-      );
-    }
-
-    if (filtros.fechaInicio) {
-      eventosFiltrados = eventosFiltrados.filter(evento => {
-        const fechaEvento = evento.fecha.split('T')[0];
-        return fechaEvento >= filtros.fechaInicio!;
-      });
-    }
-
-    if (filtros.fechaFin) {
-      eventosFiltrados = eventosFiltrados.filter(evento => {
-        const fechaEvento = evento.fecha.split('T')[0];
-        return fechaEvento <= filtros.fechaFin!;
-      });
-    }
-
-    return eventosFiltrados;
-  }
-
-  obtenerEventosPorFecha(
-    eventos: EventoCalendarioExtendido[],
-    fecha: Date
-  ): EventoCalendarioExtendido[] {
-    const fechaStr = this.formatearFechaParaBackend(fecha);
-    const eventosDia = eventos.filter(evento => {
-      const fechaEvento = evento.fecha.split('T')[0];
-      return fechaEvento === fechaStr;
-    });
-
-    // Ordenar por hora de inicio
-    return eventosDia.sort((a, b) => {
-      return a.horaInicio.localeCompare(b.horaInicio);
-    });
-  }
-
-  obtenerEventosPorRango(
-    eventos: EventoCalendarioExtendido[],
-    fechaInicio: Date,
-    fechaFin: Date
-  ): EventoCalendarioExtendido[] {
-    const fechaInicioStr = this.formatearFechaParaBackend(fechaInicio);
-    const fechaFinStr = this.formatearFechaParaBackend(fechaFin);
-
-    return eventos.filter(evento => {
-      const fechaEvento = evento.fecha.split('T')[0];
-      return fechaEvento >= fechaInicioStr && fechaEvento <= fechaFinStr;
-    });
-  }
-
   // ==================== UTILIDADES ====================
 
   formatearFechaParaBackend(fecha: Date): string {
@@ -361,81 +351,44 @@ export class CalendarioService {
     return `${year}-${month}-${day}`;
   }
 
-  convertirFechaDesdeBackend(fechaStr: string): Date {
-    return new Date(fechaStr + 'T00:00:00');
+  parsearFechaDesdeBackend(fechaString: string): Date {
+    return new Date(fechaString);
   }
 
-  formatearHora(hora: string): string {
-    // Convertir HH:MM:SS a HH:MM
-    if (hora && hora.length >= 5) {
-      return hora.substring(0, 5);
-    }
-    return hora;
-  }
+  filtrarEventos(eventos: EventoCalendarioExtendido[], filtros: FiltrosCalendario): EventoCalendarioExtendido[] {
+    return eventos.filter(evento => {
+      if (filtros.idUsuario && evento.idUsuario !== filtros.idUsuario) {
+        return false;
+      }
 
-  validarEvento(evento: Partial<EventoCalendario>): string[] {
-    const errores: string[] = [];
+      if (filtros.idDepartamento && evento.idDepartamento !== filtros.idDepartamento) {
+        return false;
+      }
 
-    if (!evento.idTipoCalendario) {
-      errores.push('El tipo de calendario es requerido');
-    }
+      if (filtros.idsTipoCalendario && filtros.idsTipoCalendario.length > 0) {
+        if (!filtros.idsTipoCalendario.includes(evento.idTipoCalendario)) {
+          return false;
+        }
+      }
 
-    if (!evento.idTipoEventoCalendario) {
-      errores.push('El tipo de evento es requerido');
-    }
+      if (filtros.fechaInicio) {
+        const fechaEvento = new Date(evento.fecha);
+        const fechaInicio = new Date(filtros.fechaInicio);
+        if (fechaEvento < fechaInicio) {
+          return false;
+        }
+      }
 
-    if (!evento.idDep) {
-      errores.push('El departamento es requerido');
-    }
+      if (filtros.fechaFin) {
+        const fechaEvento = new Date(evento.fecha);
+        const fechaFin = new Date(filtros.fechaFin);
+        if (fechaEvento > fechaFin) {
+          return false;
+        }
+      }
 
-    if (!evento.idUser) {
-      errores.push('El usuario es requerido');
-    }
-
-    if (!evento.fecha) {
-      errores.push('La fecha es requerida');
-    }
-
-    if (!evento.horaInicio) {
-      errores.push('La hora de inicio es requerida');
-    }
-
-    if (!evento.horaFin) {
-      errores.push('La hora de fin es requerida');
-    }
-
-    if (evento.horaInicio && evento.horaFin && evento.horaInicio >= evento.horaFin) {
-      errores.push('La hora de fin debe ser posterior a la hora de inicio');
-    }
-
-    return errores;
-  }
-
-  obtenerEstadisticas(eventos: EventoCalendarioExtendido[]): {
-    totalEventos: number;
-    eventosPorTipo: { [tipo: string]: number };
-    eventosPorUsuario: { [usuario: string]: number };
-    eventosPorDepartamento: { [departamento: string]: number };
-  } {
-    const stats = {
-      totalEventos: eventos.length,
-      eventosPorTipo: {} as { [tipo: string]: number },
-      eventosPorUsuario: {} as { [usuario: string]: number },
-      eventosPorDepartamento: {} as { [departamento: string]: number }
-    };
-
-    eventos.forEach(evento => {
-      const tipo = evento.descripcionTipoEventoCalendario;
-      stats.eventosPorTipo[tipo] = (stats.eventosPorTipo[tipo] || 0) + 1;
-
-      const usuario = evento.nombreCompletoUsuario;
-      stats.eventosPorUsuario[usuario] = (stats.eventosPorUsuario[usuario] || 0) + 1;
-
-      const depto = evento.nombreDepartamento;
-      stats.eventosPorDepartamento[depto] = (stats.eventosPorDepartamento[depto] || 0) + 1;
+      return true;
     });
-
-    return stats;
   }
 
   limpiarCache(): void {
@@ -559,9 +512,6 @@ export class CalendarioService {
 
   // ==================== EXPORTACIÓN DE CALENDARIO ====================
 
-  /**
-  * Descargar calendario en formato Excel
-  */
   descargarCalendario(
     filtros: FiltrosCalendario,
     tipoArchivo: 'excel' | 'pdf' | 'imagen',
@@ -579,8 +529,6 @@ export class CalendarioService {
       userId
     };
 
-    console.log('📥 Descargando calendario...', { filtros, tipoArchivo, subtipoImagen, userRole, userId });
-
     return this.http.post(url, body, {
       responseType: 'blob',
       observe: 'response',
@@ -595,18 +543,15 @@ export class CalendarioService {
           throw new Error('No se recibieron datos del servidor');
         }
 
-        // Validar que NO sea un error JSON
         if (blob.type === 'application/json') {
           throw new Error('CORRUPT_BLOB_FOR_JSON_ERROR');
         }
 
-        console.log(`✅ Blob recibido: ${blob.size} bytes, tipo: ${blob.type}`);
         return blob;
       }),
       catchError((error: HttpErrorResponse) => {
-        console.error('❌ Error al descargar calendario:', error);
+        console.error('Error al descargar calendario:', error);
 
-        // Manejar error JSON dentro de Blob
         if (error.error instanceof Blob && error.error.type === 'application/json') {
           return new Observable<never>(observer => {
             const reader = new FileReader();
@@ -628,9 +573,6 @@ export class CalendarioService {
     );
   }
 
-  /**
- * Descargar archivo al navegador
- */
   downloadFile(blob: Blob, fileName: string): void {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -640,13 +582,8 @@ export class CalendarioService {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-
-    console.log(`✅ Archivo descargado: ${fileName}`);
   }
 
-  /**
-  * Enviar calendario por email
-  */
   enviarCalendarioPorEmail(
     filtros: FiltrosCalendario,
     tipoArchivo: 'excel' | 'pdf' | 'imagen',
@@ -666,16 +603,14 @@ export class CalendarioService {
       userId
     };
 
-    console.log('📧 Enviando calendario por email...', { ...body, subtipoImagen });
-
     return this.http.post<any>(url, body, {
       headers: this.getHeaders()
     }).pipe(
       tap(response => {
-        console.log('✅ Email enviado:', response);
+        console.log('Email enviado:', response);
       }),
       catchError((error: HttpErrorResponse) => {
-        console.error('❌ Error al enviar email:', error);
+        console.error('Error al enviar email:', error);
 
         let errorMessage = 'Error al enviar calendario por email';
 
@@ -689,6 +624,32 @@ export class CalendarioService {
           message: errorMessage,
           detalle: error.error?.detalle || error.message
         }));
+      })
+    );
+  }
+
+  // ==================== NUEVO: GESTIÓN DE FORMULARIOS ====================
+
+  obtenerFormularios(): Observable<Formulario[]> {
+    return this.http.get<Formulario[]>(
+      `${this.formulariosUrl}/all`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener formularios:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  obtenerFormularioCompleto(idFormulario: number): Observable<FormularioCompleto> {
+    return this.http.get<FormularioCompleto>(
+      `${this.formulariosUrl}/${idFormulario}/completo`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener formulario completo:', error);
+        return throwError(() => error);
       })
     );
   }
