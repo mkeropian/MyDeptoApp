@@ -378,7 +378,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         valorDefault = false;
       }
 
-      // NO tomar valor actual si es un campo nuevo que no existía antes
       const valorActual = this.eventoForm.get(campo.nombre_campo)?.value;
       const valorFinal = (valorActual !== undefined && valorActual !== null && valorActual !== '')
         ? valorActual
@@ -408,6 +407,30 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       console.log('🟡 [10] Poblando form para edición');
       this.poblarFormularioParaEdicion(this.eventoEditando);
     }
+
+    // ✅ IMPORTANTE: Re-suscribir al cambio de CALENDARIO
+    this.eventoForm.get('idTipoCalendario')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((nuevoIdCalendario) => {
+        console.log('🔄 [RECONSTRUIR] Calendario cambió a:', nuevoIdCalendario);
+
+        if (nuevoIdCalendario && nuevoIdCalendario !== idTipoCalendario) {
+          // Resetear estado
+          this.formularioActual = null;
+          this.camposFormularioActual = [];
+
+          // Recrear formulario básico
+          this.eventoForm = this.fb.group({
+            idTipoCalendario: [nuevoIdCalendario, Validators.required],
+            idTipoEventoCalendario: [{ value: '', disabled: true }, Validators.required]
+          });
+
+          console.log('🔄 Formulario reseteado - cargando eventos para calendario:', nuevoIdCalendario);
+
+          // Cargar eventos del nuevo calendario
+          this.cargarEventosPermitidos(Number(nuevoIdCalendario));
+        }
+      });
 
     // Re-suscribir al cambio de tipo de evento
     this.eventoForm.get('idTipoEventoCalendario')?.valueChanges
@@ -659,19 +682,56 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     console.log('🟢 Form básico creado');
 
     // Listener para cuando cambia el tipo de calendario
+
     this.eventoForm.get('idTipoCalendario')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe((idCalendario) => {
         console.log('🟡 idTipoCalendario cambió a:', idCalendario);
+
         if (idCalendario) {
+          // ✅ Resetear campos dinámicos antes de cargar nuevos eventos
+          this.formularioActual = null;
+          this.camposFormularioActual = [];
+
+          // ✅ Recrear el formulario desde cero con solo los 2 campos básicos
+          const idCalendarioActual = this.eventoForm.get('idTipoCalendario')?.value;
+
+          this.eventoForm = this.fb.group({
+            idTipoCalendario: [idCalendarioActual, Validators.required],
+            idTipoEventoCalendario: [{ value: '', disabled: true }, Validators.required]
+          });
+
+          // ✅ Re-suscribir al cambio de calendario (recursivo)
+          this.eventoForm.get('idTipoCalendario')?.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((nuevoIdCalendario) => {
+              if (nuevoIdCalendario && nuevoIdCalendario !== idCalendario) {
+                console.log('🔄 Calendario cambió nuevamente a:', nuevoIdCalendario);
+                // Cargar eventos del nuevo calendario
+                this.cargarEventosPermitidos(Number(nuevoIdCalendario));
+              }
+            });
+
+          console.log('🔄 Formulario reseteado a estado básico');
+
+          // Cargar nuevos eventos permitidos
           this.cargarEventosPermitidos(Number(idCalendario));
         } else {
-          // Si se limpia el calendario, deshabilitar y limpiar eventos
+          // Si se limpia el calendario, resetear todo
           this.tiposEventoFiltrados = [];
-          this.eventoForm.get('idTipoEventoCalendario')?.disable();
-          this.eventoForm.get('idTipoEventoCalendario')?.reset();
+          this.formularioActual = null;
+          this.camposFormularioActual = [];
+
+          const tipoEventoControl = this.eventoForm.get('idTipoEventoCalendario');
+          if (tipoEventoControl) {
+            tipoEventoControl.disable();
+            tipoEventoControl.reset();
+          }
         }
+
+        this.cdr.detectChanges();
       });
+
 
     // Si hay fecha, guardarla temporalmente
     if (fecha) {
@@ -693,22 +753,54 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
           console.log('🟢 Eventos permitidos recibidos:', eventos);
           this.tiposEventoFiltrados = eventos;
 
-          // ✅ HABILITAR el campo y resetear su valor
+          // Habilitar el campo y resetear su valor
           const tipoEventoControl = this.eventoForm.get('idTipoEventoCalendario');
-          tipoEventoControl?.enable();
+
+          if (eventos.length > 0) {
+            // Si hay eventos, habilitar el select
+            tipoEventoControl?.enable();
+          } else {
+            // Si NO hay eventos, mantener deshabilitado
+            tipoEventoControl?.disable();
+            console.log('⚠️ No hay eventos para este calendario');
+          }
+
           tipoEventoControl?.reset();
 
-          // ✅ Suscribir al cambio de tipo de evento (solo la primera vez)
-          if (!this.eventoForm.get('idTipoEventoCalendario')?.valueChanges) {
-            this.eventoForm.get('idTipoEventoCalendario')?.valueChanges
-              .pipe(takeUntil(this.destroy$))
-              .subscribe((idTipoEvento) => {
-                console.log('🟡 idTipoEventoCalendario cambió a:', idTipoEvento);
-                if (idTipoEvento) {
-                  this.cargarFormularioDinamico(Number(idTipoEvento));
-                }
-              });
-          }
+          // ✅ IMPORTANTE: Mantener el listener del calendario SIEMPRE
+          this.eventoForm.get('idTipoCalendario')?.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((nuevoIdCalendario) => {
+              console.log('🔄 [EVENTOS_PERMITIDOS] Calendario cambió a:', nuevoIdCalendario);
+
+              if (nuevoIdCalendario && nuevoIdCalendario !== idCalendario) {
+                // Resetear estado
+                this.formularioActual = null;
+                this.camposFormularioActual = [];
+                this.tiposEventoFiltrados = [];
+
+                // Recrear formulario básico
+                this.eventoForm = this.fb.group({
+                  idTipoCalendario: [nuevoIdCalendario, Validators.required],
+                  idTipoEventoCalendario: [{ value: '', disabled: true }, Validators.required]
+                });
+
+                console.log('🔄 Formulario reseteado - cargando eventos para calendario:', nuevoIdCalendario);
+
+                // Cargar eventos del nuevo calendario
+                this.cargarEventosPermitidos(Number(nuevoIdCalendario));
+              }
+            });
+
+          // Suscribir al cambio de tipo de evento
+          tipoEventoControl?.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((idTipoEvento) => {
+              console.log('🟡 idTipoEventoCalendario cambió a:', idTipoEvento);
+              if (idTipoEvento) {
+                this.cargarFormularioDinamico(Number(idTipoEvento));
+              }
+            });
 
           this.cdr.detectChanges();
         },

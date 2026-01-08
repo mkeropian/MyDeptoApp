@@ -123,7 +123,7 @@ export interface CampoFormulario {
   id: number;
   id_formulario: number;
   nombre_campo: string;
-  tipo_campo: 'text' | 'textarea' | 'number' | 'date' | 'email' | 'tel' | 'select' | 'checkbox' | 'radio';
+  tipo_campo: 'text' | 'textarea' | 'number' | 'date' | 'time' | 'email' | 'tel' | 'select' | 'checkbox' | 'radio';
   label: string;
   placeholder: string;
   requerido: boolean;

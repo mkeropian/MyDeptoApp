@@ -124,7 +124,7 @@
           </div>
         </div>
 
-        <div class="flex-1 relative" [class.cursor-pointer]="!esEmpleado" (click)="!esEmpleado && abrirModalEvento(fechaSeleccionada)">
+        <div class="flex-1 relative">
           <!-- Líneas de fondo -->
           <div class="absolute inset-0 top-12">
             <div *ngFor="let hora of horasDia" class="h-[60px] border-b border-gray-200"></div>
@@ -152,12 +152,6 @@
                     </div>
                     <div class="text-[10px] text-gray-600 truncate leading-tight mt-0.5">{{ evento.nombreDepartamento }}</div>
                   </div>
-                  <button type="button" (click)="$event.stopPropagation(); editarEvento(evento)"
-                          *ngIf="!esEmpleado"
-                          class="text-indigo-600 hover:text-indigo-900 flex-shrink-0 -mt-0.5"
-                          aria-label="Editar evento">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                  </button>
                 </div>
                 <div class="text-[10px] font-medium text-indigo-600 leading-tight">
                   {{ formatearHora(evento.horaInicio) }} - {{ formatearHora(evento.horaFin) }}
@@ -192,10 +186,7 @@
         <!-- Grid de eventos -->
         <div class="grid grid-cols-7 gap-px bg-gray-200">
           <div *ngFor="let dia of diasDeLaSemana"
-                class="bg-white min-h-[200px] p-2 transition-colors"
-                [class.cursor-pointer]="!esEmpleado"
-                [class.hover:bg-gray-50]="!esEmpleado"
-                (click)="!esEmpleado && abrirModalEvento(dia)">
+                class="bg-white min-h-[200px] p-2">
             <!-- Eventos del día -->
             <ng-container *ngFor="let evento of obtenerEventosPorFecha(dia)">
               <div class="mb-2 p-2 rounded text-xs cursor-pointer hover:shadow-md hover:bg-indigo-100 transition-all border-l-4 bg-indigo-50"
@@ -226,6 +217,7 @@
     </div>
 
     <!-- VISTA MENSUAL -->
+
     <div *ngIf="vistaActual === 'mes'">
 
       <div class="grid grid-cols-7 gap-px border-b border-gray-300 bg-gray-200 text-center text-xs font-semibold leading-6 text-gray-700 lg:flex-none">
@@ -236,15 +228,14 @@
       </div>
       <div class="flex bg-gray-200 text-xs leading-6 text-gray-700 lg:flex-auto">
         <div class="hidden w-full lg:grid lg:grid-cols-7 lg:auto-rows-min lg:gap-px">
+          <!-- ✅ ELIMINAR (click) y cursor-pointer -->
           <div *ngFor="let dia of diasDelMes"
-                [class]="'relative px-2 py-2 min-h-[120px] ' + (esMesActual(dia) ? 'bg-white' : 'bg-gray-50 text-gray-500') + (!esEmpleado ? ' cursor-pointer' : '')"
-                (click)="!esEmpleado && abrirModalEvento(dia)"
-                (mouseleave)="ocultarTooltip()">
+                [class]="'relative px-2 py-2 min-h-[120px] ' + (esMesActual(dia) ? 'bg-white' : 'bg-gray-50 text-gray-500')">
             <time [attr.datetime]="calendarioService.formatearFechaParaBackend(dia)" [class]="esHoy(dia) ? 'flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white' : ''">{{ dia.getDate() }}</time>
             <ol class="mt-2 space-y-1" *ngIf="obtenerEventosPorFecha(dia).length > 0">
               <li *ngFor="let evento of obtenerEventosPorFecha(dia); let i = index" [hidden]="i >= 3">
                 <button type="button"
-                        (click)="$event.stopPropagation(); abrirModalDetalles(evento)"
+                        (click)="abrirModalDetalles(evento)"
                         class="w-full text-left text-xs p-1.5 rounded cursor-pointer hover:shadow-md transition-all border-l-4 bg-indigo-50 hover:bg-indigo-100"
                         [style.border-left-color]="evento.colorTipoEvento">
                   <div class="flex items-start justify-between gap-1">
@@ -255,9 +246,9 @@
                     </div>
                     <!-- ✅ Ícono de ubicación -->
                     <i *ngIf="tieneUbicacion(evento)"
-                       class="fas fa-map-marker-alt location-icon flex-shrink-0"
-                       (click)="abrirModalMapa(evento, $event)"
-                       aria-label="Ver ubicación en el mapa"></i>
+                      class="fas fa-map-marker-alt location-icon flex-shrink-0"
+                      (click)="abrirModalMapa(evento, $event)"
+                      aria-label="Ver ubicación en el mapa"></i>
                   </div>
                 </button>
               </li>
@@ -266,27 +257,24 @@
           </div>
         </div>
 
-
+        <!-- Vista Mobile - Cambiar button por div -->
         <div class="isolate grid w-full grid-cols-7 grid-rows-6 gap-px lg:hidden">
-          <button *ngFor="let dia of diasDelMes"
-                  type="button"
-                  [class]="'flex h-14 flex-col px-3 py-2 transition-colors ' + (esMesActual(dia) ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-500') + (esHoy(dia) ? ' font-semibold text-indigo-600' : '') + (!esEmpleado ? ' hover:bg-gray-100' : '')"
-                  (click)="!esEmpleado && abrirModalEvento(dia)"
-                  [attr.aria-label]="'Día ' + dia.getDate() + (obtenerEventosPorFecha(dia).length > 0 ? ', ' + obtenerEventosPorFecha(dia).length + ' eventos programados' : ', sin eventos')">
+          <div *ngFor="let dia of diasDelMes"
+              [class]="'flex h-14 flex-col px-3 py-2 ' + (esMesActual(dia) ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-500') + (esHoy(dia) ? ' font-semibold text-indigo-600' : '')">
             <time [attr.datetime]="calendarioService.formatearFechaParaBackend(dia)" class="ml-auto">{{ dia.getDate() }}</time>
             <span class="sr-only">{{ obtenerEventosPorFecha(dia).length }} eventos programados</span>
             <span *ngIf="obtenerEventosPorFecha(dia).length > 0" class="-mx-0.5 mt-auto flex flex-wrap-reverse">
               <span *ngFor="let _ of obtenerEventosPorFecha(dia); let i = index" [class]="'mx-0.5 mb-1 h-1.5 w-1.5 rounded-full ' + (i < 3 ? 'bg-indigo-400' : 'bg-gray-400')"></span>
             </span>
-          </button>
+          </div>
         </div>
       </div>
     </div>
+
+
+
+
   </div>
-
-  <!-- Continúa en siguiente mensaje con los modales... -->
-
-<!-- ... (continuación del código anterior) ... -->
 
   <!-- ==================== MODAL CREAR/EDITAR (DINÁMICO) ==================== -->
   <div *ngIf="mostrarModalEvento" class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true">
@@ -421,6 +409,21 @@
                         </label>
                         <input
                           type="tel"
+                          [id]="campo.nombre_campo"
+                          [formControlName]="campo.nombre_campo"
+                          [placeholder]="campo.placeholder"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
+                      </div>
+
+                      <!-- Campo de Hora/Time -->
+                      <div *ngIf="campo.tipo_campo === 'time'">
+                        <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
+                          {{ campo.label }}
+                          <span *ngIf="campo.requerido" class="text-red-600">*</span>
+                        </label>
+                        <input
+                          type="time"
                           [id]="campo.nombre_campo"
                           [formControlName]="campo.nombre_campo"
                           [placeholder]="campo.placeholder"
