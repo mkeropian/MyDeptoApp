@@ -257,8 +257,9 @@ export class RendimientoMensualDepartamentosPageComponent implements OnInit {
     // Extraer años únicos
     const anosUnicos = Array.from(
       new Set(this.rendimientoData.map(item => {
-        const fecha = new Date(item.fecha);
-        return fecha.getFullYear();
+        // const fecha = new Date(item.fecha);
+        // return fecha.getFullYear();
+        return parseInt(item.fecha.toString().substring(0, 4));
       }))
     ).sort((a, b) => b - a); // Orden descendente (más reciente primero)
 
@@ -268,11 +269,17 @@ export class RendimientoMensualDepartamentosPageComponent implements OnInit {
       selected: false
     }));
 
+    // Seleccionar el año más reciente por defecto si no hay selección
+    if (this.anosOptions.length > 0 && !this.anosOptions.some(a => a.selected)) {
+      this.anosOptions[0].selected = true;
+    }
+
     // Extraer meses únicos
     const mesesUnicos = Array.from(
       new Set(this.rendimientoData.map(item => {
-        const fecha = new Date(item.fecha);
-        return `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
+        // const fecha = new Date(item.fecha);
+        // return `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
+        return item.fecha.toString().substring(0, 7);
       }))
     ).map(mesAno => {
       const [year, month] = mesAno.split('-');
@@ -319,9 +326,13 @@ export class RendimientoMensualDepartamentosPageComponent implements OnInit {
 
     // Filtrar datos
     this.filteredData = this.rendimientoData.filter(item => {
-      const fecha = new Date(item.fecha);
-      const ano = fecha.getFullYear();
-      const mesAno = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
+      // const fecha = new Date(item.fecha);
+      // const ano = fecha.getFullYear();
+      // const mesAno = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
+
+      const fechaStr = item.fecha.toString();
+      const ano = parseInt(fechaStr.substring(0, 4));
+      const mesAno = fechaStr.substring(0, 7);
 
       const matchesDepartamento = item.departamento_id === selectedDepartamento.id;
       const matchesAno = selectedAnos.length === 0 || selectedAnos.includes(ano);
@@ -369,77 +380,48 @@ export class RendimientoMensualDepartamentosPageComponent implements OnInit {
   }
 
 private processChartData() {
-  // Obtener nombre del departamento seleccionado para el título
   const selectedDepartamento = this.departamentosOptions.find(dept => dept.selected);
   const tituloChart = selectedDepartamento
-    ? `Rendimiento Departamento ${selectedDepartamento.nombre}`
-    : 'Rendimiento por Departamentos';
+    ? `Rendimiento Mensual - ${selectedDepartamento.nombre}`
+    : 'Rendimiento Mensual';
 
   if (this.filteredData.length === 0) {
-    this.chartOptions = {
-      ...this.chartOptions,
-      series: [],
-      labels: [],
-      title: {
-        ...this.chartOptions.title,
-        text: tituloChart
-      },
-      xaxis: {
-        ...this.chartOptions.xaxis,
-        categories: []
-      }
-    };
+    this.chartOptions = { ...this.chartOptions, series: [], labels: [], xaxis: { ...this.chartOptions.xaxis, categories: [] } };
     return;
   }
 
-  // NUEVA LÓGICA: Agrupar datos por mes
-  const groupedByMonth = this.filteredData.reduce((acc, item) => {
-    const fecha = new Date(item.fecha);
-    const year = fecha.getFullYear();
-    const month = fecha.getMonth() + 1; // Mes desde 1
-    const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
+  // Agrupamos por mes
+  const datosPorMes = new Map<string, { pagos: number, gastos: number, balance: number, label: string }>();
 
-    if (!acc[monthKey]) {
-      acc[monthKey] = {
-        year,
-        month,
-        totalPagos: 0,
-        totalGastos: 0,
-        balance: 0,
-        fechaOrden: new Date(year, month - 1, 1) // Para ordenar
-      };
+  this.filteredData.forEach(item => {
+    // CORRECCIÓN CLAVE: Partimos el texto de la fecha manualmente
+    const fechaStr = item.fecha.toString();
+    const parts = fechaStr.split('T')[0].split('-'); // Divide "2026-01-01" en partes
+
+    const ano = parts[0];
+    const mesNum = parseInt(parts[1]);
+    const key = `${ano}-${parts[1]}`;
+
+    const nombresMeses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const label = `${nombresMeses[mesNum - 1]} ${ano}`;
+
+    if (!datosPorMes.has(key)) {
+      datosPorMes.set(key, { pagos: 0, gastos: 0, balance: 0, label: label });
     }
 
-    // Sumar los valores del mes
-    acc[monthKey].totalPagos += Number(item.total_pagos);
-    acc[monthKey].totalGastos += Number(item.total_gastos);
-    acc[monthKey].balance += Number(item.balance_fecha);
+    const actual = datosPorMes.get(key)!;
+    actual.pagos += Number(item.total_pagos);
+    actual.gastos += Number(item.total_gastos);
+    actual.balance += Number(item.balance_fecha);
+  });
 
-    return acc;
-  }, {} as any);
-
-  // Convertir el objeto agrupado a array y ordenar por fecha
-  const processedData = Object.keys(groupedByMonth)
-    .map(key => {
-      const data = groupedByMonth[key];
-      const nombresMeses = [
-        'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
-      ];
-
-      return {
-        label: `${nombresMeses[data.month - 1]} ${data.year}`,
-        totalPagos: data.totalPagos,
-        totalGastos: data.totalGastos,
-        balance: data.balance,
-        fechaOrden: data.fechaOrden
-      };
-    })
-    .sort((a, b) => a.fechaOrden.getTime() - b.fechaOrden.getTime());
+  const processedData = Array.from(datosPorMes.entries())
+    .map(([key, value]) => ({ key, ...value }))
+    .sort((a, b) => a.key.localeCompare(b.key));
 
   const labels = processedData.map(item => item.label);
-  const totalPagos = processedData.map(item => item.totalPagos);
-  const totalGastos = processedData.map(item => item.totalGastos);
+  const totalPagos = processedData.map(item => item.pagos);
+  const totalGastos = processedData.map(item => item.gastos);
   const balances = processedData.map(item => item.balance);
 
   this.updateChartOptions(labels, totalPagos, totalGastos, balances, tituloChart);
