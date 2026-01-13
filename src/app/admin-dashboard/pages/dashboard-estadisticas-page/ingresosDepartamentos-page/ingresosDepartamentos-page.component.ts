@@ -324,12 +324,12 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy{
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data: PagoGrid[]) => {
-          this.processPagosData(data);
+          this.processPagosData(data); // Delegamos el procesamiento
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('Error al cargar gastos:', error);
-          this.handleError('Error al cargar los datos de gastos');
+          console.error('Error al cargar ingresos:', error);
+          this.handleError('Error al cargar los datos de ingresos');
         }
       });
   }
@@ -341,30 +341,98 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy{
       return;
     }
 
-    // Extraer años disponibles
-    this.availableYears = [...new Set(data.map(item =>
-      new Date(item.fecha).getFullYear()
-    ))].sort((a, b) => b - a);
+    // 1. Obtener Años disponibles (usando substring)
+    const yearsSet = new Set(data.map(item =>
+      parseInt(item.fecha.toString().substring(0, 4))
+    ));
+    this.availableYears = Array.from(yearsSet).sort((a, b) => b - a);
 
     if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
       this.selectedYear = this.availableYears[0];
     }
 
-    // Filtrar datos por año seleccionado
-    const filteredData = data.filter(item =>
-      new Date(item.fecha).getFullYear() === this.selectedYear
-    );
+    // 2. Filtrar por año seleccionado
+    const filteredData = data.filter(item => {
+      const year = parseInt(item.fecha.toString().substring(0, 4));
+      return year === this.selectedYear;
+    });
 
-    // Agrupar por departamento
-    const departmentGroups = this.groupByDepartment(filteredData);
+    const monthNames = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
 
-    // Procesar datos para el gráfico
-    this.departmentExpenses = this.processDepartmentExpenses(departmentGroups);
+    const tempMap = new Map<string, { total: number, monthly: Map<string, number> }>();
+    this.totalIngresos = 0;
 
-    // Calcular resumen
-    this.calculateSummary();
+    filteredData.forEach(item => {
+      const monthIndex = parseInt(item.fecha.toString().substring(5, 7)) - 1;
+      const monthName = monthNames[monthIndex];
+      const monto = Number(item.monto || 0);
 
-    // Actualizar gráfico
+      // --- CORRECCIÓN AQUÍ ---
+      // Usamos 'nombre' que es la propiedad correcta en tu interfaz PagoGrid
+      const deptName = item.nombre || 'Sin Departamento';
+
+      if (!tempMap.has(deptName)) {
+        tempMap.set(deptName, { total: 0, monthly: new Map() });
+      }
+
+      const current = tempMap.get(deptName)!;
+      current.total += monto;
+      this.totalIngresos += monto;
+
+      const currentMonthVal = current.monthly.get(monthName) || 0;
+      current.monthly.set(monthName, currentMonthVal + monto);
+    });
+
+    // Convertir a estructura final
+    this.departmentExpenses = Array.from(tempMap.entries()).map(([name, val]) => {
+      const monthlyDataObj: { [key: string]: number } = {};
+      monthNames.forEach(m => {
+        monthlyDataObj[m] = val.monthly.get(m) || 0;
+      });
+
+      return {
+        departmentName: name,
+        monthlyData: monthlyDataObj,
+        total: val.total
+      };
+    });
+
+    // Calcular métricas adicionales
+    const currentMonthIndex = new Date().getMonth();
+    const isCurrentYear = this.selectedYear === new Date().getFullYear();
+    const monthsDivisor = isCurrentYear ? (currentMonthIndex + 1) : 12;
+    this.promedioMensual = this.totalIngresos > 0 ? (this.totalIngresos / monthsDivisor) : 0;
+
+    if (this.departmentExpenses.length > 0) {
+        const topDept = this.departmentExpenses.reduce((prev, current) =>
+            (prev.total > current.total) ? prev : current
+        );
+        this.departamentoMayorIngreso = topDept.departmentName;
+    } else {
+        this.departamentoMayorIngreso = '-';
+    }
+
+    // Calcular mes con mayor ingreso
+    const globalMonthly = new Map<string, number>();
+    this.departmentExpenses.forEach(d => {
+        Object.entries(d.monthlyData).forEach(([m, val]) => {
+            globalMonthly.set(m, (globalMonthly.get(m) || 0) + val);
+        });
+    });
+
+    let maxMonthVal = -1;
+    let maxMonthName = '-';
+    globalMonthly.forEach((val, key) => {
+        if (val > maxMonthVal) {
+            maxMonthVal = val;
+            maxMonthName = key;
+        }
+    });
+    this.mesConMayorIngreso = maxMonthVal > 0 ? maxMonthName : '-';
+
     this.updateChart();
   }
 

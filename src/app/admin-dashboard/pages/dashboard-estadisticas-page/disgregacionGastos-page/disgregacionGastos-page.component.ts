@@ -1,7 +1,8 @@
-import { Component, inject, OnInit, ViewChild, NgZone } from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { EstadisticasReportesService } from '../../../../estadisticasReportes/services/estadisticasReportes.service';
+// Usamos GastosService que es el que tiene el método getGastos() que funcionó antes
+import { GastosService } from '../../../../gastos/services/gastos.service';
 import { GastoGrid } from '../../../../gastos/interfaces/gasto.interface';
 import { SafeCurrencyPipe, SafeNumberPipe } from '../../../../estadisticasReportes/pipes/safe-number.pipe';
 
@@ -15,6 +16,7 @@ import {
   ApexDataLabels,
   NgApexchartsModule
 } from 'ng-apexcharts';
+import { take } from 'rxjs';
 
 export type ChartOptions = {
   series: ApexNonAxisChartSeries;
@@ -41,397 +43,287 @@ interface GastosPorCategoria {
     CommonModule,
     FormsModule,
     NgApexchartsModule,
-    SafeCurrencyPipe,
-    SafeNumberPipe
+    SafeCurrencyPipe
   ],
   templateUrl: './disgregacionGastos-page.component.html',
 })
 export class DisgregacionGastosPageComponent implements OnInit {
-  @ViewChild("chart") chart!: ChartComponent;
+  // Inyectamos el servicio correcto
+  private gastosService = inject(GastosService);
 
-  private estadisticasService = inject(EstadisticasReportesService);
-  private ngZone = inject(NgZone);
+  @ViewChild('chart') chart: ChartComponent | undefined;
 
-  public chartOptions: Partial<ChartOptions> | any;
-  public gastos: GastoGrid[] = [];
+  // Estados de datos
+  public gastosTotales: GastoGrid[] = [];
   public gastosFiltrados: GastoGrid[] = [];
   public gastosPorCategoria: GastosPorCategoria[] = [];
-
-  public totalGastos: number = 0;
-  public categoriaConMayorGasto: string = '';
-  public montoMayorCategoria: number = 0;
-  public cantidadCategorias: number = 0;
-
-  public isLoading: boolean = true;
-
-  // Detalle de categoría seleccionada
-  public categoriaSeleccionada: string = '';
-  public gastosDetalleCategoria: GastoGrid[] = [];
-  public iniciarTransicion: boolean = false; // Controla el cambio de tamaño del grid
-  public mostrarTabla: boolean = false; // Controla la renderización de la tabla
+  public isLoading = true;
 
   // Filtros
-  public anioSeleccionado: number;
-  public mesSeleccionado: number = 0;
   public aniosDisponibles: number[] = [];
+  public anioSeleccionado: number = new Date().getFullYear();
+  public mesSeleccionado: number = -1; // -1 = Todos
+
   public meses = [
-    { value: 0, label: 'Todos' },
-    { value: 1, label: 'Enero' },
-    { value: 2, label: 'Febrero' },
-    { value: 3, label: 'Marzo' },
-    { value: 4, label: 'Abril' },
-    { value: 5, label: 'Mayo' },
-    { value: 6, label: 'Junio' },
-    { value: 7, label: 'Julio' },
-    { value: 8, label: 'Agosto' },
-    { value: 9, label: 'Septiembre' },
-    { value: 10, label: 'Octubre' },
-    { value: 11, label: 'Noviembre' },
-    { value: 12, label: 'Diciembre' }
+    { id: 1, nombre: 'Enero' }, { id: 2, nombre: 'Febrero' }, { id: 3, nombre: 'Marzo' },
+    { id: 4, nombre: 'Abril' }, { id: 5, nombre: 'Mayo' }, { id: 6, nombre: 'Junio' },
+    { id: 7, nombre: 'Julio' }, { id: 8, nombre: 'Agosto' }, { id: 9, nombre: 'Septiembre' },
+    { id: 10, nombre: 'Octubre' }, { id: 11, nombre: 'Noviembre' }, { id: 12, nombre: 'Diciembre' }
   ];
 
-  constructor() {
-    this.anioSeleccionado = new Date().getFullYear();
-    this.initializeChart();
-  }
+  // Detalles e interacción
+  public mostrarTabla: boolean = false;
+  public categoriaSeleccionada: string = '';
+  public gastosDetalleCategoria: GastoGrid[] = [];
+  public iniciarTransicion: boolean = false;
+  public totalGastos: number = 0;
 
-  ngOnInit(): void {
-    this.loadGastos();
-  }
-
-  private initializeChart(): void {
-    this.chartOptions = {
-      series: [],
-      chart: {
-        type: 'donut',
-        height: 420,
-        events: {
-          dataPointSelection: (event: any, chartContext: any, config: any) => {
-            this.onChartClick(config.dataPointIndex);
+  // Configuración del Gráfico
+  public chartOptions: ChartOptions = {
+    series: [],
+    chart: {
+      type: 'donut',
+      height: 350,
+      events: {
+        dataPointSelection: (event, chartContext, config) => {
+          if (config && config.w && config.w.config && config.w.config.labels) {
+            const label = config.w.config.labels[config.dataPointIndex];
+            this.seleccionarCategoria(label);
           }
         }
-      },
-      labels: [],
-      colors: [
-        '#008FFB',
-        '#00E396',
-        '#FEB019',
-        '#FF4560',
-        '#775DD0',
-        '#546E7A',
-        '#26a69a',
-        '#D10CE8',
-        '#F86624',
-        '#2E93fA',
-        '#66DA26',
-        '#E91E63'
-      ],
-      plotOptions: {
-        pie: {
-          donut: {
-            size: '65%',
-            labels: {
+      }
+    },
+    labels: [],
+    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6'],
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '65%',
+          labels: {
+            show: true,
+            total: {
               show: true,
-              name: {
-                show: true,
-                fontSize: '18px',
-                fontFamily: 'Helvetica, Arial, sans-serif',
-                fontWeight: 600,
-                offsetY: -10
-              },
-              value: {
-                show: true,
-                fontSize: '24px',
-                fontFamily: 'Helvetica, Arial, sans-serif',
-                fontWeight: 700,
-                offsetY: 10,
-                formatter: (val: string) => {
-                  return new Intl.NumberFormat('es-AR', {
-                    style: 'currency',
-                    currency: 'ARS',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                  }).format(Number(val));
-                }
-              },
-              total: {
-                show: true,
-                showAlways: true,
-                label: 'Total Gastos',
-                fontSize: '16px',
-                fontFamily: 'Helvetica, Arial, sans-serif',
-                fontWeight: 600,
-                color: '#373d3f',
-                formatter: (w: any) => {
-                  const total = w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
-                  return new Intl.NumberFormat('es-AR', {
-                    style: 'currency',
-                    currency: 'ARS',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                  }).format(total);
-                }
+              label: 'Total',
+              formatter: function (w) {
+                const total = w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
+                return '$' + total.toLocaleString('es-AR');
               }
             }
           }
         }
-      },
-      dataLabels: {
-        enabled: true,
-        formatter: (val: number) => {
-          return val.toFixed(1) + '%';
+      }
+    },
+    dataLabels: { enabled: false },
+    legend: { position: 'bottom' },
+    responsive: [{
+      breakpoint: 480,
+      options: {
+        chart: { width: 300 },
+        legend: { position: 'bottom' }
+      }
+    }]
+  };
+
+  ngOnInit(): void {
+    this.cargarDatos();
+  }
+
+  private cargarDatos(): void {
+    this.isLoading = true;
+
+    // Usamos getGastos() que sabemos que funciona
+    this.gastosService.getGastos()
+      .pipe(take(1))
+      .subscribe({
+        next: (data) => {
+          this.gastosTotales = data;
+          this.procesarAniosDisponibles();
+          this.filtrarGastos(); // Esto llamará a procesarDatosGrafico
+          this.isLoading = false;
         },
-        style: {
-          fontSize: '14px',
-          fontFamily: 'Helvetica, Arial, sans-serif',
-          fontWeight: 'bold',
-        },
-        dropShadow: {
-          enabled: false
+        error: (err) => {
+          console.error('Error cargando gastos', err);
+          this.isLoading = false;
         }
-      },
-      legend: {
-        show: true,
-        position: 'left',
-        horizontalAlign: 'left',
-        fontSize: '14px',
-        fontFamily: 'Helvetica, Arial, sans-serif',
-        offsetY: 0,
-        offsetX: -20,
-        markers: {
-          width: 12,
-          height: 12,
-          radius: 12
-        },
-        itemMargin: {
-          horizontal: 10,
-          vertical: 8
+      });
+  }
+
+  private procesarAniosDisponibles(): void {
+    // Extracción segura de año usando string (evita bug de zona horaria)
+    const anios = new Set(this.gastosTotales.map(g =>
+      parseInt(g.fecha.toString().substring(0, 4))
+    ));
+
+    this.aniosDisponibles = Array.from(anios).sort((a, b) => b - a);
+
+    // Si el año actual no está en los datos, seleccionamos el más reciente disponible
+    if (this.aniosDisponibles.length > 0 && !this.aniosDisponibles.includes(this.anioSeleccionado)) {
+      this.anioSeleccionado = this.aniosDisponibles[0];
+    }
+  }
+
+  // Se ejecuta cuando cambia el Dropdown de Año o Mes
+  public onAnioChange(): void {
+    this.limpiarSeleccion();
+    this.filtrarGastos();
+  }
+
+  public onMesChange(): void {
+    this.limpiarSeleccion();
+    this.filtrarGastos();
+  }
+
+  private filtrarGastos(): void {
+    if (!this.gastosTotales) return;
+
+    this.gastosFiltrados = this.gastosTotales.filter(g => {
+      // Parseo seguro de fecha texto "YYYY-MM-DD"
+      const year = parseInt(g.fecha.toString().substring(0, 4));
+      // Mes en string "01" -> int 1
+      const month = parseInt(g.fecha.toString().substring(5, 7));
+
+      const coincideAnio = year === Number(this.anioSeleccionado);
+      // Si mesSeleccionado es -1, mostramos todos los meses
+      const coincideMes = this.mesSeleccionado === -1 || month === Number(this.mesSeleccionado);
+
+      return coincideAnio && coincideMes;
+    });
+
+    this.procesarDatosGrafico();
+  }
+
+  private procesarDatosGrafico(): void {
+    const categoriasMap = new Map<string, { monto: number, cantidad: number }>();
+    this.totalGastos = 0;
+
+    this.gastosFiltrados.forEach(g => {
+      // --- LECTURA ROBUSTA DE CATEGORÍA ---
+      // Usamos 'any' para leer 'categoria' venga como string o como objeto {nombre: ...}
+      const itemAny = g as any;
+      let nombreCategoria = 'Sin Categoría';
+
+      if (itemAny.categoria) {
+        if (typeof itemAny.categoria === 'object' && itemAny.categoria.nombre) {
+          nombreCategoria = itemAny.categoria.nombre;
+        } else if (typeof itemAny.categoria === 'string') {
+          nombreCategoria = itemAny.categoria;
         }
-      },
-      responsive: [
-        {
-          breakpoint: 480,
-          options: {
-            chart: {
-              height: 350
-            },
-            legend: {
-              position: 'bottom'
+      }
+
+      const monto = Number(g.monto || 0);
+
+      if (!categoriasMap.has(nombreCategoria)) {
+        categoriasMap.set(nombreCategoria, { monto: 0, cantidad: 0 });
+      }
+
+      const catData = categoriasMap.get(nombreCategoria)!;
+      catData.monto += monto;
+      catData.cantidad += 1;
+      this.totalGastos += monto;
+    });
+
+    // Calcular porcentajes y crear array final
+    this.gastosPorCategoria = Array.from(categoriasMap.entries())
+      .map(([cat, data]) => ({
+        categoria: cat,
+        monto: data.monto,
+        cantidad: data.cantidad,
+        porcentaje: this.totalGastos > 0 ? (data.monto / this.totalGastos) * 100 : 0
+      }))
+      .sort((a, b) => b.monto - a.monto); // Ordenar por monto descendente
+
+    this.actualizarGrafico();
+  }
+
+  private actualizarGrafico(): void {
+    const labels = this.gastosPorCategoria.map(d => d.categoria);
+    const series = this.gastosPorCategoria.map(d => d.monto);
+
+    this.chartOptions = {
+      ...this.chartOptions,
+      labels: labels,
+      series: series,
+      // Actualizamos el formateador del total del centro del donut
+      plotOptions: {
+        pie: {
+          donut: {
+            labels: {
+              total: {
+                formatter: () => {
+                   return '$' + this.totalGastos.toLocaleString('es-AR', {
+                     minimumFractionDigits: 0,
+                     maximumFractionDigits: 0
+                   });
+                }
+              }
             }
-          }
-        }
-      ],
-      tooltip: {
-        y: {
-          formatter: (val: number) => {
-            return new Intl.NumberFormat('es-AR', {
-              style: 'currency',
-              currency: 'ARS',
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0
-            }).format(val);
-          }
-        }
-      },
-      states: {
-        active: {
-          filter: {
-            type: 'darken',
-            value: 0.35
           }
         }
       }
     };
   }
 
-  private loadGastos(): void {
-    this.isLoading = true;
-
-    this.estadisticasService.getGastos().subscribe({
-      next: (gastos: any[]) => {
-        this.gastos = gastos.map(gasto => ({
-          ...gasto,
-          monto: typeof gasto.monto === 'string' ? parseFloat(gasto.monto) : gasto.monto
-        }));
-        this.extractAniosDisponibles(this.gastos);
-        this.aplicarFiltros();
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error cargando gastos:', error);
-        this.isLoading = false;
-      }
-    });
-  }
-
-  private extractAniosDisponibles(gastos: GastoGrid[]): void {
-    const anios = new Set<number>();
-    gastos.forEach(gasto => {
-      const fecha = new Date(gasto.fecha);
-      if (!isNaN(fecha.getTime())) {
-        anios.add(fecha.getFullYear());
-      }
-    });
-    this.aniosDisponibles = Array.from(anios).sort((a, b) => b - a);
-
-    if (this.aniosDisponibles.length > 0 && !this.aniosDisponibles.includes(this.anioSeleccionado)) {
-      this.anioSeleccionado = this.aniosDisponibles[0];
+  public seleccionarCategoria(categoria: string): void {
+    if (this.categoriaSeleccionada === categoria && this.mostrarTabla) {
+      this.limpiarSeleccion();
+      return;
     }
-  }
 
-  public aplicarFiltros(): void {
-    this.gastosFiltrados = this.gastos.filter(gasto => {
-      const fechaStr = gasto.fecha;
-      const [year, month] = fechaStr.split('T')[0].split('-').map(Number);
+    this.iniciarTransicion = true;
 
-      const cumpleAnio = year === this.anioSeleccionado;
-      const cumpleMes = this.mesSeleccionado === 0 || month === this.mesSeleccionado;
-
-      return cumpleAnio && cumpleMes;
-    });
-
-    this.processChartData(this.gastosFiltrados);
-    this.limpiarSeleccion();
-  }
-
-  private processChartData(gastos: GastoGrid[]): void {
-    const gastosAgrupados = this.agruparGastosPorTipo(gastos);
-    this.gastosPorCategoria = gastosAgrupados;
-
-    this.chartOptions.series = gastosAgrupados.map(g => g.monto);
-    this.chartOptions.labels = gastosAgrupados.map(g => g.categoria);
-
-    this.calcularEstadisticas(gastosAgrupados);
-  }
-
-  private agruparGastosPorTipo(gastos: GastoGrid[]): GastosPorCategoria[] {
-    const grupos = new Map<string, { monto: number, cantidad: number }>();
-
-    gastos.forEach(gasto => {
-      const tipo = gasto.descripcion || 'Sin categoría';
-      const monto = gasto.monto;
-
-      if (!grupos.has(tipo)) {
-        grupos.set(tipo, { monto: 0, cantidad: 0 });
-      }
-
-      const grupoActual = grupos.get(tipo)!;
-      grupoActual.monto += monto;
-      grupoActual.cantidad += 1;
-    });
-
-    const totalMonto = Array.from(grupos.values()).reduce((sum, g) => sum + g.monto, 0);
-
-    return Array.from(grupos.entries())
-      .map(([categoria, datos]) => ({
-        categoria,
-        monto: datos.monto,
-        cantidad: datos.cantidad,
-        porcentaje: totalMonto > 0 ? (datos.monto / totalMonto) * 100 : 0
-      }))
-      .sort((a, b) => b.monto - a.monto);
-  }
-
-  private calcularEstadisticas(gastosPorCategoria: GastosPorCategoria[]): void {
-    this.totalGastos = gastosPorCategoria.reduce((sum, g) => sum + g.monto, 0);
-    this.cantidadCategorias = gastosPorCategoria.length;
-
-    if (gastosPorCategoria.length > 0) {
-      const categoriaMax = gastosPorCategoria.reduce((max, g) =>
-        g.monto > max.monto ? g : max
-      , gastosPorCategoria[0]);
-
-      this.categoriaConMayorGasto = categoriaMax.categoria;
-      this.montoMayorCategoria = categoriaMax.monto;
-    } else {
-      this.categoriaConMayorGasto = '';
-      this.montoMayorCategoria = 0;
-    }
-  }
-
-  public onChartClick(dataPointIndex: number): void {
-    this.ngZone.run(() => {
-      const categoria = this.chartOptions.labels[dataPointIndex];
-
-      // Si se hace click en la misma categoría, deseleccionar
-      if (this.categoriaSeleccionada === categoria) {
-        this.limpiarSeleccion();
-        return;
-      }
-
-      // Si hay una categoría previa, ocultar su tabla primero
-      if (this.categoriaSeleccionada) {
-        this.mostrarTabla = false;
-        this.iniciarTransicion = false;
-      }
-
-      // Actualizar categoría seleccionada y preparar datos
+    // Pequeño delay para permitir que la UI respire antes de la animación
+    setTimeout(() => {
       this.categoriaSeleccionada = categoria;
 
-      const gastosTemp = this.gastosFiltrados
-        .filter(gasto => gasto.descripcion === categoria)
-        .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+      // Filtrar detalles usando la misma lógica robusta de categoría
+      this.gastosDetalleCategoria = this.gastosFiltrados.filter(g => {
+        const itemAny = g as any;
+        let catName = 'Sin Categoría';
+        if (itemAny.categoria) {
+             catName = (typeof itemAny.categoria === 'object') ? itemAny.categoria.nombre : itemAny.categoria;
+        }
+        return catName === categoria;
+      });
 
-      this.gastosDetalleCategoria = [...gastosTemp];
+      this.mostrarTabla = true;
 
-      // FASE 1: Iniciar la transición del grid (cambiar su tamaño)
+      // Forzar resize del gráfico si es necesario por cambios de layout
       setTimeout(() => {
-        this.iniciarTransicion = true;
-        
-        // FASE 2: Esperar a que el gráfico termine completamente su movimiento
-        // 600ms = 300ms (transición CSS) + 300ms para el re-render completo de ApexCharts
-        setTimeout(() => {
-          this.mostrarTabla = true;
-          
-          // Forzar re-render del chart
-          setTimeout(() => {
-            window.dispatchEvent(new Event('resize'));
-          }, 50);
-        }, 600);
-      }, 10);
-    });
+        window.dispatchEvent(new Event('resize'));
+      }, 50);
+    }, 100);
   }
 
   public limpiarSeleccion(): void {
     this.mostrarTabla = false;
     this.categoriaSeleccionada = '';
     this.gastosDetalleCategoria = [];
-    
-    // Esperar un frame para que Angular procese el cambio de mostrarTabla
+    this.iniciarTransicion = false;
+
     setTimeout(() => {
-      this.iniciarTransicion = false;
-      
-      // Esperar a que termine la transición del grid antes de hacer resize
-      setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-      }, 320);
-    }, 10);
+      window.dispatchEvent(new Event('resize'));
+    }, 300);
   }
 
-  public formatearFecha(fechaISO: string): string {
-    const fecha = new Date(fechaISO);
-    return fecha.toLocaleDateString('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+  // Método seguro para formatear fechas en la tabla (sin timezone offset)
+  public formatearFecha(fechaISO: string | Date): string {
+    if (!fechaISO) return '';
+    const str = fechaISO.toString();
+    // Asumimos formato YYYY-MM-DD
+    if (str.length >= 10) {
+      const year = str.substring(0, 4);
+      const month = str.substring(5, 7);
+      const day = str.substring(8, 10);
+      return `${day}/${month}/${year}`;
+    }
+    return str;
   }
 
   public calcularTotalCategoria(): number {
-    return this.gastosDetalleCategoria.reduce((sum, g) => sum + g.monto, 0);
+    return this.gastosDetalleCategoria.reduce((sum, g) => sum + Number(g.monto || 0), 0);
   }
 
   public trackByGastoId(index: number, gasto: GastoGrid): number {
     return gasto.id;
-  }
-
-  public onAnioChange(): void {
-    this.anioSeleccionado = Number(this.anioSeleccionado);
-    this.aplicarFiltros();
-  }
-
-  public onMesChange(): void {
-    this.mesSeleccionado = Number(this.mesSeleccionado);
-    this.aplicarFiltros();
   }
 }

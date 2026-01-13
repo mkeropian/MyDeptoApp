@@ -319,7 +319,7 @@ export class GastosDepartamentosPageComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.hasError = false;
 
-    this.gastosService.getGastos()
+    this.gastosService.getGastos() // O el método que uses para traer el listado (ej: getGastos())
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data: GastoGrid[]) => {
@@ -340,30 +340,100 @@ export class GastosDepartamentosPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Extraer años disponibles
-    this.availableYears = [...new Set(data.map(item =>
-      new Date(item.fecha).getFullYear()
-    ))].sort((a, b) => b - a);
+    // 1. Obtener Años (Usando texto para evitar error de zona horaria)
+    const yearsSet = new Set(data.map(item =>
+      parseInt(item.fecha.toString().substring(0, 4))
+    ));
+    this.availableYears = Array.from(yearsSet).sort((a, b) => b - a);
 
     if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
       this.selectedYear = this.availableYears[0];
     }
 
-    // Filtrar datos por año seleccionado
-    const filteredData = data.filter(item =>
-      new Date(item.fecha).getFullYear() === this.selectedYear
-    );
+    // 2. Filtrar por año seleccionado
+    const filteredData = data.filter(item => {
+      const year = parseInt(item.fecha.toString().substring(0, 4));
+      return year === this.selectedYear;
+    });
 
-    // Agrupar por departamento
-    const departmentGroups = this.groupByDepartment(filteredData);
+    const monthNames = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
 
-    // Procesar datos para el gráfico
-    this.departmentExpenses = this.processDepartmentExpenses(departmentGroups);
+    const tempMap = new Map<string, { total: number, monthly: Map<string, number> }>();
+    this.totalGastos = 0;
 
-    // Calcular resumen
-    this.calculateSummary();
+    filteredData.forEach(item => {
+      // Parsear mes manualmente "2026-01-01" -> "01"
+      const monthIndex = parseInt(item.fecha.toString().substring(5, 7)) - 1;
+      const monthName = monthNames[monthIndex];
+      const monto = Number(item.monto || 0);
 
-    // Actualizar gráfico
+      // --- CORRECCIÓN ROBUSTA AQUÍ ---
+      // Usamos 'any' para detectar el nombre del departamento sin importar cómo se llame en la interfaz
+      const itemAny = item as any;
+      const deptName = itemAny.nombre || itemAny.departamento?.nombre || itemAny.departamento || 'Sin Departamento';
+
+      if (!tempMap.has(deptName)) {
+        tempMap.set(deptName, { total: 0, monthly: new Map() });
+      }
+
+      const current = tempMap.get(deptName)!;
+      current.total += monto;
+      this.totalGastos += monto;
+
+      const currentMonthVal = current.monthly.get(monthName) || 0;
+      current.monthly.set(monthName, currentMonthVal + monto);
+    });
+
+    // Convertir a estructura DepartmentExpense
+    this.departmentExpenses = Array.from(tempMap.entries()).map(([name, val]) => {
+      const monthlyDataObj: { [key: string]: number } = {};
+      monthNames.forEach(m => {
+        monthlyDataObj[m] = val.monthly.get(m) || 0;
+      });
+
+      return {
+        departmentName: name,
+        monthlyData: monthlyDataObj,
+        total: val.total
+      };
+    });
+
+    // Métricas
+    const currentMonthIndex = new Date().getMonth();
+    const isCurrentYear = this.selectedYear === new Date().getFullYear();
+    const monthsDivisor = isCurrentYear ? (currentMonthIndex + 1) : 12;
+    this.promedioMensual = this.totalGastos > 0 ? (this.totalGastos / monthsDivisor) : 0;
+
+    if (this.departmentExpenses.length > 0) {
+        const topDept = this.departmentExpenses.reduce((prev, current) =>
+            (prev.total > current.total) ? prev : current
+        );
+        this.departamentoMayorGasto = topDept.departmentName;
+    } else {
+        this.departamentoMayorGasto = '-';
+    }
+
+    // Mes con mayor gasto
+    const globalMonthly = new Map<string, number>();
+    this.departmentExpenses.forEach(d => {
+        Object.entries(d.monthlyData).forEach(([m, val]) => {
+            globalMonthly.set(m, (globalMonthly.get(m) || 0) + val);
+        });
+    });
+
+    let maxMonthVal = -1;
+    let maxMonthName = '-';
+    globalMonthly.forEach((val, key) => {
+        if (val > maxMonthVal) {
+            maxMonthVal = val;
+            maxMonthName = key;
+        }
+    });
+    this.mesConMayorGasto = maxMonthVal > 0 ? maxMonthName : '-';
+
     this.updateChart();
   }
 

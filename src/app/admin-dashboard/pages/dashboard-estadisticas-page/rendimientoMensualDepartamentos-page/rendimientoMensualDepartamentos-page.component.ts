@@ -269,11 +269,6 @@ export class RendimientoMensualDepartamentosPageComponent implements OnInit {
       selected: false
     }));
 
-    // Seleccionar el año más reciente por defecto si no hay selección
-    if (this.anosOptions.length > 0 && !this.anosOptions.some(a => a.selected)) {
-      this.anosOptions[0].selected = true;
-    }
-
     // Extraer meses únicos
     const mesesUnicos = Array.from(
       new Set(this.rendimientoData.map(item => {

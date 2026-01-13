@@ -550,35 +550,43 @@ export class IngresosRankingMensualDepartamentosPageComponent implements OnInit,
       return;
     }
 
-    // Extraer años disponibles
+    // CORRECCIÓN 1: Extraer años usando substring (evita el problema de Zona Horaria)
     this.availableYears = [...new Set(this.rawData.map(item =>
-      new Date(item.fecha).getFullYear()
+      parseInt(item.fecha.toString().substring(0, 4))
     ))].sort((a, b) => b - a);
 
     if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
       this.selectedYear = this.availableYears[0];
     }
 
-    // Filtrar datos por año y meses seleccionados
+    // CORRECCIÓN 2: Filtrar datos usando substring
     const filteredData = this.rawData.filter(item => {
-      const date = new Date(item.fecha);
-      const year = date.getFullYear();
-      const monthIndex = date.getMonth();
+      // Tomamos la fecha como texto: "2026-01-01T..."
+      const fechaStr = item.fecha.toString();
+
+      // Año: caracteres 0 a 4 ("2026")
+      const year = parseInt(fechaStr.substring(0, 4));
+
+      // Mes: caracteres 5 a 7 ("01"). Restamos 1 porque el array empieza en 0
+      const monthNum = parseInt(fechaStr.substring(5, 7));
+      const monthIndex = monthNum - 1;
+
       const monthName = this.availableMonths[monthIndex];
 
+      // Verificamos si coincide
       return year === this.selectedYear && this.selectedMonths.includes(monthName);
     });
 
-    // Agrupar por departamento
+    // Agrupar por departamento (Esto sigue igual)
     const departmentGroups = this.groupByDepartment(filteredData);
 
-    // Procesar ranking
+    // Procesar ranking (Esto sigue igual)
     this.departmentRanking = this.processDepartmentRanking(departmentGroups);
 
-    // Calcular resumen
+    // Calcular resumen (Esto sigue igual)
     this.calculateSummary();
 
-    // Actualizar gráfico
+    // Actualizar gráfico (Esto sigue igual)
     this.updateChart();
   }
 

@@ -1,13 +1,10 @@
 <div class="container mx-auto p-4">
-  <!-- Header -->
   <div class="mb-6">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Disgregación de Gastos por categoría</h1>
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Disgregación de Gastos por Categoría</h1>
   </div>
 
-  <!-- Filtros -->
   <div class="bg-white rounded-lg shadow-md p-4 mb-6">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
-      <!-- Selector de Año -->
       <div>
         <label for="anio" class="block text-sm font-semibold text-gray-700 mb-2">
           Año
@@ -23,7 +20,6 @@
         </select>
       </div>
 
-      <!-- Selector de Mes -->
       <div>
         <label for="mes" class="block text-sm font-semibold text-gray-700 mb-2">
           Mes
@@ -33,267 +29,152 @@
           [(ngModel)]="mesSeleccionado"
           (change)="onMesChange()"
           class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white">
-          <option *ngFor="let mes of meses" [value]="mes.value">
-            {{ mes.label }}
+          <option [value]="-1">Todos los meses</option>
+          <option *ngFor="let mes of meses" [value]="mes.id">
+            {{ mes.nombre }}
           </option>
         </select>
       </div>
     </div>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="flex justify-center items-center h-96">
-    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+  <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
   </div>
 
-  <!-- Chart Card -->
-  <div *ngIf="!isLoading && gastosFiltrados.length > 0" class="bg-white rounded-lg shadow-lg p-6">
-    <!-- Stats Summary -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <!-- Total de Gastos -->
-      <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200 shadow-sm">
-        <p class="text-sm text-blue-700 font-semibold mb-1 flex items-center">
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Total de Gastos
-        </p>
-        <p class="text-2xl font-bold text-blue-900">
-          {{ totalGastos | safeCurrency }}
-        </p>
-      </div>
+  <div *ngIf="!isLoading && gastosFiltrados.length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-6 transition-all duration-500 ease-in-out">
 
-      <!-- Categoría con Mayor Gasto -->
-      <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 border border-red-200 shadow-sm">
-        <p class="text-sm text-red-700 font-semibold mb-1 flex items-center">
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-          </svg>
-          Categoría con Mayor Gasto
-        </p>
-        <p class="text-lg font-bold text-red-900 truncate" [title]="categoriaConMayorGasto">
-          {{ categoriaConMayorGasto || 'N/A' }}
-        </p>
-        <p class="text-sm text-red-700 font-semibold">
-          {{ montoMayorCategoria | safeCurrency }}
-        </p>
-      </div>
+    <div [class]="mostrarTabla ? 'lg:col-span-1' : 'lg:col-span-2'" class="transition-all duration-500">
+      <div class="bg-white rounded-lg shadow-lg p-6 h-full">
+        <h3 class="text-xl font-bold text-gray-800 mb-6">Distribución de Gastos</h3>
 
-      <!-- Cantidad de Categorías -->
-      <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200 shadow-sm">
-        <p class="text-sm text-purple-700 font-semibold mb-1 flex items-center">
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-          </svg>
-          Categorías Activas
-        </p>
-        <p class="text-2xl font-bold text-purple-900">
-          {{ cantidadCategorias | safeNumber }}
-        </p>
-        <p class="text-sm text-purple-700">
-          {{ gastosFiltrados.length }} gasto{{ gastosFiltrados.length !== 1 ? 's' : '' }}
-        </p>
+        <div id="chart" class="w-full flex justify-center">
+          <apx-chart
+            *ngIf="chartOptions.series.length > 0"
+            [series]="chartOptions.series"
+            [chart]="chartOptions.chart"
+            [labels]="chartOptions.labels"
+            [plotOptions]="chartOptions.plotOptions"
+            [responsive]="chartOptions.responsive"
+            [legend]="chartOptions.legend"
+            [colors]="chartOptions.colors"
+            [dataLabels]="chartOptions.dataLabels"
+          ></apx-chart>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div
+            *ngFor="let cat of gastosPorCategoria"
+            (click)="seleccionarCategoria(cat.categoria)"
+            class="p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md"
+            [ngClass]="{'border-blue-500 bg-blue-50 ring-2 ring-blue-200': categoriaSeleccionada === cat.categoria, 'border-gray-200 hover:border-blue-300': categoriaSeleccionada !== cat.categoria}"
+          >
+            <div class="flex justify-between items-start mb-2">
+              <span class="font-semibold text-gray-700 truncate pr-2" [title]="cat.categoria">{{ cat.categoria }}</span>
+              <span class="text-xs font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                {{ cat.porcentaje | number:'1.0-1' }}%
+              </span>
+            </div>
+            <div class="text-2xl font-bold text-gray-900 mb-1">
+              {{ cat.monto | safeCurrency }}
+            </div>
+            <div class="text-xs text-gray-500">
+              {{ cat.cantidad }} registros
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Chart y Tabla de Detalle lado a lado -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <!-- Chart Container -->
-      <div [ngClass]="iniciarTransicion ? 'lg:col-span-6' : 'lg:col-span-12'" class="chart-container">
-        <apx-chart
-          #chart
-          [series]="chartOptions.series"
-          [chart]="chartOptions.chart"
-          [labels]="chartOptions.labels"
-          [colors]="chartOptions.colors"
-          [plotOptions]="chartOptions.plotOptions"
-          [dataLabels]="chartOptions.dataLabels"
-          [legend]="chartOptions.legend"
-          [responsive]="chartOptions.responsive"
-          [tooltip]="chartOptions.tooltip"
-        ></apx-chart>
-        <p class="text-center text-sm text-gray-500 mt-2">
-          Haz click en una categoría para ver el detalle
-        </p>
-      </div>
-
-      <!-- Tabla de Detalle de Categoría Seleccionada -->
-      <!-- Contenedor que SIEMPRE ocupa espacio cuando iniciarTransicion = true -->
-      <div *ngIf="iniciarTransicion" class="lg:col-span-6">
-        <!-- Contenido de la tabla, solo visible cuando mostrarTabla = true -->
-        <div *ngIf="mostrarTabla" class="animate-slide-in">
-          <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 mb-4 border border-indigo-200">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-lg font-bold text-indigo-900">{{ categoriaSeleccionada }}</h3>
-              <p class="text-sm text-indigo-700">{{ gastosDetalleCategoria.length }} registro{{ gastosDetalleCategoria.length !== 1 ? 's' : '' }}</p>
-            </div>
-            <button
-              (click)="limpiarSeleccion()"
-              class="px-3 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-lg border border-gray-300 transition-colors flex items-center gap-2 text-sm font-medium">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Cerrar
-            </button>
+    <div *ngIf="mostrarTabla" class="lg:col-span-1 animate-fadeIn">
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden h-full flex flex-col">
+        <div class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+          <div>
+            <h3 class="text-lg font-bold text-gray-800">Detalle: {{ categoriaSeleccionada }}</h3>
+            <p class="text-sm text-gray-500">{{ gastosDetalleCategoria.length }} registros encontrados</p>
           </div>
+          <button
+            (click)="limpiarSeleccion()"
+            class="p-2 hover:bg-gray-200 rounded-full transition-colors"
+            title="Cerrar detalle"
+          >
+            <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-lg">
+        <div class="overflow-y-auto flex-1 p-0 custom-scrollbar" style="max-height: 600px;">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50 sticky top-0">
               <tr>
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ID
-                </th>
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fecha
-                </th>
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Departamento
-                </th>
-                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Monto
-                </th>
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Propietario
-                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detalle</th>
+                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr *ngFor="let gasto of gastosDetalleCategoria; let i = index; trackBy: trackByGastoId"
-                  [class.bg-gray-50]="i % 2 === 0"
-                  class="hover:bg-indigo-50 transition-colors">
-                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-700">
-                  {{ gasto.id }}
-                </td>
-                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
+              <tr *ngFor="let gasto of gastosDetalleCategoria; trackBy: trackByGastoId" class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                   {{ formatearFecha(gasto.fecha) }}
                 </td>
-                <td class="px-3 py-2 text-xs text-gray-700">
-                  {{ gasto.nombre }}
+                <td class="px-6 py-4 text-sm text-gray-900">
+                  <div class="font-medium">
+                    {{ $any(gasto).departamento?.nombre || $any(gasto).departamento || $any(gasto).nombre || 'Sin Depto' }}
+                  </div>
+                  <div class="text-gray-500 text-xs truncate max-w-xs">
+                    {{ $any(gasto).observaciones || '-' }}
+                  </div>
                 </td>
-                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900 text-right font-semibold">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
                   {{ gasto.monto | safeCurrency }}
-                </td>
-                <td class="px-3 py-2 text-xs text-gray-700">
-                  {{ gasto.nombreApellido }}
                 </td>
               </tr>
             </tbody>
-            <tfoot class="bg-gray-100 sticky bottom-0">
+            <tfoot class="bg-gray-50 sticky bottom-0 border-t border-gray-200">
               <tr>
-                <td colspan="3" class="px-3 py-2 text-xs font-bold text-gray-900">
-                  TOTAL
-                </td>
-                <td class="px-3 py-2 text-xs font-bold text-gray-900 text-right">
+                <td colspan="2" class="px-6 py-4 text-sm font-bold text-gray-900 text-right">Total:</td>
+                <td class="px-6 py-4 text-sm font-bold text-blue-600 text-right">
                   {{ calcularTotalCategoria() | safeCurrency }}
                 </td>
-                <td></td>
               </tr>
             </tfoot>
           </table>
         </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tabla de Resumen por Categoría -->
-    <div class="mt-8">
-      <h3 class="text-xl font-bold text-gray-800 mb-4">Resumen por Categoría</h3>
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Categoría
-              </th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Cantidad
-              </th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Monto Total
-              </th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Porcentaje
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr *ngFor="let item of gastosPorCategoria; let i = index"
-                [class.bg-gray-50]="i % 2 === 0">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                <div class="flex items-center">
-                  <span class="w-3 h-3 rounded-full mr-2"
-                        [style.background-color]="chartOptions.colors[i % chartOptions.colors.length]"></span>
-                  {{ item.categoria }}
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">
-                {{ item.cantidad | safeNumber }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
-                {{ item.monto | safeCurrency }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  {{ item.porcentaje | number:'1.1-1' }}%
-                </span>
-              </td>
-            </tr>
-          </tbody>
-          <tfoot class="bg-gray-100">
-            <tr>
-              <td class="px-6 py-4 text-sm font-bold text-gray-900">
-                TOTAL
-              </td>
-              <td class="px-6 py-4 text-sm font-bold text-gray-900 text-right">
-                {{ gastosFiltrados.length | safeNumber }}
-              </td>
-              <td class="px-6 py-4 text-sm font-bold text-gray-900 text-right">
-                {{ totalGastos | safeCurrency }}
-              </td>
-              <td class="px-6 py-4 text-sm font-bold text-gray-900 text-right">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  100%
-                </span>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
       </div>
     </div>
   </div>
 
-  <!-- Empty State -->
   <div *ngIf="!isLoading && gastosFiltrados.length === 0" class="bg-white rounded-lg shadow-lg p-12 text-center">
     <svg class="mx-auto h-24 w-24 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
-    <h3 class="text-xl font-semibold text-gray-700 mb-2">No hay gastos para el período seleccionado</h3>
-    <p class="text-gray-500">Intenta seleccionar otro año o mes</p>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">No hay gastos registrados</h3>
+    <p class="text-gray-500">No se encontraron gastos para el período seleccionado.</p>
   </div>
 </div>
 
 <style>
-/* Transición suave para el contenedor del gráfico */
-.chart-container {
-  transition: all 0.3s ease-in-out;
-}
-
-/* Animación para el contenido de la tabla */
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out both;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out forwards;
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-}
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
 </style>
