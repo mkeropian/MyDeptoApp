@@ -340,8 +340,9 @@ export class RendimientoDepartamentosPageComponent implements OnInit {
     // Extraer años únicos
     const anosUnicos = Array.from(
       new Set(this.rendimientoData.map(item => {
-        const fecha = new Date(item.fecha);
-        return fecha.getFullYear();
+        // const fecha = new Date(item.fecha);
+        // return fecha.getFullYear();
+        return parseInt(item.fecha.toString().substring(0, 4));
       }))
     ).sort((a, b) => b - a); // Orden descendente (más reciente primero)
 
@@ -354,8 +355,9 @@ export class RendimientoDepartamentosPageComponent implements OnInit {
     // Extraer meses únicos
     const mesesUnicos = Array.from(
       new Set(this.rendimientoData.map(item => {
-        const fecha = new Date(item.fecha);
-        return `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
+        // const fecha = new Date(item.fecha);
+        // return `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
+        return item.fecha.toString().substring(0, 7);
       }))
     ).map(mesAno => {
       const [year, month] = mesAno.split('-');
@@ -402,9 +404,12 @@ export class RendimientoDepartamentosPageComponent implements OnInit {
 
     // Filtrar datos
     this.filteredData = this.rendimientoData.filter(item => {
-      const fecha = new Date(item.fecha);
-      const ano = fecha.getFullYear();
-      const mesAno = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
+      // const fecha = new Date(item.fecha);
+      // const ano = fecha.getFullYear();
+      // const mesAno = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
+
+      const ano = parseInt(item.fecha.toString().substring(0, 4));
+      const mesAno = item.fecha.toString().substring(0, 7);
 
       const matchesDepartamento = item.departamento_id === selectedDepartamento.id;
       const matchesAno = selectedAnos.length === 0 || selectedAnos.includes(ano);
@@ -477,9 +482,16 @@ export class RendimientoDepartamentosPageComponent implements OnInit {
 
     // Procesar cada registro individualmente mostrando día
     const processedData = this.filteredData.map(item => {
-      const fecha = new Date(item.fecha);
-      const dia = fecha.getDate().toString().padStart(2, '0');
-      const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+      // const fecha = new Date(item.fecha);
+      // const dia = fecha.getDate().toString().padStart(2, '0');
+      // const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+
+      const fechaStr = item.fecha.toString();
+      const parts = fechaStr.split('T')[0].split('-');
+
+      const dia = parts[2];
+      const mes = parts[1];
+
       const fechaFormateada = `${dia}/${mes}`;
 
       return {
