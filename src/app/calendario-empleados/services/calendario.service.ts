@@ -91,7 +91,6 @@ export interface FiltrosCalendario {
   fechaFin?: string;
   idsTipoCalendario?: number[];
 }
-
 export interface UsuarioRol {
   id: number;
   idrol: number;
@@ -100,7 +99,6 @@ export interface UsuarioRol {
   usuario: string;
   nombreCompleto: string;
 }
-
 export interface CalendarioUsuario {
   id: number;
   idCalendar: number;
@@ -109,16 +107,12 @@ export interface CalendarioUsuario {
   codUser: string;
   nameUser: string;
 }
-
-// ==================== NUEVAS INTERFACES PARA FORMULARIOS ====================
-
 export interface Formulario {
   id: number;
   nombre: string;
   descripcion: string;
   activo: boolean;
 }
-
 export interface CampoFormulario {
   id: number;
   id_formulario: number;
@@ -134,6 +128,28 @@ export interface CampoFormulario {
 
 export interface FormularioCompleto extends Formulario {
   campos: CampoFormulario[];
+}
+
+export interface TipoCampoDisponible {
+  id: number;
+  codigo: string;
+  nombre_display: string;
+  icono: string;
+  descripcion: string;
+  activo: number;
+}
+
+export interface CampoFormularioDetalle {
+  id?: number;
+  id_formulario: number;
+  nombre_campo: string;
+  tipo_campo: string;
+  label: string;
+  placeholder: string;
+  requerido: boolean;
+  orden: number;
+  opciones?: any;
+  activo?: number;
 }
 
 export type VistaCalendario = 'dia' | 'semana' | 'mes';
@@ -630,15 +646,61 @@ export class CalendarioService {
 
   // ==================== NUEVO: GESTIÓN DE FORMULARIOS ====================
 
-  obtenerFormularios(): Observable<Formulario[]> {
-    return this.http.get<Formulario[]>(
-      `${this.formulariosUrl}/all`,
+  /**
+   * Obtener todos los formularios
+   */
+  obtenerFormularios(): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.formulariosUrl}/all`
+    );
+  }
+
+  /**
+   * Obtener formularios activos
+   */
+  obtenerFormulariosActivos(): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.formulariosUrl}/activos`
+    );
+  }
+
+  /**
+   * Crear un nuevo formulario
+   */
+  crearFormulario(formulario: any): Observable<any> {
+    return this.http.post(
+      this.formulariosUrl,
+      formulario
+    );
+  }
+
+  /**
+   * Actualizar un formulario existente
+   */
+  actualizarFormulario(id: number, formulario: any): Observable<any> {
+    return this.http.put(
+      `${this.formulariosUrl}/${id}`,
+      formulario
+    );
+  }
+
+  /**
+   * Reactivar un formulario
+   */
+  reactivarFormulario(id: number): Observable<any> {
+    return this.http.post(
+      `${this.formulariosUrl}/${id}/reactivar`,
+      {},
       { headers: this.getHeaders() }
-    ).pipe(
-      catchError(error => {
-        console.error('Error al obtener formularios:', error);
-        return throwError(() => error);
-      })
+    );
+  }
+
+  /**
+   * Eliminar (desactivar) un formulario
+   */
+  eliminarFormulario(id: number): Observable<any> {
+    return this.http.delete(
+      `${this.formulariosUrl}/${id}`
     );
   }
 
@@ -651,6 +713,80 @@ export class CalendarioService {
         console.error('Error al obtener formulario completo:', error);
         return throwError(() => error);
       })
+    );
+  }
+
+  // ==================== TIPOS DE CAMPO DISPONIBLES ====================
+
+  /**
+   * Obtener tipos de campo disponibles para formularios
+   */
+  obtenerTiposCampoDisponibles(): Observable<TipoCampoDisponible[]> {
+    return this.http.get<TipoCampoDisponible[]>(
+      `${this.formulariosUrl}/tipos-campo`
+    );
+  }
+
+  // ==================== GESTIÓN DE CAMPOS DE FORMULARIO ====================
+
+  /**
+   * Crear un nuevo campo en un formulario
+   */
+  crearCampoFormulario(campo: CampoFormularioDetalle): Observable<any> {
+    return this.http.post(
+      `${this.formulariosUrl}/campos`,
+      campo
+    );
+  }
+
+  /**
+   * Actualizar un campo existente
+   */
+  actualizarCampoFormulario(idCampo: number, campo: CampoFormularioDetalle): Observable<any> {
+    return this.http.put(
+      `${this.formulariosUrl}/campos/${idCampo}`,
+      campo
+    );
+  }
+
+  /**
+   * Eliminar (desactivar) un campo
+   */
+  eliminarCampoFormulario(idCampo: number): Observable<any> {
+    return this.http.delete(
+      `${this.formulariosUrl}/campos/${idCampo}`
+    );
+  }
+
+  /**
+   * Obtener campos de un formulario específico
+   */
+  obtenerCamposFormulario(idFormulario: number): Observable<CampoFormulario[]> {
+    return this.http.get<CampoFormulario[]>(
+      `${this.formulariosUrl}/${idFormulario}/campos`
+    );
+  }
+
+  // ==================== VINCULACIÓN EVENTOS-CALENDARIOS ====================
+
+  /**
+   * Obtener calendarios donde está permitido un evento
+   */
+  obtenerCalendariosPermitidosPorEvento(idEvento: number): Observable<TipoCalendario[]> {
+    return this.http.get<TipoCalendario[]>(
+      `${this.apiUrl}/eventos/${idEvento}/calendarios-permitidos`,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  /**
+   * Asignar evento a múltiples calendarios
+   */
+  asignarEventoACalendarios(idEvento: number, idsCalendarios: number[]): Observable<any> {
+    return this.http.post(
+      `${this.apiUrl}/eventos/asignar-calendarios`,
+      { idEvento, idsCalendarios },
+      { headers: this.getHeaders() }
     );
   }
 

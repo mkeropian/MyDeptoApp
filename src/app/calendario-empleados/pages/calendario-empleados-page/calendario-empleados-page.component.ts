@@ -744,71 +744,45 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   cargarEventosPermitidos(idCalendario: number): void {
-    console.log('🔵 cargarEventosPermitidos para calendario:', idCalendario);
+    this.calendarioService.obtenerEventosPermitidosPorCalendario(idCalendario).subscribe({
+      next: (eventos) => {
+        // ✅ Filtrar SOLO eventos que tengan formulario asociado
+        this.tiposEventoFiltrados = eventos.filter(evento =>
+          evento.activo && evento.id_formulario !== null && evento.id_formulario !== undefined
+        );
 
-    this.calendarioService.obtenerEventosPermitidosPorCalendario(idCalendario)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (eventos) => {
-          console.log('🟢 Eventos permitidos recibidos:', eventos);
-          this.tiposEventoFiltrados = eventos;
+        if (this.tiposEventoFiltrados.length === 0) {
+          this.notificationService.mostrarNotificacion(
+            'No hay eventos disponibles para este calendario. Configure eventos con formularios asociados.',
+            'warning'
+          );
+          this.eventoForm.get('idTipoEventoCalendario')?.disable();
+        } else {
+          this.eventoForm.get('idTipoEventoCalendario')?.enable();
 
-          // Habilitar el campo y resetear su valor
-          const tipoEventoControl = this.eventoForm.get('idTipoEventoCalendario');
-
-          if (eventos.length > 0) {
-            // Si hay eventos, habilitar el select
-            tipoEventoControl?.enable();
-          } else {
-            // Si NO hay eventos, mantener deshabilitado
-            tipoEventoControl?.disable();
-            console.log('⚠️ No hay eventos para este calendario');
-          }
-
-          tipoEventoControl?.reset();
-
-          // ✅ IMPORTANTE: Mantener el listener del calendario SIEMPRE
-          this.eventoForm.get('idTipoCalendario')?.valueChanges
-            .pipe(takeUntil(this.destroy$))
-            .subscribe((nuevoIdCalendario) => {
-              console.log('🔄 [EVENTOS_PERMITIDOS] Calendario cambió a:', nuevoIdCalendario);
-
-              if (nuevoIdCalendario && nuevoIdCalendario !== idCalendario) {
-                // Resetear estado
-                this.formularioActual = null;
-                this.camposFormularioActual = [];
-                this.tiposEventoFiltrados = [];
-
-                // Recrear formulario básico
-                this.eventoForm = this.fb.group({
-                  idTipoCalendario: [nuevoIdCalendario, Validators.required],
-                  idTipoEventoCalendario: [{ value: '', disabled: true }, Validators.required]
-                });
-
-                console.log('🔄 Formulario reseteado - cargando eventos para calendario:', nuevoIdCalendario);
-
-                // Cargar eventos del nuevo calendario
-                this.cargarEventosPermitidos(Number(nuevoIdCalendario));
-              }
-            });
-
-          // Suscribir al cambio de tipo de evento
-          tipoEventoControl?.valueChanges
-            .pipe(takeUntil(this.destroy$))
-            .subscribe((idTipoEvento) => {
-              console.log('🟡 idTipoEventoCalendario cambió a:', idTipoEvento);
-              if (idTipoEvento) {
-                this.cargarFormularioDinamico(Number(idTipoEvento));
-              }
-            });
-
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.error('❌ Error al cargar eventos permitidos:', error);
-          this.notificationService.mostrarNotificacion('Error al cargar tipos de evento', 'error');
+          // Listener para cargar formulario dinámico
+          this.eventoForm.get('idTipoEventoCalendario')?.valueChanges.subscribe(idTipoEvento => {
+            if (idTipoEvento) {
+              this.cargarFormularioDinamico(idTipoEvento);
+            }
+          });
         }
-      });
+
+        // Listener de cambio de calendario
+        this.eventoForm.get('idTipoCalendario')?.valueChanges.subscribe(idCal => {
+          if (idCal && idCal !== idCalendario) {
+            this.formularioActual = null;
+            this.camposFormularioActual = [];
+            this.eventoForm.get('idTipoEventoCalendario')?.reset();
+            this.cargarEventosPermitidos(idCal);
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error al cargar eventos permitidos:', error);
+        this.notificationService.mostrarNotificacion('Error al cargar tipos de evento', 'error');
+      }
+    });
   }
 
   editarEvento(evento: EventoCalendarioExtendido): void {
