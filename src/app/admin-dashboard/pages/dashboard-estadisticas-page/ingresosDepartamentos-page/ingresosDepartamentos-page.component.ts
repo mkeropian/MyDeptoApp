@@ -126,22 +126,23 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
   private processPagosData(): void {
     if (!this.rawData || this.rawData.length === 0) {
       this.departmentExpenses = [];
+      this.updateChart();
       return;
     }
 
-    // --- 1. Detectar años ---
+    // --- 1. Detectar años usando TEXTO (Infalible contra Timezones) ---
     const yearsSet = new Set<number>();
     this.rawData.forEach(item => {
-      const d = new Date(item.fecha);
-      if(!isNaN(d.getFullYear())) yearsSet.add(d.getFullYear());
+      // Tomamos "2026" directamente del string "2026-01-01..."
+      const yearStr = String(item.fecha).substring(0, 4);
+      const year = parseInt(yearStr);
+      if (!isNaN(year)) yearsSet.add(year);
     });
     this.availableYears = Array.from(yearsSet).sort((a, b) => b - a);
 
-    // Asegurar año válido
     if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
       this.selectedYear = this.availableYears[0];
     }
-    console.log('📅 Año seleccionado:', this.selectedYear);
 
     // --- 2. Agrupar Datos ---
     const monthNames = [
@@ -152,27 +153,26 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
     const tempMap = new Map<string, { total: number, monthly: Map<string, number> }>();
     this.totalIngresos = 0;
 
-    // Filtramos
+    // Filtramos comparando TEXTO contra número
     const datosFiltrados = this.rawData.filter(item => {
-      const d = new Date(item.fecha);
-      return d.getFullYear() === this.selectedYear;
+      const yearStr = String(item.fecha).substring(0, 4);
+      return parseInt(yearStr) === this.selectedYear;
     });
 
-    console.log(`🔎 Registros encontrados para ${this.selectedYear}:`, datosFiltrados.length);
+    console.log(`🔎 Registros recuperados (Fix Texto) para ${this.selectedYear}:`, datosFiltrados.length);
 
     datosFiltrados.forEach(item => {
-      // Obtener Mes
-      // Truco: Usamos 'new Date' + 'getUTCMonth' para evitar líos de zona horaria si viene ISO
-      // O 'getMonth' simple. Vamos a usar un método seguro.
-      const d = new Date(item.fecha);
-      // Ajuste: si la fecha viene como string "2026-01-01", el new Date asume UTC.
-      // Si usamos getMonth() en Argentina (GMT-3), las 00:00 se vuelven 21:00 del día anterior.
-      // SOLUCIÓN: Usar UTC para determinar el mes si es string ISO.
-      const monthIndex = d.getUTCMonth();
+      // Obtener Mes usando TEXTO ("2026-01-01" -> toma "01")
+      // Restamos 1 porque el array empieza en 0
+      const monthStr = String(item.fecha).substring(5, 7);
+      const monthIndex = parseInt(monthStr) - 1;
+
+      if (monthIndex < 0 || monthIndex > 11) return; // Validación seguridad
 
       const monthName = monthNames[monthIndex];
       const monto = Number(item.monto || 0);
 
+      // Obtener nombre del departamento (Seguro contra tipos)
       const itemAny = item as any;
       const deptName = itemAny.nombre || itemAny.departamento?.nombre || itemAny.departamento || 'Sin Departamento';
 
@@ -192,17 +192,20 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
     this.departmentExpenses = Array.from(tempMap.entries()).map(([name, val]) => {
       const monthlyDataObj: { [key: string]: number } = {};
       monthNames.forEach(m => monthlyDataObj[m] = val.monthly.get(m) || 0);
-      return { departmentName: name, monthlyData: monthlyDataObj, total: val.total };
-    });
 
-    console.log('📊 Datos procesados para el gráfico:', this.departmentExpenses);
+      return {
+        departmentName: name,
+        monthlyData: monthlyDataObj,
+        total: val.total
+      };
+    });
 
     this.calculateMetrics();
 
-    // CORRECCIÓN 2: Pequeño delay para asegurar renderizado
+    // Pequeño delay para asegurar que el gráfico se dibuje
     setTimeout(() => {
         this.updateChart();
-    }, 100);
+    }, 50);
   }
 
   private updateChart(): void {
