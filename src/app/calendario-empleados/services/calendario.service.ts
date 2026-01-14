@@ -125,11 +125,9 @@ export interface CampoFormulario {
   opciones: any | null;
   activo: boolean;
 }
-
 export interface FormularioCompleto extends Formulario {
   campos: CampoFormulario[];
 }
-
 export interface TipoCampoDisponible {
   id: number;
   codigo: string;
@@ -138,7 +136,6 @@ export interface TipoCampoDisponible {
   descripcion: string;
   activo: number;
 }
-
 export interface CampoFormularioDetalle {
   id?: number;
   id_formulario: number;
@@ -150,6 +147,19 @@ export interface CampoFormularioDetalle {
   orden: number;
   opciones?: any;
   activo?: number;
+}
+
+export interface CampoCalendarDisponible {
+  id: number;
+  nombre_columna: string;
+  tipo_dato: string;
+  etiqueta_sugerida: string;
+  icono: string;
+  descripcion: string;
+  es_obligatorio: number;
+  categoria: string;
+  orden_display: number;
+  activo: number;
 }
 
 export type VistaCalendario = 'dia' | 'semana' | 'mes';
@@ -724,6 +734,16 @@ export class CalendarioService {
   obtenerTiposCampoDisponibles(): Observable<TipoCampoDisponible[]> {
     return this.http.get<TipoCampoDisponible[]>(
       `${this.formulariosUrl}/tipos-campo`
+    );
+  }
+
+  /**
+   * Obtener campos disponibles de la tabla calendar
+   */
+  obtenerCamposCalendarDisponibles(): Observable<CampoCalendarDisponible[]> {
+    return this.http.get<CampoCalendarDisponible[]>(
+      `${this.formulariosUrl}/campos-calendar-disponibles`,
+      { headers: this.getHeaders() }
     );
   }
 

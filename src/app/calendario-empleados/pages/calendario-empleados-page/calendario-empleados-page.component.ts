@@ -359,13 +359,17 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   reconstruirFormulario(campos: CampoFormulario[]): void {
     console.log('🔵 [5] reconstruirFormulario llamado con', campos.length, 'campos');
 
-    const group: { [key: string]: FormControl } = {};
-
     // GUARDAR valores actuales ANTES de recrear el form
     const idTipoCalendario = this.eventoForm.get('idTipoCalendario')?.value;
     const idTipoEventoCalendario = this.eventoForm.get('idTipoEventoCalendario')?.value;
 
     console.log('🟡 [6] Valores guardados - Calendario:', idTipoCalendario, 'Evento:', idTipoEventoCalendario);
+
+    const group: { [key: string]: FormControl } = {};
+
+    // ✅ AGREGAR CONTROLES FIJOS PRIMERO
+    group['idTipoCalendario'] = new FormControl(idTipoCalendario, Validators.required);
+    group['idTipoEventoCalendario'] = new FormControl(idTipoEventoCalendario, Validators.required);
 
     // Crear controles para cada campo del formulario
     campos.forEach(campo => {
@@ -392,14 +396,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.eventoForm = this.fb.group(group);
 
     console.log('🟢 [7] FormGroup recreado con', Object.keys(group).length, 'controles');
-
-    // RESTAURAR los valores de tipo calendario y tipo evento
-    this.eventoForm.patchValue({
-      idTipoCalendario: idTipoCalendario,
-      idTipoEventoCalendario: idTipoEventoCalendario
-    }, { emitEvent: false });
-
-    console.log('🟢 [8] Valores restaurados al form');
     console.log('🟢 [9] Form actual:', this.eventoForm.value);
 
     // Si estamos editando, poblar con los datos del evento

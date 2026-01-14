@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CalendarioService, CalendarioUsuario, TipoCalendario, TipoEventoCalendario, Usuario, TipoCampoDisponible, CampoFormularioDetalle } from '../../../../calendario-empleados/services/calendario.service';
 import { NotificationService } from '../../../../shared/services/notification.service';
+import { CampoCalendarDisponible } from '../../../../calendario-empleados/services/calendario.service';
 import Swal from 'sweetalert2';
 
 interface PermisoUsuario {
@@ -49,6 +50,7 @@ export class CalendarSettingsPageComponent implements OnInit {
     activo: true,
     id_formulario: null
   };
+  eventosConCalendarios: Map<number, { id: number; descripcion: string }[]> = new Map();
   showEventForm = false;
 
   // Estados para permisos de usuario
@@ -114,6 +116,7 @@ export class CalendarSettingsPageComponent implements OnInit {
   tiposCampoDisponibles: TipoCampoDisponible[] = [];
   formularioSeleccionado: Formulario | null = null;
   camposFormulario: CampoFormularioDetalle[] = [];
+  camposCalendarDisponibles: CampoCalendarDisponible[] = [];
   editingCampo: CampoFormularioDetalle | null = null;
   newCampo: Partial<CampoFormularioDetalle> = {};
   showCampoForm = false;
@@ -137,43 +140,26 @@ export class CalendarSettingsPageComponent implements OnInit {
   async cargarDatos(): Promise<void> {
     this.loading = true;
     this.error = null;
-
     try {
-      console.log('🔵 Iniciando carga de datos...');
-
-      // PRIMERO: Cargar usuarios, calendarios, formularios y tipos de campo
+      // PRIMERO: Cargar usuarios, calendarios, eventos y formularios
       await Promise.all([
-        this.cargarTiposCalendario().catch(err => {
-          console.error('❌ Error en cargarTiposCalendario:', err);
-          throw err;
-        }),
-        this.cargarTiposEvento().catch(err => {
-          console.error('❌ Error en cargarTiposEvento:', err);
-          throw err;
-        }),
-        this.cargarUsuarios().catch(err => {
-          console.error('❌ Error en cargarUsuarios:', err);
-          throw err;
-        }),
-        this.cargarFormularios().catch(err => {
-          console.error('❌ Error en cargarFormularios:', err);
-          throw err;
-        }),
-        this.cargarTiposCampoDisponibles().catch(err => {
-          console.error('❌ Error en cargarTiposCampoDisponibles:', err);
-          throw err;
-        })
+        this.cargarTiposCalendario(),
+        this.cargarTiposEvento(),
+        this.cargarUsuarios(),
+        this.cargarFormularios(),  // ← AGREGAR
+        this.cargarTiposCampoDisponibles()  // ← AGREGAR
       ]);
-
-      console.log('🟢 Datos base cargados correctamente');
 
       // DESPUÉS: Cargar permisos (necesita que users ya esté cargado)
       await this.cargarPermisos();
 
-      console.log('🟢 Todos los datos cargados correctamente');
+      // Cargar vinculaciones de calendarios para cada evento
+      this.eventTypes.forEach(evento => {
+        this.cargarCalendariosPorEvento(evento.id);
+      });
 
     } catch (error) {
-      console.error('❌ Error al cargar datos:', error);
+      console.error('Error al cargar datos:', error);
       this.error = 'Error al cargar la configuración. Por favor, intente nuevamente.';
     } finally {
       this.loading = false;
@@ -612,15 +598,18 @@ export class CalendarSettingsPageComponent implements OnInit {
 
   async cargarTiposCampoDisponibles(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.calendarioService.obtenerTiposCampoDisponibles().subscribe({
-        next: (tipos) => {
-          this.tiposCampoDisponibles = tipos;
-          resolve();
-        },
-        error: (error) => {
-          console.error('Error al cargar tipos de campo:', error);
-          reject(error);
-        }
+      // Cargar tipos de campo genéricos Y campos específicos de calendar
+      Promise.all([
+        this.calendarioService.obtenerTiposCampoDisponibles().toPromise(),
+        this.calendarioService.obtenerCamposCalendarDisponibles().toPromise()
+      ]).then(([tiposCampo, camposCalendar]) => {
+        this.tiposCampoDisponibles = tiposCampo || [];
+        this.camposCalendarDisponibles = camposCalendar || [];
+        console.log('✅ Campos calendar disponibles cargados:', this.camposCalendarDisponibles.length);
+        resolve();
+      }).catch(error => {
+        console.error('Error al cargar tipos de campo:', error);
+        reject(error);
       });
     });
   }
@@ -776,18 +765,33 @@ export class CalendarSettingsPageComponent implements OnInit {
     });
   }
 
-  seleccionarTipoCampo(tipo: TipoCampoDisponible): void {
+  seleccionarCampoCalendar(campo: CampoCalendarDisponible): void {
+    // Verificar si el campo ya está agregado
+    const yaExiste = this.camposFormulario.some(c => c.nombre_campo === campo.nombre_columna);
+
+    if (yaExiste) {
+      this.notificationService.mostrarNotificacion(
+        `El campo "${campo.etiqueta_sugerida}" ya está agregado a este formulario`,
+        'warning'
+      );
+      return;
+    }
+
     this.newCampo = {
       id_formulario: this.formularioSeleccionado!.id,
-      nombre_campo: '',
-      tipo_campo: tipo.codigo,
-      label: '',
+      nombre_campo: campo.nombre_columna,
+      tipo_campo: campo.tipo_dato,
+      label: campo.etiqueta_sugerida,
       placeholder: '',
-      requerido: false,
+      requerido: campo.es_obligatorio === 1,
       orden: this.camposFormulario.length + 1,
-      opciones: tipo.codigo === 'select' || tipo.codigo === 'radio' ? [] : undefined
+      opciones: campo.tipo_dato === 'select' ? [] : undefined
     };
     this.showCampoForm = true;
+  }
+
+  isCampoYaAgregado(nombreColumna: string): boolean {
+    return this.camposFormulario.some(c => c.nombre_campo === nombreColumna);
   }
 
   handleSaveCampo(): void {
@@ -879,6 +883,17 @@ export class CalendarSettingsPageComponent implements OnInit {
     return formulario ? formulario.nombre : 'Desconocido';
   }
 
+  cargarCalendariosPorEvento(idEvento: number): void {
+    this.calendarioService.obtenerCalendariosPermitidosPorEvento(idEvento).subscribe({
+      next: (calendarios) => {
+        this.eventosConCalendarios.set(idEvento, calendarios);
+      },
+      error: (error) => {
+        console.error('Error al cargar calendarios del evento:', error);
+      }
+    });
+  }
+
   // Propiedades computadas para eventos (crear/editar)
   get eventoDescripcion(): string {
     return this.editingEvent ? this.editingEvent.descripcion : this.newEvent.descripcion || '';
@@ -933,6 +948,10 @@ export class CalendarSettingsPageComponent implements OnInit {
     } else {
       this.newEvent.activo = value;
     }
+  }
+
+  getCalendariosVinculados(idEvento: number): { id: number; descripcion: string }[] {
+    return this.eventosConCalendarios.get(idEvento) || [];
   }
 
 }
