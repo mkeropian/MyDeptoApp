@@ -1,5 +1,5 @@
 import { CurrencyPipe, CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import {
   ChartComponent,
   ApexAxisChartSeries,
@@ -12,7 +12,7 @@ import {
   ApexTooltip,
   ApexGrid,
   ApexPlotOptions,
-  NgApexchartsModule // IMPORTANTE: Importamos el Módulo completo
+  NgApexchartsModule
 } from 'ng-apexcharts';
 import { PagosService } from '../../../../incomes/services/incomes.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -41,7 +41,6 @@ interface DepartmentExpense {
 @Component({
   selector: 'app-ingresos-departamentos-page',
   standalone: true,
-  // CORRECCION 1: Usamos NgApexchartsModule en lugar de ChartComponent
   imports: [CommonModule, NgApexchartsModule, CurrencyPipe],
   templateUrl: './ingresosDepartamentos-page.component.html',
   styles: `
@@ -71,6 +70,9 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
   public selectedYear: number = new Date().getFullYear();
   public selectedChartType: 'bar' | 'area' | 'line' = 'bar';
 
+  // Interruptor para resetear el gráfico visualmente
+  public isChartVisible = true;
+
   // Métricas
   public totalIngresos = 0;
   public promedioMensual = 0;
@@ -93,7 +95,10 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private pagosService: PagosService) {}
+  constructor(
+    private pagosService: PagosService,
+    private cdr: ChangeDetectorRef // Inyectamos el detector de cambios
+  ) {}
 
   ngOnInit(): void {
     this.loadPagosData();
@@ -112,32 +117,34 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          console.log('📥 Datos recibidos del servicio:', data.length); // DEBUG
           this.rawData = data;
           this.processPagosData();
           this.isLoading = false;
         },
         error: (error) => {
+          console.error(error);
           this.handleError('Error al cargar los datos de ingresos');
         }
       });
   }
 
   private processPagosData(): void {
+    // CORRECCIÓN: Quitamos la llamada a this.updateChart() aquí
     if (!this.rawData || this.rawData.length === 0) {
       this.departmentExpenses = [];
-      this.updateChart();
       return;
     }
 
-    // --- 1. Detectar años usando TEXTO (Infalible contra Timezones) ---
+    // --- 1. Detectar años (Método substring robusto) ---
     const yearsSet = new Set<number>();
     this.rawData.forEach(item => {
-      // Tomamos "2026" directamente del string "2026-01-01..."
-      const yearStr = String(item.fecha).substring(0, 4);
-      const year = parseInt(yearStr);
-      if (!isNaN(year)) yearsSet.add(year);
+      const fechaStr = String(item.fecha);
+      const match = fechaStr.match(/\d{4}/);
+      if (match) {
+        yearsSet.add(parseInt(match[0]));
+      }
     });
+
     this.availableYears = Array.from(yearsSet).sort((a, b) => b - a);
 
     if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
@@ -153,39 +160,48 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
     const tempMap = new Map<string, { total: number, monthly: Map<string, number> }>();
     this.totalIngresos = 0;
 
-    // Filtramos comparando TEXTO contra número
     const datosFiltrados = this.rawData.filter(item => {
-      const yearStr = String(item.fecha).substring(0, 4);
-      return parseInt(yearStr) === this.selectedYear;
+      const fechaStr = String(item.fecha);
+      const match = fechaStr.match(/\d{4}/);
+      return match ? parseInt(match[0]) === this.selectedYear : false;
     });
 
-    console.log(`🔎 Registros recuperados (Fix Texto) para ${this.selectedYear}:`, datosFiltrados.length);
+    console.log(`🔎 Registros año ${this.selectedYear}:`, datosFiltrados.length, datosFiltrados);
 
     datosFiltrados.forEach(item => {
-      // Obtener Mes usando TEXTO ("2026-01-01" -> toma "01")
-      // Restamos 1 porque el array empieza en 0
-      const monthStr = String(item.fecha).substring(5, 7);
-      const monthIndex = parseInt(monthStr) - 1;
+      const fechaStr = String(item.fecha);
+      let monthIndex = -1;
 
-      if (monthIndex < 0 || monthIndex > 11) return; // Validación seguridad
-
-      const monthName = monthNames[monthIndex];
-      const monto = Number(item.monto || 0);
-
-      // Obtener nombre del departamento (Seguro contra tipos)
-      const itemAny = item as any;
-      const deptName = itemAny.nombre || itemAny.departamento?.nombre || itemAny.departamento || 'Sin Departamento';
-
-      if (!tempMap.has(deptName)) {
-        tempMap.set(deptName, { total: 0, monthly: new Map() });
+      const posibleMes = fechaStr.substring(5, 7);
+      if (!isNaN(Number(posibleMes))) {
+        monthIndex = parseInt(posibleMes) - 1;
       }
 
-      const current = tempMap.get(deptName)!;
-      current.total += monto;
-      this.totalIngresos += monto;
+      if (monthIndex < 0 || monthIndex > 11) {
+        const d = new Date(item.fecha);
+        if (!isNaN(d.getTime())) {
+          monthIndex = d.getUTCMonth();
+        }
+      }
 
-      const currentMonthVal = current.monthly.get(monthName) || 0;
-      current.monthly.set(monthName, currentMonthVal + monto);
+      if (monthIndex >= 0 && monthIndex <= 11) {
+        const monthName = monthNames[monthIndex];
+        const monto = Number(item.monto || 0);
+
+        const itemAny = item as any;
+        const deptName = itemAny.nombre || itemAny.departamento?.nombre || itemAny.departamento || 'Sin Departamento';
+
+        if (!tempMap.has(deptName)) {
+          tempMap.set(deptName, { total: 0, monthly: new Map() });
+        }
+
+        const current = tempMap.get(deptName)!;
+        current.total += monto;
+        this.totalIngresos += monto;
+
+        const currentMonthVal = current.monthly.get(monthName) || 0;
+        current.monthly.set(monthName, currentMonthVal + monto);
+      }
     });
 
     // --- 3. Construir Array final ---
@@ -202,31 +218,60 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
 
     this.calculateMetrics();
 
-    // Pequeño delay para asegurar que el gráfico se dibuje
+    // --- 4. REINICIO FORZADO DEL GRÁFICO ---
+    this.isChartVisible = false;
+    this.cdr.detectChanges();
+
     setTimeout(() => {
-        this.updateChart();
-    }, 50);
+      this.updateChartOptions(monthNames);
+      this.isChartVisible = true;
+      this.cdr.detectChanges();
+    }, 100);
   }
 
-  private updateChart(): void {
-    const monthNames = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
-
-    const newSeries = this.departmentExpenses.map(dept => ({
+  private updateChartOptions(monthNames: string[]): void {
+    const seriesData = this.departmentExpenses.map(dept => ({
       name: dept.departmentName,
       data: monthNames.map(m => dept.monthlyData[m] || 0)
     }));
 
-    console.log('📈 Series enviadas a ApexCharts:', newSeries);
+    // Imprimir lo que se va a dibujar para estar 100% seguros
+    console.log('📈 DATOS DEL GRÁFICO:', seriesData);
 
-    // Asignamos una NUEVA referencia al objeto chartOptions para forzar detección de cambios
     this.chartOptions = {
-      ...this.chartOptions,
-      series: newSeries,
-      xaxis: { categories: monthNames },
-      chart: { ...this.chartOptions.chart, type: this.selectedChartType }
+      series: seriesData,
+      chart: {
+        type: this.selectedChartType,
+        height: 350,
+        toolbar: { show: false },
+        fontFamily: 'Inter, sans-serif',
+        animations: { enabled: false } // Desactivamos animación inicial para evitar glitches
+      },
+      plotOptions: {
+        bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 }
+      },
+      dataLabels: { enabled: false },
+      xaxis: {
+        categories: monthNames
+      },
+      yaxis: {
+        title: { text: 'Monto ($)' },
+        labels: {
+          formatter: (value) => {
+             // Formateo de eje Y
+             if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+             if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
+             return `$${value}`;
+          }
+        }
+      },
+      fill: { opacity: 1 },
+      tooltip: {
+        y: { formatter: (val) => `$${val.toLocaleString('es-AR')}` }
+      },
+      colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
+      legend: { position: 'bottom' },
+      grid: { borderColor: '#f1f1f1' }
     };
   }
 
@@ -244,11 +289,11 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
       this.departamentoMayorIngreso = '-';
     }
 
-    // Mes mayor
     const globalMonthly = new Map<string, number>();
     this.departmentExpenses.forEach(d => {
       Object.entries(d.monthlyData).forEach(([m, val]) => globalMonthly.set(m, (globalMonthly.get(m) || 0) + val));
     });
+
     let maxVal = -1;
     let maxName = '-';
     globalMonthly.forEach((val, key) => { if (val > maxVal) { maxVal = val; maxName = key; } });
@@ -264,13 +309,12 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
   public onChartTypeChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
     this.selectedChartType = target.value as 'bar' | 'area' | 'line';
-    this.updateChart();
+    this.processPagosData(); // Reprocesamos para forzar el redibujado
   }
 
   private handleError(message: string): void {
     this.isLoading = false;
     this.hasError = true;
     this.errorMessage = message;
-    console.error(message);
   }
 }

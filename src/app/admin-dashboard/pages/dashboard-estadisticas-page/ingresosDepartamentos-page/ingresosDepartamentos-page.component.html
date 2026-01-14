@@ -1,11 +1,8 @@
-<!-- gastosDepartamentos-page.component.html -->
 <div class="chart-container">
-  <!-- Header con título y filtros -->
   <div class="chart-header">
     <h2 class="chart-title">Ingresos por Departamento - {{ selectedYear }}</h2>
 
     <div class="chart-filters">
-      <!-- Selector de año -->
       <select
         class="filter-select"
         [value]="selectedYear"
@@ -18,7 +15,6 @@
         </option>
       </select>
 
-      <!-- Selector de tipo de gráfico -->
       <select
         class="filter-select"
         [value]="selectedChartType"
@@ -33,24 +29,19 @@
     </div>
   </div>
 
-  <!-- Estado de carga -->
   <div *ngIf="isLoading" class="loading-spinner">
     <div>Cargando datos de ingresos...</div>
   </div>
 
-  <!-- Estado de error -->
   <div *ngIf="hasError && !isLoading" class="error-message">
     <div>{{ errorMessage }}</div>
   </div>
 
-  <!-- Mensaje cuando no hay datos -->
   <div *ngIf="!isLoading && !hasError && departmentExpenses.length === 0" class="no-data">
-    <div class="no-data-icon">📊</div>
     <div>No hay datos de ingresos para mostrar en {{ selectedYear }}</div>
   </div>
 
-  <!-- Gráfico -->
-  <div *ngIf="!isLoading && !hasError && departmentExpenses.length > 0">
+  <div *ngIf="!isLoading && !hasError && departmentExpenses.length > 0 && isChartVisible">
     <apx-chart
       #chart
       [series]="chartOptions.series"
@@ -66,7 +57,6 @@
       [plotOptions]="chartOptions.plotOptions">
     </apx-chart>
 
-    <!-- Tarjetas de resumen -->
     <div class="summary-cards">
       <div class="summary-card">
         <span class="label">Total ingresos {{ selectedYear }}</span>
