@@ -1,17 +1,17 @@
 import { CurrencyPipe, CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { 
-  ChartComponent, 
-  ApexAxisChartSeries, 
-  ApexChart, 
-  ApexXAxis, 
-  ApexDataLabels, 
-  ApexYAxis, 
-  ApexLegend, 
-  ApexFill, 
-  ApexTooltip, 
-  ApexGrid, 
-  ApexPlotOptions, 
+import {
+  ChartComponent,
+  ApexAxisChartSeries,
+  ApexChart,
+  ApexXAxis,
+  ApexDataLabels,
+  ApexYAxis,
+  ApexLegend,
+  ApexFill,
+  ApexTooltip,
+  ApexGrid,
+  ApexPlotOptions,
   NgApexchartsModule // IMPORTANTE: Importamos el Módulo completo
 } from 'ng-apexcharts';
 import { PagosService } from '../../../../incomes/services/incomes.service';
@@ -42,7 +42,7 @@ interface DepartmentExpense {
   selector: 'app-ingresos-departamentos-page',
   standalone: true,
   // CORRECCION 1: Usamos NgApexchartsModule en lugar de ChartComponent
-  imports: [CommonModule, NgApexchartsModule, CurrencyPipe], 
+  imports: [CommonModule, NgApexchartsModule, CurrencyPipe],
   templateUrl: './ingresosDepartamentos-page.component.html',
   styles: `
     .chart-container { max-width: 1200px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -136,7 +136,7 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
       if(!isNaN(d.getFullYear())) yearsSet.add(d.getFullYear());
     });
     this.availableYears = Array.from(yearsSet).sort((a, b) => b - a);
-    
+
     // Asegurar año válido
     if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
       this.selectedYear = this.availableYears[0];
@@ -148,7 +148,7 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
       'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
-    
+
     const tempMap = new Map<string, { total: number, monthly: Map<string, number> }>();
     this.totalIngresos = 0;
 
@@ -168,11 +168,11 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
       // Ajuste: si la fecha viene como string "2026-01-01", el new Date asume UTC.
       // Si usamos getMonth() en Argentina (GMT-3), las 00:00 se vuelven 21:00 del día anterior.
       // SOLUCIÓN: Usar UTC para determinar el mes si es string ISO.
-      const monthIndex = d.getUTCMonth(); 
+      const monthIndex = d.getUTCMonth();
 
       const monthName = monthNames[monthIndex];
       const monto = Number(item.monto || 0);
-      
+
       const itemAny = item as any;
       const deptName = itemAny.nombre || itemAny.departamento?.nombre || itemAny.departamento || 'Sin Departamento';
 
@@ -198,7 +198,7 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
     console.log('📊 Datos procesados para el gráfico:', this.departmentExpenses);
 
     this.calculateMetrics();
-    
+
     // CORRECCIÓN 2: Pequeño delay para asegurar renderizado
     setTimeout(() => {
         this.updateChart();
@@ -228,10 +228,10 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
   }
 
   private calculateMetrics(): void {
-    const currentMonthIndex = new Date().getMonth(); 
+    const currentMonthIndex = new Date().getMonth();
     const isCurrentYear = this.selectedYear === new Date().getFullYear();
     const totalMonths = isCurrentYear ? (currentMonthIndex + 1) : 12;
-    
+
     this.promedioMensual = this.totalIngresos > 0 ? (this.totalIngresos / totalMonths) : 0;
 
     if (this.departmentExpenses.length > 0) {
@@ -246,7 +246,7 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
     this.departmentExpenses.forEach(d => {
       Object.entries(d.monthlyData).forEach(([m, val]) => globalMonthly.set(m, (globalMonthly.get(m) || 0) + val));
     });
-    let maxVal = -1; 
+    let maxVal = -1;
     let maxName = '-';
     globalMonthly.forEach((val, key) => { if (val > maxVal) { maxVal = val; maxName = key; } });
     this.mesConMayorIngreso = maxVal > 0 ? maxName : '-';
