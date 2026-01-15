@@ -59,7 +59,7 @@ export class GastosDepartamentosPageComponent implements OnInit {
   @ViewChild('chart') chart: ChartComponent | undefined;
 
   public chartOptions: ChartOptions;
-  public isLoading = true; // Inicia true para controlar el renderizado
+  public isLoading = true;
 
   private allGastos: GastoGrid[] = [];
   public departmentExpenses: DepartmentExpense[] = [];
@@ -120,19 +120,17 @@ export class GastosDepartamentosPageComponent implements OnInit {
       next: (data) => {
         this.allGastos = data;
         this.processYears();
+        this.processDashboardData();
 
-        // --- SOLUCIÓN DEL BUG VISUAL ---
-        // 1. Decimos que ya cargó, lo que habilita el <apx-chart> en el HTML
+        // Marcamos como cargado y forzamos detección de cambios
         this.isLoading = false;
-
-        // 2. Forzamos a Angular a procesar el HTML inmediatamente
         this.cdr.detectChanges();
 
-        // 3. Esperamos 100ms para que la librería gráfica se instancie en el DOM
-        // antes de empujarle los datos.
+        // Esperamos a que Angular renderice el componente apx-chart en el DOM
+        // y luego renderizamos el gráfico
         setTimeout(() => {
-          this.updateDashboard();
-        }, 100);
+          this.renderChart();
+        }, 200);
       },
       error: (err) => {
         console.error('Error cargando gastos:', err);
@@ -183,20 +181,17 @@ export class GastosDepartamentosPageComponent implements OnInit {
     }
   }
 
-  // --- MÉTODOS SIMPLIFICADOS (Sin argumentos) ---
   public onYearChange(): void {
-    // Angular ya actualizó this.selectedYear gracias a [(ngModel)]
     this.selectedYear = Number(this.selectedYear);
-    this.updateDashboard();
+    this.processDashboardData();
+    this.renderChart();
   }
 
   public onChartTypeChange(): void {
-    // Angular ya actualizó this.selectedChartType gracias a [(ngModel)]
-    this.updateChartRender();
+    this.renderChart();
   }
-  // ---------------------------------------------
 
-  private updateDashboard(): void {
+  private processDashboardData(): void {
     const targetYear = Number(this.selectedYear);
     const deptMap = new Map<string, { name: string, data: number[] }>();
     let totalAnualCalc = 0;
@@ -248,6 +243,7 @@ export class GastosDepartamentosPageComponent implements OnInit {
 
     this.departmentExpenses.sort((a, b) => b.total - a.total);
 
+    // Calcular estadísticas
     this.totalGastos = totalAnualCalc;
     const currentDate = new Date();
     const isCurrentYear = targetYear === currentDate.getFullYear();
@@ -265,12 +261,13 @@ export class GastosDepartamentosPageComponent implements OnInit {
       if(val > maxMesVal) { maxMesVal = val; maxMesIdx = idx; }
     });
     this.mesConMayorGasto = maxMesIdx >= 0 ? this.meses[maxMesIdx] : '-';
-
-    this.updateChartRender();
   }
 
-  private updateChartRender(): void {
-    if (!this.chart) return;
+  private renderChart(): void {
+    // Verificar que hay datos para renderizar
+    if (this.departmentExpenses.length === 0) {
+      return;
+    }
 
     const isBar = this.selectedChartType === 'bar';
     let newSeries: ApexAxisChartSeries = [];
@@ -286,6 +283,7 @@ export class GastosDepartamentosPageComponent implements OnInit {
       newXAxisCategories = this.meses;
     }
 
+    // Actualizar las opciones del gráfico
     this.chartOptions = {
       ...this.chartOptions,
       chart: { ...this.chartOptions.chart, type: this.selectedChartType },
@@ -293,9 +291,12 @@ export class GastosDepartamentosPageComponent implements OnInit {
       series: newSeries
     };
 
+    // Forzar detección de cambios
     this.cdr.detectChanges();
+
+    // Si el chart ya está disponible, actualizar sus opciones
     if (this.chart) {
-      this.chart.updateOptions(this.chartOptions);
+      this.chart.updateOptions(this.chartOptions, true, true);
     }
   }
 }
