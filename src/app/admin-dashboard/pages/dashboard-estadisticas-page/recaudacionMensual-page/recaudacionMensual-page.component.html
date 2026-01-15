@@ -28,21 +28,23 @@
   <!-- Gráfico y Estadísticas lado a lado -->
   <div *ngIf="!loading" class="chart-stats-container">
     <!-- Gráfico a la izquierda -->
-    <div class="chart-section">
-      <apx-chart
-        [series]="chartOptions.series"
-        [chart]="chartOptions.chart"
-        [xaxis]="chartOptions.xaxis"
-        [yaxis]="chartOptions.yaxis"
-        [dataLabels]="chartOptions.dataLabels"
-        [plotOptions]="chartOptions.plotOptions"
-        [stroke]="chartOptions.stroke"
-        [fill]="chartOptions.fill"
-        [tooltip]="chartOptions.tooltip"
-        [title]="chartOptions.title"
-        [legend]="chartOptions.legend"
-        [grid]="chartOptions.grid">
-      </apx-chart>
+    <div class="chart-section" *ngIf="isChartVisible">
+
+        <apx-chart
+          [series]="chartOptions.series"
+          [chart]="chartOptions.chart"
+          [xaxis]="chartOptions.xaxis"
+          [yaxis]="chartOptions.yaxis"
+          [dataLabels]="chartOptions.dataLabels"
+          [plotOptions]="chartOptions.plotOptions"
+          [stroke]="chartOptions.stroke"
+          [fill]="chartOptions.fill"
+          [tooltip]="chartOptions.tooltip"
+          [title]="chartOptions.title"
+          [legend]="chartOptions.legend"
+          [grid]="chartOptions.grid">
+        </apx-chart>
+
     </div>
   </div>
 
