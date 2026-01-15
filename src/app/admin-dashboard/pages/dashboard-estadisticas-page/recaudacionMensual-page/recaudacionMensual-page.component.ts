@@ -76,7 +76,6 @@ export class RecaudacionMensualPageComponent implements OnInit {
     private estadisticasService: EstadisticasReportesService,
     private cdr: ChangeDetectorRef
   ) {
-    // Configuración Inicial Completa
     this.chartOptions = {
       series: [{ name: "Recaudación", data: [] }],
       chart: {
@@ -84,7 +83,6 @@ export class RecaudacionMensualPageComponent implements OnInit {
         height: 350,
         fontFamily: 'Inter, sans-serif',
         toolbar: { show: false },
-        // CORRECCIÓN: Quitamos 'easing' para evitar el error de TypeScript
         animations: { enabled: true, speed: 800 }
       },
       plotOptions: {
@@ -152,30 +150,28 @@ export class RecaudacionMensualPageComponent implements OnInit {
     });
   }
 
-  // --- PARSER DE FECHA UNIVERSAL ---
   private getFechaInfo(fecha: any): { year: number, month: number } | null {
     if (!fecha) return null;
 
-    // Caso 1: Objeto Date real
     if (fecha instanceof Date) {
        return { year: fecha.getUTCFullYear(), month: fecha.getUTCMonth() };
     }
 
     const str = String(fecha).trim();
 
-    // Caso 2: String ISO o DD/MM/YYYY
+    // Buscamos 4 dígitos (Año)
     const yearMatch = str.match(/\d{4}/);
     if (!yearMatch) return null;
 
     const year = parseInt(yearMatch[0]);
 
-    // Eliminar hora
+    // Eliminar hora y separar
     const datePart = str.split('T')[0];
     const parts = datePart.split(/[-/]/);
 
     let month = -1;
 
-    // Detectar mes
+    // Lógica para detectar el mes
     if (parts.length >= 2) {
       const yearIndex = parts.findIndex(p => p.includes(year.toString()));
 
@@ -186,7 +182,7 @@ export class RecaudacionMensualPageComponent implements OnInit {
       }
     }
 
-    // Validación y Fallback
+    // Validación final
     if (isNaN(year) || isNaN(month) || month < 0 || month > 11) {
        const d = new Date(str);
        if (!isNaN(d.getTime())) {
@@ -212,21 +208,29 @@ export class RecaudacionMensualPageComponent implements OnInit {
     }
   }
 
+  // --- CORRECCIÓN CRÍTICA AQUÍ ---
   public onYearChange(): void {
+    // Forzamos la conversión a Número, porque el HTML select devuelve string
+    this.selectedYear = Number(this.selectedYear);
+    console.log('Año cambiado manualmente a:', this.selectedYear, 'Tipo:', typeof this.selectedYear);
     this.updateChartData();
   }
 
   private updateChartData(): void {
     const montosPorMes = new Array(12).fill(0);
 
-    console.log(`Procesando datos para año: ${this.selectedYear}`);
+    // Aseguramos que selectedYear sea número también aquí por seguridad
+    const targetYear = Number(this.selectedYear);
+
+    console.log(`Procesando datos para año: ${targetYear}`);
     let encontrados = 0;
 
     this.gastos.forEach(gasto => {
       if (gasto.idTipoGasto === 1) {
         const info = this.getFechaInfo(gasto.fecha);
 
-        if (info && info.year === this.selectedYear) {
+        // Comparación estricta segura
+        if (info && info.year === targetYear) {
           if (info.month >= 0 && info.month <= 11) {
              const monto = Number(gasto.monto || 0);
              montosPorMes[info.month] += monto;
@@ -238,11 +242,10 @@ export class RecaudacionMensualPageComponent implements OnInit {
 
     console.log(`Registros encontrados: ${encontrados}`, montosPorMes);
 
-    // Métricas
     this.totalAnual = montosPorMes.reduce((a, b) => a + b, 0);
 
     const currentDate = new Date();
-    const isCurrentYear = this.selectedYear === currentDate.getFullYear();
+    const isCurrentYear = targetYear === currentDate.getFullYear();
     const divisor = isCurrentYear ? (currentDate.getMonth() + 1) : 12;
     this.promedioMensual = this.totalAnual > 0 ? (this.totalAnual / divisor) : 0;
 
@@ -257,7 +260,6 @@ export class RecaudacionMensualPageComponent implements OnInit {
     this.mejorMesMonto = maxMonto;
     this.mesMayorRecaudacion = maxIndex >= 0 ? this.meses[maxIndex] : '-';
 
-    // Actualización del gráfico
     if (this.chart) {
       this.chart.updateSeries([{
         name: "Recaudación",
