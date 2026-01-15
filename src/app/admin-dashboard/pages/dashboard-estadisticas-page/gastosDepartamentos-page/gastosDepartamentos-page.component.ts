@@ -59,7 +59,7 @@ export class GastosDepartamentosPageComponent implements OnInit {
   @ViewChild('chart') chart: ChartComponent | undefined;
 
   public chartOptions: ChartOptions;
-  public isLoading = true; // Iniciamos en true para evitar parpadeos
+  public isLoading = true;
 
   private allGastos: GastoGrid[] = [];
   public departmentExpenses: DepartmentExpense[] = [];
@@ -121,15 +121,10 @@ export class GastosDepartamentosPageComponent implements OnInit {
         this.allGastos = data;
         this.processYears();
 
-        // --- CORRECCIÓN DEL TIEMPO DE CARGA ---
-        // 1. Ocultamos el spinner para que el *ngIf muestre el gráfico
+        // --- LÓGICA DE ESPERA PARA EVITAR GRÁFICO VACÍO ---
         this.isLoading = false;
-
-        // 2. Forzamos a Angular a pintar el HTML del gráfico AHORA MISMO
         this.cdr.detectChanges();
 
-        // 3. Esperamos 100ms a que la librería ApexCharts se inicialice internamente
-        // antes de inyectarle los datos.
         setTimeout(() => {
           this.updateDashboard();
         }, 100);
@@ -175,7 +170,6 @@ export class GastosDepartamentosPageComponent implements OnInit {
     });
     this.availableYears = Array.from(years).sort((a, b) => b - a);
 
-    // Seleccionar año actual o el más reciente
     const currentYear = new Date().getFullYear();
     if (this.availableYears.includes(currentYear)) {
         this.selectedYear = currentYear;
@@ -184,20 +178,18 @@ export class GastosDepartamentosPageComponent implements OnInit {
     }
   }
 
-  public onYearChange(event?: any): void {
-    if(event) {
-        // Si viene del evento change del select HTML
-        const target = event.target as HTMLSelectElement;
-        this.selectedYear = Number(target.value);
-    }
+  // --- CORRECCIÓN AQUÍ: Eliminamos los argumentos 'event' ---
+  public onYearChange(): void {
+    // Como usamos [(ngModel)], this.selectedYear ya tiene el valor nuevo
+    this.selectedYear = Number(this.selectedYear);
     this.updateDashboard();
   }
 
-  public onChartTypeChange(event: any): void {
-    const target = event.target as HTMLSelectElement;
-    this.selectedChartType = target.value as 'bar' | 'area' | 'line';
+  public onChartTypeChange(): void {
+    // Como usamos [(ngModel)], this.selectedChartType ya tiene el valor nuevo
     this.updateChartRender();
   }
+  // -----------------------------------------------------------
 
   private updateDashboard(): void {
     const targetYear = Number(this.selectedYear);
@@ -273,7 +265,8 @@ export class GastosDepartamentosPageComponent implements OnInit {
   }
 
   private updateChartRender(): void {
-    // Definimos las series
+    if (!this.chart) return;
+
     const isBar = this.selectedChartType === 'bar';
     let newSeries: ApexAxisChartSeries = [];
     let newXAxisCategories: string[] = [];
@@ -288,7 +281,6 @@ export class GastosDepartamentosPageComponent implements OnInit {
       newXAxisCategories = this.meses;
     }
 
-    // Actualizamos el objeto de opciones
     this.chartOptions = {
       ...this.chartOptions,
       chart: { ...this.chartOptions.chart, type: this.selectedChartType },
@@ -296,7 +288,6 @@ export class GastosDepartamentosPageComponent implements OnInit {
       series: newSeries
     };
 
-    // Forzamos actualización visual
     this.cdr.detectChanges();
     if (this.chart) {
       this.chart.updateOptions(this.chartOptions);
