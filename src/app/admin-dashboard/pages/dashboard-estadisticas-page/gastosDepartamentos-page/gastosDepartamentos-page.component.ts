@@ -18,11 +18,9 @@ import {
 import { GastosService } from '../../../../gastos/services/gastos.service';
 import { Gasto } from '../../../../gastos/interfaces/gasto.interface';
 
-// Definimos una interfaz más flexible por si el backend trae datos anidados
+// Interfaz flexible para cazar cualquier propiedad que venga
 export interface GastoGrid extends Gasto {
-  departamento?: string | any; // Puede ser string u objeto
-  nombreDepartamento?: string; // Otra posibilidad común
-  idDepartamento?: number;
+  [key: string]: any; // Permite acceder a cualquier propiedad extra (idDepartamento, etc.)
 }
 
 export type ChartOptions = {
@@ -122,11 +120,11 @@ export class GastosDepartamentosPageComponent implements OnInit {
       next: (data) => {
         this.allGastos = data;
 
-        // --- DEBUG: Ver qué datos llegan realmente ---
+        // --- DEBUG CRÍTICO: Imprimir JSON string para ver TODO lo que trae ---
         if (this.allGastos.length > 0) {
-           console.log('🔍 DEBUG - Estructura del primer gasto:', this.allGastos[0]);
+           console.log('🔍 DATA COMPLETA:', JSON.stringify(this.allGastos[0], null, 2));
         }
-        // ---------------------------------------------
+        // -------------------------------------------------------------------
 
         this.processYears();
         this.updateDashboard();
@@ -189,7 +187,7 @@ export class GastosDepartamentosPageComponent implements OnInit {
 
   private updateDashboard(): void {
     const targetYear = Number(this.selectedYear);
-    console.log(`Procesando Departamentos para año: ${targetYear}`);
+    console.log(`Procesando año: ${targetYear}`);
 
     const deptMap = new Map<string, number[]>();
     let totalAnualCalc = 0;
@@ -199,28 +197,30 @@ export class GastosDepartamentosPageComponent implements OnInit {
 
       if (info && info.year === targetYear && info.month >= 0 && info.month <= 11) {
 
-        // --- LOGICA ROBUSTA PARA OBTENER NOMBRE ---
+        // --- LÓGICA DE DETECCIÓN DE NOMBRE ---
         let nombreDepto = 'Sin Asignar';
 
-        // 1. Si existe la propiedad directa (string)
-        if (typeof gasto.departamento === 'string') {
-            nombreDepto = gasto.departamento;
+        // 1. Prioridad: Objeto completo o Nombre directo
+        if (gasto['departamento'] && typeof gasto['departamento'] === 'object') {
+           nombreDepto = gasto['departamento'].nombre || gasto['departamento'].descripcion || 'Depto Obj';
+        } else if (typeof gasto['departamento'] === 'string') {
+           nombreDepto = gasto['departamento'];
         }
-        // 2. Si es un objeto (ej: gasto.departamento.nombre)
-        else if (typeof gasto.departamento === 'object' && gasto.departamento !== null) {
-            nombreDepto = gasto.departamento['nombre'] || gasto.departamento['descripcion'] || 'Depto Obj';
+        // 2. Prioridad: Propiedades alternativas
+        else if (gasto['nombreDepartamento']) {
+           nombreDepto = gasto['nombreDepartamento'];
         }
-        // 3. Si existe una propiedad alternativa común
-        else if (gasto.nombreDepartamento) {
-            nombreDepto = gasto.nombreDepartamento;
+        // 3. Prioridad: ID (Lo más probable que pase ahora)
+        else if (gasto['idDepartamento']) {
+           nombreDepto = `Depto ${gasto['idDepartamento']}`;
         }
-        // 4. Último recurso: Usar el ID
-        else if (gasto.idDepartamento) {
-            nombreDepto = `Depto ID: ${gasto.idDepartamento}`;
+        else if (gasto['departmentId']) { // Por si acaso viene en inglés
+            nombreDepto = `Depto ${gasto['departmentId']}`;
         }
 
-        nombreDepto = nombreDepto.trim();
-        // ------------------------------------------
+        // Limpieza
+        nombreDepto = String(nombreDepto).trim();
+        // -------------------------------------
 
         const monto = Number(gasto.monto || 0);
 
@@ -230,7 +230,6 @@ export class GastosDepartamentosPageComponent implements OnInit {
 
         const meses = deptMap.get(nombreDepto)!;
         meses[info.month] += monto;
-
         totalAnualCalc += monto;
       }
     });
@@ -242,7 +241,6 @@ export class GastosDepartamentosPageComponent implements OnInit {
     }));
 
     this.departmentExpenses.sort((a, b) => b.total - a.total);
-    console.log('Datos procesados:', this.departmentExpenses);
 
     // Estadísticas
     this.totalGastos = totalAnualCalc;
