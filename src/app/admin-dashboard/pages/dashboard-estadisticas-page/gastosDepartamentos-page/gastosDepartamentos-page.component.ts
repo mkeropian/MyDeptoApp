@@ -18,9 +18,9 @@ import {
 import { GastosService } from '../../../../gastos/services/gastos.service';
 import { Gasto } from '../../../../gastos/interfaces/gasto.interface';
 
-// Interfaz flexible para cazar cualquier propiedad que venga
+// Interfaz flexible
 export interface GastoGrid extends Gasto {
-  [key: string]: any; // Permite acceder a cualquier propiedad extra (idDepartamento, etc.)
+  [key: string]: any; // Permite leer 'nombre', 'idDep', etc. sin errores
 }
 
 export type ChartOptions = {
@@ -119,13 +119,6 @@ export class GastosDepartamentosPageComponent implements OnInit {
     this.gastosService.getGastos().subscribe({
       next: (data) => {
         this.allGastos = data;
-
-        // --- DEBUG CRÍTICO: Imprimir JSON string para ver TODO lo que trae ---
-        if (this.allGastos.length > 0) {
-           console.log('🔍 DATA COMPLETA:', JSON.stringify(this.allGastos[0], null, 2));
-        }
-        // -------------------------------------------------------------------
-
         this.processYears();
         this.updateDashboard();
         this.isLoading = false;
@@ -197,30 +190,24 @@ export class GastosDepartamentosPageComponent implements OnInit {
 
       if (info && info.year === targetYear && info.month >= 0 && info.month <= 11) {
 
-        // --- LÓGICA DE DETECCIÓN DE NOMBRE ---
+        // --- AQUÍ ESTÁ LA CORRECCIÓN CLAVE (Usar corchetes) ---
         let nombreDepto = 'Sin Asignar';
 
-        // 1. Prioridad: Objeto completo o Nombre directo
-        if (gasto['departamento'] && typeof gasto['departamento'] === 'object') {
-           nombreDepto = gasto['departamento'].nombre || gasto['departamento'].descripcion || 'Depto Obj';
-        } else if (typeof gasto['departamento'] === 'string') {
+        // 1. Buscamos el campo 'nombre'
+        if (gasto['nombre']) {
+          nombreDepto = String(gasto['nombre']);
+        }
+        // 2. Si no, buscamos 'idDep'
+        else if (gasto['idDep']) {
+          nombreDepto = `Depto ${gasto['idDep']}`;
+        }
+        // 3. Fallbacks clásicos
+        else if (gasto['departamento'] && typeof gasto['departamento'] === 'string') {
            nombreDepto = gasto['departamento'];
         }
-        // 2. Prioridad: Propiedades alternativas
-        else if (gasto['nombreDepartamento']) {
-           nombreDepto = gasto['nombreDepartamento'];
-        }
-        // 3. Prioridad: ID (Lo más probable que pase ahora)
-        else if (gasto['idDepartamento']) {
-           nombreDepto = `Depto ${gasto['idDepartamento']}`;
-        }
-        else if (gasto['departmentId']) { // Por si acaso viene en inglés
-            nombreDepto = `Depto ${gasto['departmentId']}`;
-        }
 
-        // Limpieza
-        nombreDepto = String(nombreDepto).trim();
-        // -------------------------------------
+        nombreDepto = nombreDepto.charAt(0).toUpperCase() + nombreDepto.slice(1);
+        // -----------------------------------------------------
 
         const monto = Number(gasto.monto || 0);
 
@@ -242,7 +229,6 @@ export class GastosDepartamentosPageComponent implements OnInit {
 
     this.departmentExpenses.sort((a, b) => b.total - a.total);
 
-    // Estadísticas
     this.totalGastos = totalAnualCalc;
     const currentDate = new Date();
     const isCurrentYear = targetYear === currentDate.getFullYear();
@@ -251,7 +237,6 @@ export class GastosDepartamentosPageComponent implements OnInit {
 
     this.departamentoMayorGasto = this.departmentExpenses.length > 0 ? this.departmentExpenses[0].departmentName : '-';
 
-    // Calcular mes pico
     const globalMonthly = new Array(12).fill(0);
     this.departmentExpenses.forEach(d => {
       d.monthlyData.forEach((val, idx) => globalMonthly[idx] += val);
