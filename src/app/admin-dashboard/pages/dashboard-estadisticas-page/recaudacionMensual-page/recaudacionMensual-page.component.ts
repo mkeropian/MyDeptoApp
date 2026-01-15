@@ -1,14 +1,45 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgApexchartsModule } from 'ng-apexcharts';
+import {
+  NgApexchartsModule,
+  ChartComponent,
+  ApexAxisChartSeries,
+  ApexChart,
+  ApexXAxis,
+  ApexDataLabels,
+  ApexTitleSubtitle,
+  ApexStroke,
+  ApexGrid,
+  ApexYAxis,
+  ApexLegend,
+  ApexPlotOptions,
+  ApexFill,
+  ApexTooltip
+} from 'ng-apexcharts';
 import { EstadisticasReportesService } from '../../../../estadisticasReportes/services/estadisticasReportes.service';
 import { Gasto } from '../../../../gastos/interfaces/gasto.interface';
 
+// Extensión de la interfaz Gasto para incluir propiedades opcionales si vienen del backend
 export interface GastoGrid extends Gasto {
   tipoGasto?: string;
   departamento?: string;
 }
+
+export type ChartOptions = {
+  series: ApexAxisChartSeries;
+  chart: ApexChart;
+  xaxis: ApexXAxis;
+  dataLabels: ApexDataLabels;
+  grid: ApexGrid;
+  stroke: ApexStroke;
+  title: ApexTitleSubtitle;
+  yaxis: ApexYAxis;
+  legend: ApexLegend;
+  plotOptions: ApexPlotOptions;
+  fill: ApexFill;
+  tooltip: ApexTooltip;
+};
 
 @Component({
   selector: 'app-recaudacion-mensual-page',
@@ -22,14 +53,22 @@ export interface GastoGrid extends Gasto {
   styleUrls: ['./recaudacionMensual-page.component.css']
 })
 export class RecaudacionMensualPageComponent implements OnInit {
+  @ViewChild('chart') chart: ChartComponent | undefined;
 
-  public chartOptions: any;
+  public chartOptions: Partial<ChartOptions> | any;
   public gastos: GastoGrid[] = [];
   public loading = false;
+
+  // Inicializamos con el año actual
   public selectedYear: number = new Date().getFullYear();
   public availableYears: number[] = [];
 
-  // Nombres de los meses en español
+  // Variables para estadísticas
+  public totalAnual: number = 0;
+  public promedioMensual: number = 0;
+  public mesMayorRecaudacion: string = '-';
+  public mejorMesMonto: number = 0;
+
   private meses = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -48,102 +87,118 @@ export class RecaudacionMensualPageComponent implements OnInit {
   private initChartOptions(): void {
     this.chartOptions = {
       series: [{
-        name: 'Honorarios',
-        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        name: "Recaudación",
+        data: []
       }],
       chart: {
-        type: 'bar',
         height: 350,
-        width: '100%'
+        type: "bar", // Mantenemos gráfico de barras como en la imagen
+        fontFamily: 'Inter, sans-serif',
+        toolbar: {
+          show: false
+        }
       },
       plotOptions: {
         bar: {
-          horizontal: true
+          columnWidth: '50%',
+          borderRadius: 4,
+          dataLabels: {
+            position: 'top',
+          },
         }
       },
       dataLabels: {
         enabled: true,
-        formatter: (val: number) => {
-          // CORRECCIÓN: No convertir a string aquí, dejar que ApexCharts maneje el número
-          if (val === 0 || val === null || val === undefined) return '';
-          return '$' + val.toLocaleString('es-AR', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-          });
+        formatter: function (val: number) {
+          if (val === 0) return "";
+          if (val >= 1000000) return "$" + (val / 1000000).toFixed(1) + "M";
+          if (val >= 1000) return "$" + (val / 1000).toFixed(0) + "k";
+          return "$" + val;
+        },
+        offsetY: -20,
+        style: {
+          fontSize: '12px',
+          colors: ["#304758"]
+        }
+      },
+      stroke: {
+        width: 0
+      },
+      grid: {
+        row: {
+          colors: ["#fff", "#f2f2f2"]
         }
       },
       xaxis: {
         categories: this.meses,
         labels: {
-          formatter: (val: string) => {
-            // CORRECCIÓN: val viene como string, convertir a número primero
-            const numVal = parseFloat(val);
-            if (isNaN(numVal)) return val;
-            return '$' + numVal.toLocaleString('es-AR', {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 2
-            });
-          }
-        }
-      },
-      yaxis: {
-        labels: {
+          rotate: -45,
           style: {
             fontSize: '12px'
           }
         }
       },
-      tooltip: {
-        y: {
-          formatter: (val: number) => {
-            if (val === 0 || val === null || val === undefined) return '$0';
-            return '$' + val.toLocaleString('es-AR', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            });
+      yaxis: {
+        title: {
+          text: 'Monto ($)',
+        },
+        labels: {
+          formatter: (value: number) => {
+            return "$" + value.toLocaleString('es-AR');
           }
         }
       },
-      legend: {
-        position: 'right',
-        fontSize: '12px',
-        width: 100,
-        offsetX: 10,
-        offsetY: 50,
-        markers: {
-          width: 8,
-          height: 8
+      fill: {
+        type: "gradient",
+        gradient: {
+          shade: "light",
+          type: "vertical",
+          shadeIntensity: 0.25,
+          gradientToColors: undefined,
+          inverseColors: true,
+          opacityFrom: 0.85,
+          opacityTo: 0.85,
+          stops: [50, 0, 100]
         },
-        itemMargin: {
-          horizontal: 3,
-          vertical: 3
+      },
+      tooltip: {
+        y: {
+          formatter: function (val: number) {
+            return "$ " + val.toLocaleString('es-AR');
+          }
         }
-      }
+      },
+      colors: ['#008FFB']
     };
   }
 
   private loadGastos(): void {
     this.loading = true;
-
     this.estadisticasService.getGastos().subscribe({
-      next: (gastos: GastoGrid[]) => {
-        this.gastos = gastos;
-        this.extractAvailableYears();
-        this.updateChart();
+      next: (data) => {
+        this.gastos = data;
+        this.processGastos(); // Procesa años disponibles
+        this.updateChart();   // Filtra y actualiza el gráfico
         this.loading = false;
       },
-      error: (error) => {
-        console.error('Error al cargar gastos:', error);
+      error: (err) => {
+        console.error('Error cargando gastos:', err);
         this.loading = false;
       }
     });
   }
 
-  private extractAvailableYears(): void {
+  // Detectar años disponibles usando TEXTO, no Date
+  private processGastos(): void {
     const years = new Set<number>();
 
     this.gastos.forEach(gasto => {
-      const year = new Date(gasto.fecha).getFullYear();
+      // FIX: Usar substring para obtener el año exacto "2026", "2025"
+      // Evita que el 1 de Enero se convierta en año anterior por zona horaria
+      const fechaStr = String(gasto.fecha);
+      const yearStr = fechaStr.substring(0, 4);
+      const year = parseInt(yearStr);
+
       if (!isNaN(year)) {
         years.add(year);
       }
@@ -151,6 +206,7 @@ export class RecaudacionMensualPageComponent implements OnInit {
 
     this.availableYears = Array.from(years).sort((a, b) => b - a);
 
+    // Seleccionar el año más reciente si el actual no está
     if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
       this.selectedYear = this.availableYears[0];
     }
@@ -161,33 +217,63 @@ export class RecaudacionMensualPageComponent implements OnInit {
   }
 
   private updateChart(): void {
-    // Filtrar gastos con idTipoGasto = 1 para el año seleccionado
+    // 1. FILTRAR: Usamos TEXTO para el año
     const gastosHonorarios = this.gastos.filter(gasto => {
-      const fechaGasto = new Date(gasto.fecha);
-      const yearGasto = fechaGasto.getFullYear();
+      const fechaStr = String(gasto.fecha);
+      const yearStr = fechaStr.substring(0, 4);
+      const yearGasto = parseInt(yearStr);
+
+      // Mantenemos la lógica de idTipoGasto === 1
       return gasto.idTipoGasto === 1 && yearGasto === this.selectedYear;
     });
 
-    // Inicializar array con 12 meses, todos en 0
+    // Inicializar array con 12 meses en 0
     const montosPorMes = new Array(12).fill(0);
 
-    // Sumar los montos por mes
+    // 2. SUMAR: Usamos TEXTO para el mes
     gastosHonorarios.forEach(gasto => {
-      const mes = new Date(gasto.fecha).getMonth(); // 0-11
-      if (mes >= 0 && mes <= 11) {
-        // Asegurar que estamos sumando números, no strings
+      // Extraemos el mes de la cadena "YYYY-MM-DD"
+      // Posiciones 5 y 6 (índices 5, 7 en substring) corresponden al mes "01", "12", etc.
+      const fechaStr = String(gasto.fecha);
+      const mesStr = fechaStr.substring(5, 7);
+      const mesIndex = parseInt(mesStr) - 1; // Convertimos "01" a índice 0
+
+      if (mesIndex >= 0 && mesIndex <= 11) {
         const monto = typeof gasto.monto === 'string' ? parseFloat(gasto.monto) : gasto.monto;
-        montosPorMes[mes] += monto;
+        montosPorMes[mesIndex] += monto;
       }
     });
 
-    // Actualizar el gráfico con los nuevos datos
-    this.chartOptions = {
-      ...this.chartOptions,
-      series: [{
-        name: 'Honorarios',
-        data: montosPorMes
-      }]
-    };
+    // Calcular Estadísticas
+    this.totalAnual = montosPorMes.reduce((a, b) => a + b, 0);
+
+    // Promedio (dividido por mes actual si es año corriente, o 12 si es pasado)
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    let divisor = 12;
+
+    if (this.selectedYear === currentYear) {
+        const currentMonth = currentDate.getMonth() + 1;
+        divisor = currentMonth;
+    }
+    this.promedioMensual = this.totalAnual / (divisor || 1);
+
+    // Mes mayor
+    let maxMonto = 0;
+    let maxIndex = -1;
+    montosPorMes.forEach((monto, index) => {
+      if (monto > maxMonto) {
+        maxMonto = monto;
+        maxIndex = index;
+      }
+    });
+    this.mejorMesMonto = maxMonto;
+    this.mesMayorRecaudacion = maxIndex >= 0 ? this.meses[maxIndex] : '-';
+
+    // Actualizar Gráfico
+    this.chartOptions.series = [{
+      name: "Recaudación",
+      data: montosPorMes
+    }];
   }
 }
