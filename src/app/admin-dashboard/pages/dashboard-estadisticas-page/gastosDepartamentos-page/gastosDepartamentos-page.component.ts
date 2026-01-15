@@ -59,7 +59,7 @@ export class GastosDepartamentosPageComponent implements OnInit {
   @ViewChild('chart') chart: ChartComponent | undefined;
 
   public chartOptions: ChartOptions;
-  public isLoading = false;
+  public isLoading = true; // Iniciamos en true para evitar parpadeos
 
   private allGastos: GastoGrid[] = [];
   public departmentExpenses: DepartmentExpense[] = [];
@@ -89,7 +89,7 @@ export class GastosDepartamentosPageComponent implements OnInit {
         type: 'bar',
         fontFamily: 'Inter, sans-serif',
         toolbar: { show: true },
-        animations: { enabled: true, speed: 800 }
+        animations: { enabled: true }
       },
       plotOptions: {
         bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 }
@@ -121,15 +121,18 @@ export class GastosDepartamentosPageComponent implements OnInit {
         this.allGastos = data;
         this.processYears();
 
-        // --- SOLUCIÓN DEL BUG DE CARGA INICIAL ---
+        // --- CORRECCIÓN DEL TIEMPO DE CARGA ---
+        // 1. Ocultamos el spinner para que el *ngIf muestre el gráfico
         this.isLoading = false;
-        this.cdr.detectChanges(); // Forzamos a Angular a mostrar el HTML del gráfico
 
-        // Esperamos un momento para asegurar que el gráfico existe antes de actualizarlo
+        // 2. Forzamos a Angular a pintar el HTML del gráfico AHORA MISMO
+        this.cdr.detectChanges();
+
+        // 3. Esperamos 100ms a que la librería ApexCharts se inicialice internamente
+        // antes de inyectarle los datos.
         setTimeout(() => {
           this.updateDashboard();
         }, 100);
-        // -----------------------------------------
       },
       error: (err) => {
         console.error('Error cargando gastos:', err);
@@ -172,18 +175,27 @@ export class GastosDepartamentosPageComponent implements OnInit {
     });
     this.availableYears = Array.from(years).sort((a, b) => b - a);
 
-    // Si hay años disponibles y el seleccionado no está en la lista, tomar el más reciente
-    if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
-      this.selectedYear = this.availableYears[0];
+    // Seleccionar año actual o el más reciente
+    const currentYear = new Date().getFullYear();
+    if (this.availableYears.includes(currentYear)) {
+        this.selectedYear = currentYear;
+    } else if (this.availableYears.length > 0) {
+        this.selectedYear = this.availableYears[0];
     }
   }
 
-  public onYearChange(): void {
-    this.selectedYear = Number(this.selectedYear);
+  public onYearChange(event?: any): void {
+    if(event) {
+        // Si viene del evento change del select HTML
+        const target = event.target as HTMLSelectElement;
+        this.selectedYear = Number(target.value);
+    }
     this.updateDashboard();
   }
 
-  public onChartTypeChange(): void {
+  public onChartTypeChange(event: any): void {
+    const target = event.target as HTMLSelectElement;
+    this.selectedChartType = target.value as 'bar' | 'area' | 'line';
     this.updateChartRender();
   }
 
@@ -204,7 +216,6 @@ export class GastosDepartamentosPageComponent implements OnInit {
         if (!depNombre) depNombre = gasto['departamento'];
         if (!depNombre) depNombre = 'Sin Nombre';
 
-        // Convertimos ID a string para evitar duplicados (ej: 4 vs "4")
         const uniqueKey = String(depId ? depId : depNombre);
 
         if (typeof depNombre === 'string') {
@@ -238,11 +249,7 @@ export class GastosDepartamentosPageComponent implements OnInit {
       total: value.data.reduce((a, b) => a + b, 0)
     }));
 
-    // Ordenar de mayor a menor
     this.departmentExpenses.sort((a, b) => b.total - a.total);
-
-    // Debug opcional
-    console.log(`✅ Gráfico actualizado para ${targetYear} con ${this.departmentExpenses.length} departamentos.`);
 
     this.totalGastos = totalAnualCalc;
     const currentDate = new Date();
@@ -266,12 +273,7 @@ export class GastosDepartamentosPageComponent implements OnInit {
   }
 
   private updateChartRender(): void {
-    if (!this.chart) {
-      // Intento de recuperación si el ViewChild aún no estaba listo
-      // Esto suele pasar en la primera carga si no usamos el setTimeout
-      return;
-    }
-
+    // Definimos las series
     const isBar = this.selectedChartType === 'bar';
     let newSeries: ApexAxisChartSeries = [];
     let newXAxisCategories: string[] = [];
@@ -286,6 +288,7 @@ export class GastosDepartamentosPageComponent implements OnInit {
       newXAxisCategories = this.meses;
     }
 
+    // Actualizamos el objeto de opciones
     this.chartOptions = {
       ...this.chartOptions,
       chart: { ...this.chartOptions.chart, type: this.selectedChartType },
@@ -293,7 +296,10 @@ export class GastosDepartamentosPageComponent implements OnInit {
       series: newSeries
     };
 
+    // Forzamos actualización visual
     this.cdr.detectChanges();
-    this.chart.updateOptions(this.chartOptions);
+    if (this.chart) {
+      this.chart.updateOptions(this.chartOptions);
+    }
   }
 }
