@@ -18,7 +18,6 @@ import {
 import { GastosService } from '../../../../gastos/services/gastos.service';
 import { Gasto } from '../../../../gastos/interfaces/gasto.interface';
 
-// Permitimos acceso flexible a propiedades
 export interface GastoGrid extends Gasto {
   [key: string]: any;
 }
@@ -38,7 +37,7 @@ export type ChartOptions = {
 };
 
 interface DepartmentExpense {
-  id: string | number; // Nuevo campo para controlar agrupación exacta
+  id: string;
   departmentName: string;
   monthlyData: number[];
   total: number;
@@ -121,8 +120,16 @@ export class GastosDepartamentosPageComponent implements OnInit {
       next: (data) => {
         this.allGastos = data;
         this.processYears();
-        this.updateDashboard();
+
+        // --- SOLUCIÓN DEL BUG DE CARGA INICIAL ---
         this.isLoading = false;
+        this.cdr.detectChanges(); // Forzamos a Angular a mostrar el HTML del gráfico
+
+        // Esperamos un momento para asegurar que el gráfico existe antes de actualizarlo
+        setTimeout(() => {
+          this.updateDashboard();
+        }, 100);
+        // -----------------------------------------
       },
       error: (err) => {
         console.error('Error cargando gastos:', err);
@@ -165,6 +172,7 @@ export class GastosDepartamentosPageComponent implements OnInit {
     });
     this.availableYears = Array.from(years).sort((a, b) => b - a);
 
+    // Si hay años disponibles y el seleccionado no está en la lista, tomar el más reciente
     if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
       this.selectedYear = this.availableYears[0];
     }
@@ -181,42 +189,30 @@ export class GastosDepartamentosPageComponent implements OnInit {
 
   private updateDashboard(): void {
     const targetYear = Number(this.selectedYear);
-
-    // Mapa: Clave = ID del departamento (para asegurar unicidad), Valor = Datos
-    const deptMap = new Map<string | number, { name: string, data: number[] }>();
+    const deptMap = new Map<string, { name: string, data: number[] }>();
     let totalAnualCalc = 0;
-
-    // Contadores para debug
-    let gastosProcesados = 0;
 
     this.allGastos.forEach(gasto => {
       const info = this.getFechaInfo(gasto.fecha);
 
       if (info && info.year === targetYear && info.month >= 0 && info.month <= 11) {
-        gastosProcesados++;
 
-        // 1. Identificar ID y Nombre (Priorizamos 'idDep' para agrupar)
         let depId = gasto['idDep'];
         let depNombre = gasto['nombre'];
 
-        // Fallbacks si las claves vienen distintas
         if (!depId) depId = gasto['idDepartamento'];
         if (!depNombre) depNombre = gasto['departamento'];
-
-        // Si no hay nombre, ponemos uno temporal
         if (!depNombre) depNombre = 'Sin Nombre';
 
-        // CLAVE ÚNICA: Usamos idDep. Si no existe, usamos el nombre.
-        let uniqueKey = depId ? depId : depNombre;
+        // Convertimos ID a string para evitar duplicados (ej: 4 vs "4")
+        const uniqueKey = String(depId ? depId : depNombre);
 
-        // Limpieza visual del nombre
         if (typeof depNombre === 'string') {
             depNombre = depNombre.charAt(0).toUpperCase() + depNombre.slice(1);
         }
 
         const monto = Number(gasto.monto || 0);
 
-        // Agrupación en el Mapa
         if (!deptMap.has(uniqueKey)) {
           deptMap.set(uniqueKey, {
               name: String(depNombre),
@@ -227,7 +223,6 @@ export class GastosDepartamentosPageComponent implements OnInit {
         const entry = deptMap.get(uniqueKey)!;
         entry.data[info.month] += monto;
 
-        // Si antes era 'Sin Nombre' y ahora encontramos uno mejor, lo actualizamos
         if (entry.name === 'Sin Nombre' && depNombre !== 'Sin Nombre') {
             entry.name = String(depNombre);
         }
@@ -236,7 +231,6 @@ export class GastosDepartamentosPageComponent implements OnInit {
       }
     });
 
-    // Transformar Mapa a Array
     this.departmentExpenses = Array.from(deptMap.entries()).map(([key, value]) => ({
       id: key,
       departmentName: value.name,
@@ -244,17 +238,12 @@ export class GastosDepartamentosPageComponent implements OnInit {
       total: value.data.reduce((a, b) => a + b, 0)
     }));
 
-    // --- DEBUG CRÍTICO ---
-    console.log(`📊 REPORTE AÑO ${targetYear}:`);
-    console.log(`- Gastos procesados: ${gastosProcesados}`);
-    console.log(`- Grupos (Deptos) encontrados: ${this.departmentExpenses.length}`);
-    this.departmentExpenses.forEach(d => console.log(`  -> [ID: ${d.id}] ${d.departmentName}: $${d.total}`));
-    // ---------------------
-
     // Ordenar de mayor a menor
     this.departmentExpenses.sort((a, b) => b.total - a.total);
 
-    // Estadísticas
+    // Debug opcional
+    console.log(`✅ Gráfico actualizado para ${targetYear} con ${this.departmentExpenses.length} departamentos.`);
+
     this.totalGastos = totalAnualCalc;
     const currentDate = new Date();
     const isCurrentYear = targetYear === currentDate.getFullYear();
@@ -277,7 +266,11 @@ export class GastosDepartamentosPageComponent implements OnInit {
   }
 
   private updateChartRender(): void {
-    if (!this.chart) return;
+    if (!this.chart) {
+      // Intento de recuperación si el ViewChild aún no estaba listo
+      // Esto suele pasar en la primera carga si no usamos el setTimeout
+      return;
+    }
 
     const isBar = this.selectedChartType === 'bar';
     let newSeries: ApexAxisChartSeries = [];
@@ -301,8 +294,6 @@ export class GastosDepartamentosPageComponent implements OnInit {
     };
 
     this.cdr.detectChanges();
-    if (this.chart) {
-      this.chart.updateOptions(this.chartOptions);
-    }
+    this.chart.updateOptions(this.chartOptions);
   }
 }
