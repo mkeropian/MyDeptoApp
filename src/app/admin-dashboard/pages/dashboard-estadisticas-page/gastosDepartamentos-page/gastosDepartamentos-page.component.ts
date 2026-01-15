@@ -18,9 +18,9 @@ import {
 import { GastosService } from '../../../../gastos/services/gastos.service';
 import { Gasto } from '../../../../gastos/interfaces/gasto.interface';
 
-// Interfaz flexible
+// Permitimos acceso flexible a propiedades
 export interface GastoGrid extends Gasto {
-  [key: string]: any; // Permite leer 'nombre', 'idDep', etc. sin errores
+  [key: string]: any;
 }
 
 export type ChartOptions = {
@@ -38,6 +38,7 @@ export type ChartOptions = {
 };
 
 interface DepartmentExpense {
+  id: string | number; // Nuevo campo para controlar agrupación exacta
   departmentName: string;
   monthlyData: number[];
   total: number;
@@ -180,61 +181,85 @@ export class GastosDepartamentosPageComponent implements OnInit {
 
   private updateDashboard(): void {
     const targetYear = Number(this.selectedYear);
-    console.log(`Procesando año: ${targetYear}`);
 
-    const deptMap = new Map<string, number[]>();
+    // Mapa: Clave = ID del departamento (para asegurar unicidad), Valor = Datos
+    const deptMap = new Map<string | number, { name: string, data: number[] }>();
     let totalAnualCalc = 0;
+
+    // Contadores para debug
+    let gastosProcesados = 0;
 
     this.allGastos.forEach(gasto => {
       const info = this.getFechaInfo(gasto.fecha);
 
       if (info && info.year === targetYear && info.month >= 0 && info.month <= 11) {
+        gastosProcesados++;
 
-        // --- AQUÍ ESTÁ LA CORRECCIÓN CLAVE (Usar corchetes) ---
-        let nombreDepto = 'Sin Asignar';
+        // 1. Identificar ID y Nombre (Priorizamos 'idDep' para agrupar)
+        let depId = gasto['idDep'];
+        let depNombre = gasto['nombre'];
 
-        // 1. Buscamos el campo 'nombre'
-        if (gasto['nombre']) {
-          nombreDepto = String(gasto['nombre']);
-        }
-        // 2. Si no, buscamos 'idDep'
-        else if (gasto['idDep']) {
-          nombreDepto = `Depto ${gasto['idDep']}`;
-        }
-        // 3. Fallbacks clásicos
-        else if (gasto['departamento'] && typeof gasto['departamento'] === 'string') {
-           nombreDepto = gasto['departamento'];
-        }
+        // Fallbacks si las claves vienen distintas
+        if (!depId) depId = gasto['idDepartamento'];
+        if (!depNombre) depNombre = gasto['departamento'];
 
-        nombreDepto = nombreDepto.charAt(0).toUpperCase() + nombreDepto.slice(1);
-        // -----------------------------------------------------
+        // Si no hay nombre, ponemos uno temporal
+        if (!depNombre) depNombre = 'Sin Nombre';
+
+        // CLAVE ÚNICA: Usamos idDep. Si no existe, usamos el nombre.
+        let uniqueKey = depId ? depId : depNombre;
+
+        // Limpieza visual del nombre
+        if (typeof depNombre === 'string') {
+            depNombre = depNombre.charAt(0).toUpperCase() + depNombre.slice(1);
+        }
 
         const monto = Number(gasto.monto || 0);
 
-        if (!deptMap.has(nombreDepto)) {
-          deptMap.set(nombreDepto, new Array(12).fill(0));
+        // Agrupación en el Mapa
+        if (!deptMap.has(uniqueKey)) {
+          deptMap.set(uniqueKey, {
+              name: String(depNombre),
+              data: new Array(12).fill(0)
+          });
         }
 
-        const meses = deptMap.get(nombreDepto)!;
-        meses[info.month] += monto;
+        const entry = deptMap.get(uniqueKey)!;
+        entry.data[info.month] += monto;
+
+        // Si antes era 'Sin Nombre' y ahora encontramos uno mejor, lo actualizamos
+        if (entry.name === 'Sin Nombre' && depNombre !== 'Sin Nombre') {
+            entry.name = String(depNombre);
+        }
+
         totalAnualCalc += monto;
       }
     });
 
-    this.departmentExpenses = Array.from(deptMap.entries()).map(([name, meses]) => ({
-      departmentName: name,
-      monthlyData: meses,
-      total: meses.reduce((a, b) => a + b, 0)
+    // Transformar Mapa a Array
+    this.departmentExpenses = Array.from(deptMap.entries()).map(([key, value]) => ({
+      id: key,
+      departmentName: value.name,
+      monthlyData: value.data,
+      total: value.data.reduce((a, b) => a + b, 0)
     }));
 
+    // --- DEBUG CRÍTICO ---
+    console.log(`📊 REPORTE AÑO ${targetYear}:`);
+    console.log(`- Gastos procesados: ${gastosProcesados}`);
+    console.log(`- Grupos (Deptos) encontrados: ${this.departmentExpenses.length}`);
+    this.departmentExpenses.forEach(d => console.log(`  -> [ID: ${d.id}] ${d.departmentName}: $${d.total}`));
+    // ---------------------
+
+    // Ordenar de mayor a menor
     this.departmentExpenses.sort((a, b) => b.total - a.total);
 
+    // Estadísticas
     this.totalGastos = totalAnualCalc;
     const currentDate = new Date();
     const isCurrentYear = targetYear === currentDate.getFullYear();
     const divisor = isCurrentYear ? (currentDate.getMonth() + 1) : 12;
     this.promedioMensual = this.totalGastos > 0 ? (this.totalGastos / divisor) : 0;
-
     this.departamentoMayorGasto = this.departmentExpenses.length > 0 ? this.departmentExpenses[0].departmentName : '-';
 
     const globalMonthly = new Array(12).fill(0);
