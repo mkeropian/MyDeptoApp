@@ -59,7 +59,7 @@ export class GastosDepartamentosPageComponent implements OnInit {
   @ViewChild('chart') chart: ChartComponent | undefined;
 
   public chartOptions: ChartOptions;
-  public isLoading = true;
+  public isLoading = true; // Inicia true para controlar el renderizado
 
   private allGastos: GastoGrid[] = [];
   public departmentExpenses: DepartmentExpense[] = [];
@@ -121,10 +121,15 @@ export class GastosDepartamentosPageComponent implements OnInit {
         this.allGastos = data;
         this.processYears();
 
-        // --- LÓGICA DE ESPERA PARA EVITAR GRÁFICO VACÍO ---
+        // --- SOLUCIÓN DEL BUG VISUAL ---
+        // 1. Decimos que ya cargó, lo que habilita el <apx-chart> en el HTML
         this.isLoading = false;
+
+        // 2. Forzamos a Angular a procesar el HTML inmediatamente
         this.cdr.detectChanges();
 
+        // 3. Esperamos 100ms para que la librería gráfica se instancie en el DOM
+        // antes de empujarle los datos.
         setTimeout(() => {
           this.updateDashboard();
         }, 100);
@@ -178,18 +183,18 @@ export class GastosDepartamentosPageComponent implements OnInit {
     }
   }
 
-  // --- CORRECCIÓN AQUÍ: Eliminamos los argumentos 'event' ---
+  // --- MÉTODOS SIMPLIFICADOS (Sin argumentos) ---
   public onYearChange(): void {
-    // Como usamos [(ngModel)], this.selectedYear ya tiene el valor nuevo
+    // Angular ya actualizó this.selectedYear gracias a [(ngModel)]
     this.selectedYear = Number(this.selectedYear);
     this.updateDashboard();
   }
 
   public onChartTypeChange(): void {
-    // Como usamos [(ngModel)], this.selectedChartType ya tiene el valor nuevo
+    // Angular ya actualizó this.selectedChartType gracias a [(ngModel)]
     this.updateChartRender();
   }
-  // -----------------------------------------------------------
+  // ---------------------------------------------
 
   private updateDashboard(): void {
     const targetYear = Number(this.selectedYear);
