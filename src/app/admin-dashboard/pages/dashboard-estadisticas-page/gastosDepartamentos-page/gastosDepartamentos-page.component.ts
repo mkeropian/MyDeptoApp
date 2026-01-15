@@ -1,10 +1,28 @@
-// gastosDepartamentos-page.component.ts
-import { JsonPipe, DatePipe, CurrencyPipe, CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
-import { ApexAxisChartSeries, ApexChart, ApexXAxis, ApexDataLabels, ApexYAxis, ApexLegend, ApexFill, ChartComponent, ApexTooltip, ApexGrid, ApexPlotOptions } from 'ng-apexcharts';
-import { Subject, takeUntil } from 'rxjs';
+import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms'; // Importante para ngModel
+import {
+  NgApexchartsModule,
+  ChartComponent,
+  ApexAxisChartSeries,
+  ApexChart,
+  ApexXAxis,
+  ApexDataLabels,
+  ApexYAxis,
+  ApexLegend,
+  ApexFill,
+  ApexTooltip,
+  ApexGrid,
+  ApexPlotOptions
+} from 'ng-apexcharts';
 import { GastosService } from '../../../../gastos/services/gastos.service';
-import { GastoGrid } from '../../../../gastos/interfaces/gasto.interface';
+import { Gasto } from '../../../../gastos/interfaces/gasto.interface';
+
+// Extendemos la interfaz para asegurar que departamento exista
+export interface GastoGrid extends Gasto {
+  departamento?: string;
+  tipoGasto?: string;
+}
 
 export type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -22,557 +40,271 @@ export type ChartOptions = {
 
 interface DepartmentExpense {
   departmentName: string;
-  monthlyData: { [month: string]: number };
+  monthlyData: number[]; // Array de 12 posiciones para simplificar gráficos
   total: number;
 }
 
 @Component({
   selector: 'app-gastos-departamentos-page',
-  imports: [ChartComponent, CurrencyPipe, CommonModule],
-  templateUrl: './gastosDepartamentos-page.component.html',
-  styles: `
-    .chart-container {
-      max-width: 1200px;
-      margin: 20px auto;
-      padding: 20px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .chart-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    .chart-title {
-      font-size: 24px;
-      font-weight: 600;
-      color: #2d3748;
-      margin: 0;
-    }
-
-    .chart-filters {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .filter-select {
-      padding: 8px 12px;
-      border: 2px solid #e2e8f0;
-      border-radius: 6px;
-      background: white;
-      color: #4a5568;
-      font-size: 14px;
-      cursor: pointer;
-      transition: border-color 0.2s ease;
-    }
-
-    .filter-select:focus {
-      outline: none;
-      border-color: #3182ce;
-    }
-
-    .loading-spinner {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 350px;
-      font-size: 16px;
-      color: #718096;
-    }
-
-    .error-message {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 350px;
-      color: #e53e3e;
-      font-size: 16px;
-    }
-
-    .summary-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-top: 24px;
-      padding-top: 24px;
-      border-top: 1px solid #e2e8f0;
-    }
-
-    .summary-card {
-      background: #f7fafc;
-      padding: 16px;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    .summary-card .label {
-      display: block;
-      color: #718096;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-
-    .summary-card .value {
-      display: block;
-      color: #2d3748;
-      font-size: 20px;
-      font-weight: 600;
-    }
-
-    .no-data {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 350px;
-      color: #718096;
-    }
-
-    .no-data-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-
-    @media (max-width: 768px) {
-      .chart-container {
-        margin: 10px;
-        padding: 16px;
-      }
-
-      .chart-header {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .chart-filters {
-        justify-content: center;
-      }
-    }
-  `
+  standalone: true,
+  imports: [
+    CommonModule,
+    NgApexchartsModule,
+    FormsModule,
+    CurrencyPipe
+  ],
+  templateUrl: './gastosDepartamentos-page.component.html'
 })
-export class GastosDepartamentosPageComponent implements OnInit, OnDestroy {
-  @ViewChild("chart") chart: ChartComponent | any;
+export class GastosDepartamentosPageComponent implements OnInit {
+  @ViewChild('chart') chart: ChartComponent | undefined;
 
-  public chartOptions: Partial<ChartOptions> | any;
-  public isLoading = true;
-  public hasError = false;
-  public errorMessage = '';
+  public chartOptions: ChartOptions;
+  public isLoading = false;
+
+  // Datos crudos
+  private allGastos: GastoGrid[] = [];
 
   // Datos procesados
   public departmentExpenses: DepartmentExpense[] = [];
-  public availableYears: number[] = [];
-  public availableMonths: string[] = [];
+
+  // Filtros
   public selectedYear: number = new Date().getFullYear();
+  public availableYears: number[] = [];
   public selectedChartType: 'bar' | 'area' | 'line' = 'bar';
 
-  // Resumen
-  public totalGastos = 0;
-  public promedioMensual = 0;
-  public departamentoMayorGasto = '';
-  public mesConMayorGasto = '';
+  // Estadísticas
+  public totalGastos: number = 0;
+  public promedioMensual: number = 0;
+  public departamentoMayorGasto: string = '-';
+  public mesConMayorGasto: string = '-';
 
-  private destroy$ = new Subject<void>();
+  private meses = [
+    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+  ];
 
   constructor(
-    private gastosService: GastosService // Inyecta tu servicio aquí
-  ) {}
-
-  ngOnInit(): void {
-    this.initializeChart();
-    this.loadGastosData();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  private initializeChart(): void {
+    private gastosService: GastosService,
+    private cdr: ChangeDetectorRef
+  ) {
+    // Configuración Base del Gráfico
     this.chartOptions = {
       series: [],
       chart: {
-        type: this.selectedChartType,
-        height: 450,
-        stacked: false,
-        toolbar: {
-          show: true,
-          tools: {
-            download: true,
-            selection: false,
-            zoom: true,
-            zoomin: true,
-            zoomout: true,
-            pan: false,
-            reset: true
-          }
-        },
-        animations: {
-          enabled: true,
-          easing: 'easeinout',
-          speed: 800
-        }
+        height: 350,
+        type: 'bar',
+        fontFamily: 'Inter, sans-serif',
+        toolbar: { show: true },
+        animations: { enabled: true, speed: 800 }
       },
       plotOptions: {
-        bar: {
-          horizontal: false,
-          columnWidth: '65%',
-          borderRadius: 4,
-          dataLabels: {
-            position: 'top'
-          }
-        }
+        bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 }
       },
-      colors: ['#3182ce', '#38a169', '#d69e2e', '#e53e3e', '#805ad5', '#dd6b20', '#319795'],
-      dataLabels: {
-        enabled: false
-      },
-      fill: {
-        type: 'gradient',
-        gradient: {
-          shade: 'light',
-          type: 'vertical',
-          shadeIntensity: 0.3,
-          gradientToColors: undefined,
-          inverseColors: false,
-          opacityFrom: 0.8,
-          opacityTo: 0.6,
-          stops: [0, 100]
-        }
-      },
-      legend: {
-        position: 'top',
-        horizontalAlign: 'left',
-        floating: false,
-        fontSize: '14px',
-        fontFamily: 'Arial, sans-serif',
-        fontWeight: 500
-      },
-      grid: {
-        borderColor: '#e2e8f0',
-        strokeDashArray: 3,
-        xaxis: {
-          lines: {
-            show: false
-          }
-        },
-        yaxis: {
-          lines: {
-            show: true
-          }
-        }
-      },
-      xaxis: {
-        categories: [],
-        labels: {
-          style: {
-            colors: '#718096',
-            fontSize: '12px'
-          }
-        },
-        axisBorder: {
-          show: true,
-          color: '#e2e8f0'
-        }
-      },
+      dataLabels: { enabled: false },
+      xaxis: { categories: [] },
       yaxis: {
-        labels: {
-          style: {
-            colors: '#718096',
-            fontSize: '12px'
-          },
-          formatter: (val: number) => {
-            return '$' + this.formatCurrency(val);
-          }
-        },
-        title: {
-          text: 'Monto en Pesos',
-          style: {
-            color: '#4a5568',
-            fontSize: '14px',
-            fontWeight: 500
-          }
-        }
+        title: { text: 'Monto ($)' },
+        labels: { formatter: (val) => '$' + val.toLocaleString('es-AR', { notation: "compact" }) }
       },
+      grid: { borderColor: '#f1f1f1' },
+      fill: { opacity: 1 },
       tooltip: {
-        theme: 'light',
-        y: {
-          formatter: (val: number) => {
-            return '$' + val.toLocaleString('es-AR');
-          }
-        },
-        x: {
-          format: 'MMM yyyy'
-        }
-      }
+        y: { formatter: (val) => '$ ' + val.toLocaleString('es-AR') }
+      },
+      legend: { position: 'top' },
+      colors: ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#546E7A', '#26a69a', '#D10CE8']
     };
   }
 
-  private loadGastosData(): void {
-    this.isLoading = true;
-    this.hasError = false;
-
-    this.gastosService.getGastos() // O el método que uses para traer el listado (ej: getGastos())
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data: GastoGrid[]) => {
-          this.processGastosData(data);
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error al cargar gastos:', error);
-          this.handleError('Error al cargar los datos de gastos');
-        }
-      });
+  ngOnInit(): void {
+    this.loadData();
   }
 
-  private processGastosData(data: GastoGrid[]): void {
-    if (!data || data.length === 0) {
-      this.departmentExpenses = [];
-      this.updateChart();
-      return;
+  private loadData(): void {
+    this.isLoading = true;
+    this.gastosService.getGastos().subscribe({
+      next: (data) => {
+        this.allGastos = data;
+        this.processYears();
+        this.updateDashboard();
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error cargando gastos:', err);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  // --- PARSER DE FECHA UNIVERSAL (Igual que en Recaudación) ---
+  private getFechaInfo(fecha: any): { year: number, month: number } | null {
+    if (!fecha) return null;
+    if (fecha instanceof Date) return { year: fecha.getUTCFullYear(), month: fecha.getUTCMonth() };
+
+    const str = String(fecha).trim();
+    const yearMatch = str.match(/\d{4}/);
+    if (!yearMatch) return null;
+    const year = parseInt(yearMatch[0]);
+
+    const datePart = str.split('T')[0];
+    const parts = datePart.split(/[-/]/);
+    let month = -1;
+
+    if (parts.length >= 2) {
+      const yearIndex = parts.findIndex(p => p.includes(year.toString()));
+      if (yearIndex !== -1 && parts.length >= 3) month = parseInt(parts[1]) - 1;
+      else if (yearIndex === 0 && parts.length === 2) month = parseInt(parts[1]) - 1;
     }
 
-    // 1. Obtener Años (Usando texto para evitar error de zona horaria)
-    const yearsSet = new Set(data.map(item =>
-      parseInt(item.fecha.toString().substring(0, 4))
-    ));
-    this.availableYears = Array.from(yearsSet).sort((a, b) => b - a);
+    if (isNaN(year) || isNaN(month) || month < 0 || month > 11) {
+       const d = new Date(str);
+       return !isNaN(d.getTime()) ? { year: d.getUTCFullYear(), month: d.getUTCMonth() } : null;
+    }
+    return { year, month };
+  }
 
+  private processYears(): void {
+    const years = new Set<number>();
+    this.allGastos.forEach(g => {
+      const info = this.getFechaInfo(g.fecha);
+      if (info) years.add(info.year);
+    });
+    this.availableYears = Array.from(years).sort((a, b) => b - a);
+
+    // Si el año seleccionado no existe, usar el más reciente
     if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
       this.selectedYear = this.availableYears[0];
     }
+  }
 
-    // 2. Filtrar por año seleccionado
-    const filteredData = data.filter(item => {
-      const year = parseInt(item.fecha.toString().substring(0, 4));
-      return year === this.selectedYear;
-    });
+  public onYearChange(): void {
+    // Asegurar conversión a número
+    this.selectedYear = Number(this.selectedYear);
+    this.updateDashboard();
+  }
 
-    const monthNames = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
+  public onChartTypeChange(): void {
+    this.updateChartRender();
+  }
 
-    const tempMap = new Map<string, { total: number, monthly: Map<string, number> }>();
-    this.totalGastos = 0;
+  private updateDashboard(): void {
+    const targetYear = Number(this.selectedYear);
+    console.log(`Procesando Departamentos para año: ${targetYear}`);
 
-    filteredData.forEach(item => {
-      // Parsear mes manualmente "2026-01-01" -> "01"
-      const monthIndex = parseInt(item.fecha.toString().substring(5, 7)) - 1;
-      const monthName = monthNames[monthIndex];
-      const monto = Number(item.monto || 0);
+    // Mapa temporal para agrupar: Clave = Nombre Depto
+    const deptMap = new Map<string, number[]>();
 
-      // --- CORRECCIÓN ROBUSTA AQUÍ ---
-      // Usamos 'any' para detectar el nombre del departamento sin importar cómo se llame en la interfaz
-      const itemAny = item as any;
-      const deptName = itemAny.nombre || itemAny.departamento?.nombre || itemAny.departamento || 'Sin Departamento';
+    let totalAnualCalc = 0;
 
-      if (!tempMap.has(deptName)) {
-        tempMap.set(deptName, { total: 0, monthly: new Map() });
-      }
+    this.allGastos.forEach(gasto => {
+      const info = this.getFechaInfo(gasto.fecha);
 
-      const current = tempMap.get(deptName)!;
-      current.total += monto;
-      this.totalGastos += monto;
+      if (info && info.year === targetYear && info.month >= 0 && info.month <= 11) {
+        // Normalizar nombre departamento
+        const deptName = gasto.departamento ? gasto.departamento.trim() : 'Sin Departamento';
+        const monto = Number(gasto.monto || 0);
 
-      const currentMonthVal = current.monthly.get(monthName) || 0;
-      current.monthly.set(monthName, currentMonthVal + monto);
-    });
-
-    // Convertir a estructura DepartmentExpense
-    this.departmentExpenses = Array.from(tempMap.entries()).map(([name, val]) => {
-      const monthlyDataObj: { [key: string]: number } = {};
-      monthNames.forEach(m => {
-        monthlyDataObj[m] = val.monthly.get(m) || 0;
-      });
-
-      return {
-        departmentName: name,
-        monthlyData: monthlyDataObj,
-        total: val.total
-      };
-    });
-
-    // Métricas
-    const currentMonthIndex = new Date().getMonth();
-    const isCurrentYear = this.selectedYear === new Date().getFullYear();
-    const monthsDivisor = isCurrentYear ? (currentMonthIndex + 1) : 12;
-    this.promedioMensual = this.totalGastos > 0 ? (this.totalGastos / monthsDivisor) : 0;
-
-    if (this.departmentExpenses.length > 0) {
-        const topDept = this.departmentExpenses.reduce((prev, current) =>
-            (prev.total > current.total) ? prev : current
-        );
-        this.departamentoMayorGasto = topDept.departmentName;
-    } else {
-        this.departamentoMayorGasto = '-';
-    }
-
-    // Mes con mayor gasto
-    const globalMonthly = new Map<string, number>();
-    this.departmentExpenses.forEach(d => {
-        Object.entries(d.monthlyData).forEach(([m, val]) => {
-            globalMonthly.set(m, (globalMonthly.get(m) || 0) + val);
-        });
-    });
-
-    let maxMonthVal = -1;
-    let maxMonthName = '-';
-    globalMonthly.forEach((val, key) => {
-        if (val > maxMonthVal) {
-            maxMonthVal = val;
-            maxMonthName = key;
+        if (!deptMap.has(deptName)) {
+          deptMap.set(deptName, new Array(12).fill(0));
         }
-    });
-    this.mesConMayorGasto = maxMonthVal > 0 ? maxMonthName : '-';
 
-    this.updateChart();
-  }
+        const meses = deptMap.get(deptName)!;
+        meses[info.month] += monto;
 
-  private groupByDepartment(data: GastoGrid[]): { [key: string]: GastoGrid[] } {
-    return data.reduce((groups, item) => {
-      const departmentKey = `${item.idDep}-${item.nombre}`;
-      if (!groups[departmentKey]) {
-        groups[departmentKey] = [];
+        totalAnualCalc += monto;
       }
-      groups[departmentKey].push(item);
-      return groups;
-    }, {} as { [key: string]: GastoGrid[] });
-  }
+    });
 
-  private processDepartmentExpenses(departmentGroups: { [key: string]: GastoGrid[] }): DepartmentExpense[] {
-    const months = [
-      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
-    ];
-
-    return Object.entries(departmentGroups).map(([departmentKey, expenses]) => {
-      const departmentName = expenses[0].nombre;
-      const monthlyData: { [month: string]: number } = {};
-
-      // Inicializar todos los meses en 0
-      months.forEach(month => {
-        monthlyData[month] = 0;
-      });
-
-      // Sumar gastos por mes
-      expenses.forEach(expense => {
-        const date = new Date(expense.fecha);
-        const monthIndex = date.getMonth();
-        const monthName = months[monthIndex];
-        monthlyData[monthName] += Number(expense.monto) || 0;
-      });
-
-      const total = Object.values(monthlyData).reduce((sum, amount) => sum + amount, 0);
-
-      return {
-        departmentName,
-        monthlyData,
-        total
-      };
-    }).sort((a, b) => b.total - a.total); // Ordenar por total descendente
-  }
-
-  private updateChart(): void {
-    if (this.departmentExpenses.length === 0) {
-      this.chartOptions = {
-        ...this.chartOptions,
-        series: [],
-        xaxis: {
-          ...this.chartOptions.xaxis,
-          categories: []
-        }
-      };
-      return;
-    }
-
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-
-    const series = this.departmentExpenses.map(dept => ({
-      name: dept.departmentName,
-      data: months.map(month => dept.monthlyData[month] || 0)
+    // Convertir Mapa a Array estructurado
+    this.departmentExpenses = Array.from(deptMap.entries()).map(([name, meses]) => ({
+      departmentName: name,
+      monthlyData: meses,
+      total: meses.reduce((a, b) => a + b, 0)
     }));
 
+    // Ordenar por gasto total descendente
+    this.departmentExpenses.sort((a, b) => b.total - a.total);
+
+    console.log('Datos procesados:', this.departmentExpenses);
+
+    // Actualizar Estadísticas
+    this.totalGastos = totalAnualCalc;
+
+    const currentDate = new Date();
+    const isCurrentYear = targetYear === currentDate.getFullYear();
+    const divisor = isCurrentYear ? (currentDate.getMonth() + 1) : 12;
+    this.promedioMensual = this.totalGastos > 0 ? (this.totalGastos / divisor) : 0;
+
+    if (this.departmentExpenses.length > 0) {
+      this.departamentoMayorGasto = this.departmentExpenses[0].departmentName;
+    } else {
+      this.departamentoMayorGasto = '-';
+    }
+
+    // Calcular mes con mayor gasto global
+    const globalMonthly = new Array(12).fill(0);
+    this.departmentExpenses.forEach(d => {
+      d.monthlyData.forEach((val, idx) => globalMonthly[idx] += val);
+    });
+    let maxMesVal = 0;
+    let maxMesIdx = -1;
+    globalMonthly.forEach((val, idx) => {
+      if(val > maxMesVal) { maxMesVal = val; maxMesIdx = idx; }
+    });
+    this.mesConMayorGasto = maxMesIdx >= 0 ? this.meses[maxMesIdx] : '-';
+
+    this.updateChartRender();
+  }
+
+  private updateChartRender(): void {
+    if (!this.chart) return; // O esperar al next tick
+
+    const isBar = this.selectedChartType === 'bar';
+
+    let newSeries: ApexAxisChartSeries = [];
+    let newXAxisCategories: string[] = [];
+
+    if (isBar) {
+      // GRÁFICO DE BARRAS: Eje X = Departamentos, Y = Total Anual
+      // Top 10 para no saturar si hay muchos
+      const topDepts = this.departmentExpenses.slice(0, 15);
+
+      newSeries = [{
+        name: 'Gasto Total',
+        data: topDepts.map(d => d.total)
+      }];
+      newXAxisCategories = topDepts.map(d => d.departmentName);
+
+    } else {
+      // GRÁFICO LINEA / AREA: Eje X = Meses, Series = Departamentos
+      // Tomamos solo los top 5 o 7 departamentos para que se entienda
+      const topDepts = this.departmentExpenses.slice(0, 7);
+
+      newSeries = topDepts.map(d => ({
+        name: d.departmentName,
+        data: d.monthlyData
+      }));
+      newXAxisCategories = this.meses;
+    }
+
+    // Actualizamos opciones
     this.chartOptions = {
       ...this.chartOptions,
-      series: series,
-      xaxis: {
-        ...this.chartOptions.xaxis,
-        categories: months
-      },
       chart: {
         ...this.chartOptions.chart,
         type: this.selectedChartType
-      }
+      },
+      xaxis: {
+        categories: newXAxisCategories
+      },
+      // Si es barra mostramos nombres abajo, si es linea mostramos meses
+      series: newSeries
     };
-  }
 
-  private calculateSummary(): void {
-    if (this.departmentExpenses.length === 0) {
-      this.totalGastos = 0;
-      this.promedioMensual = 0;
-      this.departamentoMayorGasto = '';
-      this.mesConMayorGasto = '';
-      return;
+    // Forzamos actualización visual
+    this.cdr.detectChanges();
+    if (this.chart) {
+      this.chart.updateOptions(this.chartOptions);
     }
-
-    this.totalGastos = Number(this.departmentExpenses.reduce((sum, dept) => sum + dept.total, 0));
-
-    const totalMonths = Object.keys(this.departmentExpenses[0].monthlyData).length;
-    this.promedioMensual = Number(this.totalGastos / totalMonths);
-
-    // Departamento con mayor gasto
-    const deptWithMaxExpense = this.departmentExpenses.reduce((max, dept) =>
-      dept.total > max.total ? dept : max
-    );
-    this.departamentoMayorGasto = deptWithMaxExpense.departmentName;
-
-    // Mes con mayor gasto
-    const monthlyTotals: { [month: string]: number } = {};
-    this.departmentExpenses.forEach(dept => {
-      Object.entries(dept.monthlyData).forEach(([month, amount]) => {
-        monthlyTotals[month] = (monthlyTotals[month] || 0) + amount;
-      });
-    });
-
-    this.mesConMayorGasto = Object.entries(monthlyTotals).reduce((max, [month, total]) =>
-      total > max[1] ? [month, total] : max
-    )[0];
-  }
-
-  public onYearChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    this.selectedYear = parseInt(target.value);
-    this.loadGastosData();
-  }
-
-  public onChartTypeChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    this.selectedChartType = target.value as 'bar' | 'area' | 'line';
-    this.updateChart();
-  }
-
-  private handleError(message: string): void {
-    this.isLoading = false;
-    this.hasError = true;
-    this.errorMessage = message;
-    console.error(message);
-  }
-
-  private formatCurrency(value: number): string {
-    if (value >= 1000000) {
-      return (value / 1000000).toFixed(1) + 'M';
-    } else if (value >= 1000) {
-      return (value / 1000).toFixed(0) + 'K';
-    }
-    return value.toString();
   }
 }

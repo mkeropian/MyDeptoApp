@@ -1,92 +1,85 @@
-<!-- gastosDepartamentos-page.component.html -->
 <div class="chart-container">
-  <!-- Header con título y filtros -->
+
   <div class="chart-header">
     <h2 class="chart-title">Gastos por Departamento - {{ selectedYear }}</h2>
 
     <div class="chart-filters">
-      <!-- Selector de año -->
       <select
         class="filter-select"
-        [value]="selectedYear"
-        (change)="onYearChange($event)"
-        [disabled]="isLoading"
-        title="Año"
-      >
+        [(ngModel)]="selectedYear"
+        (change)="onYearChange()"
+        [disabled]="isLoading">
         <option *ngFor="let year of availableYears" [value]="year">
           {{ year }}
         </option>
       </select>
 
-      <!-- Selector de tipo de gráfico -->
       <select
         class="filter-select"
-        [value]="selectedChartType"
-        (change)="onChartTypeChange($event)"
-        [disabled]="isLoading"
-        title="Tipo Grafico"
-      >
-        <option value="bar">Barras</option>
-        <option value="area">Área</option>
-        <option value="line">Líneas</option>
+        [(ngModel)]="selectedChartType"
+        (change)="onChartTypeChange()"
+        [disabled]="isLoading">
+        <option value="bar">Barras (Totales)</option>
+        <option value="area">Área (Mensual)</option>
+        <option value="line">Líneas (Mensual)</option>
       </select>
     </div>
   </div>
 
-  <!-- Estado de carga -->
   <div *ngIf="isLoading" class="loading-spinner">
-    <div>Cargando datos de gastos...</div>
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="ms-2">Cargando datos...</div>
   </div>
 
-  <!-- Estado de error -->
-  <div *ngIf="hasError && !isLoading" class="error-message">
-    <div>{{ errorMessage }}</div>
-  </div>
+  <div *ngIf="!isLoading">
 
-  <!-- Mensaje cuando no hay datos -->
-  <div *ngIf="!isLoading && !hasError && departmentExpenses.length === 0" class="no-data">
-    <div class="no-data-icon">📊</div>
-    <div>No hay datos de gastos para mostrar en {{ selectedYear }}</div>
-  </div>
+    <div *ngIf="departmentExpenses.length > 0">
 
-  <!-- Gráfico -->
-  <div *ngIf="!isLoading && !hasError && departmentExpenses.length > 0">
-    <apx-chart
-      #chart
-      [series]="chartOptions.series"
-      [chart]="chartOptions.chart"
-      [xaxis]="chartOptions.xaxis"
-      [yaxis]="chartOptions.yaxis"
-      [dataLabels]="chartOptions.dataLabels"
-      [colors]="chartOptions.colors"
-      [legend]="chartOptions.legend"
-      [fill]="chartOptions.fill"
-      [tooltip]="chartOptions.tooltip"
-      [grid]="chartOptions.grid"
-      [plotOptions]="chartOptions.plotOptions">
-    </apx-chart>
-
-    <!-- Tarjetas de resumen -->
-    <div class="summary-cards">
-      <div class="summary-card">
-        <span class="label">Total Gastos {{ selectedYear }}</span>
-        <span class="value">{{ (totalGastos || 0) | currency:'ARS':'symbol':'1.0-0' }}</span>
+      <div class="chart-wrapper">
+        <apx-chart
+          #chart
+          [series]="chartOptions.series"
+          [chart]="chartOptions.chart"
+          [xaxis]="chartOptions.xaxis"
+          [yaxis]="chartOptions.yaxis"
+          [dataLabels]="chartOptions.dataLabels"
+          [colors]="chartOptions.colors"
+          [legend]="chartOptions.legend"
+          [fill]="chartOptions.fill"
+          [tooltip]="chartOptions.tooltip"
+          [grid]="chartOptions.grid"
+          [plotOptions]="chartOptions.plotOptions">
+        </apx-chart>
       </div>
 
-      <div class="summary-card">
-        <span class="label">Promedio Mensual</span>
-        <span class="value">{{ (promedioMensual || 0) | currency:'ARS':'symbol':'1.0-0' }}</span>
-      </div>
+      <div class="summary-cards">
+        <div class="summary-card">
+          <span class="label">Total Gastos {{ selectedYear }}</span>
+          <span class="value">{{ totalGastos | currency:'ARS':'symbol':'1.0-0' }}</span>
+        </div>
 
-      <div class="summary-card" *ngIf="departamentoMayorGasto">
-        <span class="label">Mayor Gasto</span>
-        <span class="value">{{ departamentoMayorGasto }}</span>
-      </div>
+        <div class="summary-card">
+          <span class="label">Promedio Mensual</span>
+          <span class="value">{{ promedioMensual | currency:'ARS':'symbol':'1.0-0' }}</span>
+        </div>
 
-      <div class="summary-card" *ngIf="mesConMayorGasto">
-        <span class="label">Mes Pico</span>
-        <span class="value">{{ mesConMayorGasto }}</span>
+        <div class="summary-card">
+          <span class="label">Mayor Gasto (Depto)</span>
+          <span class="value">{{ departamentoMayorGasto }}</span>
+        </div>
+
+        <div class="summary-card">
+          <span class="label">Mes Pico</span>
+          <span class="value">{{ mesConMayorGasto }}</span>
+        </div>
       </div>
     </div>
+
+    <div *ngIf="departmentExpenses.length === 0" class="no-data">
+      <div class="alert alert-info">
+        No hay datos de gastos registrados para el año {{ selectedYear }}.
+      </div>
+    </div>
+
   </div>
 </div>
