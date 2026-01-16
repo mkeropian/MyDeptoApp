@@ -92,21 +92,60 @@ export class GastosDepartamentosPageComponent implements OnInit {
         animations: { enabled: true }
       },
       plotOptions: {
-        bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 }
+        bar: {
+          horizontal: false,
+          columnWidth: '70%',
+          borderRadius: 2
+        }
       },
       dataLabels: { enabled: false },
-      xaxis: { categories: [] },
+      xaxis: {
+        categories: [],
+        labels: {
+          rotate: -45,
+          rotateAlways: false
+        }
+      },
       yaxis: {
-        title: { text: 'Monto ($)' },
-        labels: { formatter: (val) => '$' + val.toLocaleString('es-AR', { notation: "compact" }) }
+        title: { text: 'Monto en Pesos' },
+        labels: {
+          formatter: (val) => {
+            if (val >= 1000000) {
+              const millions = val / 1000000;
+              return `$${millions.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M`;
+            }
+            if (val >= 1000) {
+              const thousands = Math.round(val / 1000);
+              return `$${thousands.toLocaleString('es-AR')}K`;
+            }
+            return `$${val.toLocaleString('es-AR')}`;
+          }
+        }
       },
       grid: { borderColor: '#f1f1f1' },
       fill: { opacity: 1 },
       tooltip: {
         y: { formatter: (val) => '$ ' + val.toLocaleString('es-AR') }
       },
-      legend: { position: 'top' },
-      colors: ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#546E7A', '#26a69a', '#D10CE8']
+      legend: {
+        position: 'top',
+        horizontalAlign: 'left',
+        offsetY: 0
+      },
+      colors: [
+        '#008FFB',  // Azul
+        '#00E396',  // Verde
+        '#FEB019',  // Naranja
+        '#FF4560',  // Rojo
+        '#775DD0',  // Púrpura
+        '#546E7A',  // Gris azulado
+        '#26a69a',  // Turquesa
+        '#D10CE8',  // Magenta
+        '#00D9E9',  // Cyan
+        '#F9CE1D',  // Amarillo
+        '#FF9800',  // Naranja oscuro
+        '#9C27B0'   // Púrpura oscuro
+      ]
     };
   }
 
@@ -269,26 +308,64 @@ export class GastosDepartamentosPageComponent implements OnInit {
       return;
     }
 
-    const isBar = this.selectedChartType === 'bar';
-    let newSeries: ApexAxisChartSeries = [];
-    let newXAxisCategories: string[] = [];
-
-    if (isBar) {
-      const topDepts = this.departmentExpenses.slice(0, 15);
-      newSeries = [{ name: 'Gasto Total', data: topDepts.map(d => d.total) }];
-      newXAxisCategories = topDepts.map(d => d.departmentName);
-    } else {
-      const topDepts = this.departmentExpenses.slice(0, 7);
-      newSeries = topDepts.map(d => ({ name: d.departmentName, data: d.monthlyData }));
-      newXAxisCategories = this.meses;
-    }
+    // TODOS los tipos de gráfico ahora muestran datos mensuales
+    const topDepts = this.departmentExpenses.slice(0, 8);
+    const newSeries = topDepts.map(d => ({
+      name: d.departmentName,
+      data: d.monthlyData
+    }));
+    const newXAxisCategories = this.meses;
 
     // Actualizar las opciones del gráfico
     this.chartOptions = {
       ...this.chartOptions,
-      chart: { ...this.chartOptions.chart, type: this.selectedChartType },
-      xaxis: { categories: newXAxisCategories },
-      series: newSeries
+      chart: {
+        ...this.chartOptions.chart,
+        type: this.selectedChartType
+      },
+      xaxis: {
+        categories: newXAxisCategories,
+        labels: {
+          rotate: -45,
+          rotateAlways: false
+        }
+      },
+      yaxis: {
+        title: { text: 'Monto en Pesos' },
+        labels: {
+          formatter: (val) => {
+            if (val >= 1000000) {
+              const millions = val / 1000000;
+              return `$${millions.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M`;
+            }
+            if (val >= 1000) {
+              const thousands = Math.round(val / 1000);
+              return `$${thousands.toLocaleString('es-AR')}K`;
+            }
+            return `$${val.toLocaleString('es-AR')}`;
+          }
+        }
+      },
+      series: newSeries,
+      legend: {
+        position: 'top',
+        horizontalAlign: 'left',
+        offsetY: 0
+      },
+      colors: [
+        '#008FFB',  // Azul
+        '#00E396',  // Verde
+        '#FEB019',  // Naranja
+        '#FF4560',  // Rojo
+        '#775DD0',  // Púrpura
+        '#546E7A',  // Gris azulado
+        '#26a69a',  // Turquesa
+        '#D10CE8',  // Magenta
+        '#00D9E9',  // Cyan
+        '#F9CE1D',  // Amarillo
+        '#FF9800',  // Naranja oscuro
+        '#9C27B0'   // Púrpura oscuro
+      ]
     };
 
     // Forzar detección de cambios

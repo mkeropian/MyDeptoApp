@@ -1,9 +1,16 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+
+
+import { ApplicationConfig, provideZoneChangeDetection, LOCALE_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { registerLocaleData } from '@angular/common';
+import localeEsAr from '@angular/common/locales/es-AR';
 
 import { routes } from './app.routes';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './auth/interceptors/auth.interceptor';
+
+// Registrar el locale de Argentina
+registerLocaleData(localeEsAr);
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,5 +20,7 @@ export const appConfig: ApplicationConfig = {
       withFetch(),
       withInterceptors([authInterceptor])
     ),
+    // Establecer es-AR como locale por defecto
+    { provide: LOCALE_ID, useValue: 'es-AR' }
   ],
 };

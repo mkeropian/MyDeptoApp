@@ -81,15 +81,57 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
 
   public chartOptions: ChartOptions = {
     series: [],
-    chart: { type: 'bar', height: 350, toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
-    plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
+    chart: {
+      type: 'bar',
+      height: 350,
+      toolbar: { show: true },
+      fontFamily: 'Inter, sans-serif'
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: '70%',
+        borderRadius: 2,
+        dataLabels: {
+          position: 'top'
+        }
+      }
+    },
     dataLabels: { enabled: false },
     xaxis: { categories: [] },
-    yaxis: { title: { text: 'Monto ($)' } },
+    yaxis: {
+      title: { text: 'Monto en Pesos' },
+      labels: {
+        formatter: (value) => {
+          if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+          if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+          return `$${value}`;
+        }
+      }
+    },
     fill: { opacity: 1 },
-    tooltip: { y: { formatter: (val) => `$${val.toLocaleString('es-AR')}` } },
-    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
-    legend: { position: 'bottom' },
+    tooltip: {
+      y: { formatter: (val) => `$${val.toLocaleString('es-AR')}` }
+    },
+    colors: [
+      '#008FFB',  // Azul
+      '#00E396',  // Verde
+      '#FEB019',  // Naranja
+      '#FF4560',  // Rojo
+      '#775DD0',  // Púrpura
+      '#546E7A',  // Gris azulado
+      '#26a69a',  // Turquesa
+      '#D10CE8',  // Magenta
+      '#00D9E9',  // Cyan
+      '#F9CE1D',  // Amarillo
+      '#FF9800',  // Naranja oscuro
+      '#9C27B0'   // Púrpura oscuro
+    ],
+    legend: {
+      position: 'top',
+      horizontalAlign: 'left',
+      offsetY: 0
+    },
     grid: { borderColor: '#f1f1f1' }
   };
 
@@ -97,7 +139,7 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
 
   constructor(
     private pagosService: PagosService,
-    private cdr: ChangeDetectorRef // Inyectamos el detector de cambios
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -129,13 +171,12 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
   }
 
   private processPagosData(): void {
-    // CORRECCIÓN: Quitamos la llamada a this.updateChart() aquí
     if (!this.rawData || this.rawData.length === 0) {
       this.departmentExpenses = [];
       return;
     }
 
-    // --- 1. Detectar años (Método substring robusto) ---
+    // --- 1. Detectar años ---
     const yearsSet = new Set<number>();
     this.rawData.forEach(item => {
       const fechaStr = String(item.fecha);
@@ -216,6 +257,9 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
       };
     });
 
+    // Ordenar por total descendente
+    this.departmentExpenses.sort((a, b) => b.total - a.total);
+
     this.calculateMetrics();
 
     // --- 4. REINICIO FORZADO DEL GRÁFICO ---
@@ -230,12 +274,12 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
   }
 
   private updateChartOptions(monthNames: string[]): void {
+    // Crear series con TODOS los departamentos (sin límite)
     const seriesData = this.departmentExpenses.map(dept => ({
       name: dept.departmentName,
       data: monthNames.map(m => dept.monthlyData[m] || 0)
     }));
 
-    // Imprimir lo que se va a dibujar para estar 100% seguros
     console.log('📈 DATOS DEL GRÁFICO:', seriesData);
 
     this.chartOptions = {
@@ -243,25 +287,35 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
       chart: {
         type: this.selectedChartType,
         height: 350,
-        toolbar: { show: false },
+        toolbar: { show: true },
         fontFamily: 'Inter, sans-serif',
-        animations: { enabled: false } // Desactivamos animación inicial para evitar glitches
+        animations: { enabled: true }
       },
       plotOptions: {
-        bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 }
+        bar: {
+          horizontal: false,
+          columnWidth: '70%',
+          borderRadius: 2,
+          dataLabels: {
+            position: 'top'
+          }
+        }
       },
       dataLabels: { enabled: false },
       xaxis: {
-        categories: monthNames
+        categories: monthNames,
+        labels: {
+          rotate: -45,
+          rotateAlways: false
+        }
       },
       yaxis: {
-        title: { text: 'Monto ($)' },
+        title: { text: 'Monto en Pesos' },
         labels: {
           formatter: (value) => {
-             // Formateo de eje Y
-             if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-             if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
-             return `$${value}`;
+            if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+            if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+            return `$${value}`;
           }
         }
       },
@@ -269,8 +323,25 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
       tooltip: {
         y: { formatter: (val) => `$${val.toLocaleString('es-AR')}` }
       },
-      colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
-      legend: { position: 'bottom' },
+      colors: [
+        '#008FFB',  // Azul
+        '#00E396',  // Verde
+        '#FEB019',  // Naranja
+        '#FF4560',  // Rojo
+        '#775DD0',  // Púrpura
+        '#546E7A',  // Gris azulado
+        '#26a69a',  // Turquesa
+        '#D10CE8',  // Magenta
+        '#00D9E9',  // Cyan
+        '#F9CE1D',  // Amarillo
+        '#FF9800',  // Naranja oscuro
+        '#9C27B0'   // Púrpura oscuro
+      ],
+      legend: {
+        position: 'top',
+        horizontalAlign: 'left',
+        offsetY: 0
+      },
       grid: { borderColor: '#f1f1f1' }
     };
   }
@@ -309,7 +380,7 @@ export class IngresosDepartamentosPageComponent implements OnInit, OnDestroy {
   public onChartTypeChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
     this.selectedChartType = target.value as 'bar' | 'area' | 'line';
-    this.processPagosData(); // Reprocesamos para forzar el redibujado
+    this.processPagosData();
   }
 
   private handleError(message: string): void {
