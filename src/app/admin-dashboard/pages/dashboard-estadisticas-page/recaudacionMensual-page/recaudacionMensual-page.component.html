@@ -24,52 +24,23 @@
     <p class="loading-text">Cargando datos...</p>
   </div>
 
-  <div *ngIf="!loading" class="chart-stats-container">
-
-    <div class="chart-section">
-      <apx-chart
-        #chart
-        [series]="chartOptions.series"
-        [chart]="chartOptions.chart"
-        [xaxis]="chartOptions.xaxis"
-        [yaxis]="chartOptions.yaxis"
-        [dataLabels]="chartOptions.dataLabels"
-        [plotOptions]="chartOptions.plotOptions"
-        [stroke]="chartOptions.stroke"
-        [fill]="chartOptions.fill"
-        [tooltip]="chartOptions.tooltip"
-        [title]="chartOptions.title"
-        [legend]="chartOptions.legend"
-        [grid]="chartOptions.grid"
-        [colors]="chartOptions.colors">
-      </apx-chart>
-    </div>
-
-    <div class="summary-section">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <div class="stat-card">
-            <h5 class="stat-title">Total Anual</h5>
-            <p class="stat-value">{{ totalAnual | currency:'ARS':'symbol':'1.0-0' }}</p>
-          </div>
-        </div>
-
-        <div class="col-md-4">
-          <div class="stat-card">
-            <h5 class="stat-title">Promedio Mensual</h5>
-            <p class="stat-value">{{ promedioMensual | currency:'ARS':'symbol':'1.0-0' }}</p>
-          </div>
-        </div>
-
-        <div class="col-md-4">
-          <div class="stat-card">
-            <h5 class="stat-title">Mes récord ({{ mesMayorRecaudacion }})</h5>
-            <p class="stat-value">{{ mejorMesMonto | currency:'ARS':'symbol':'1.0-0' }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
+  <div *ngIf="!loading" class="chart-container">
+    <apx-chart
+      #chart
+      [series]="chartOptions.series"
+      [chart]="chartOptions.chart"
+      [xaxis]="chartOptions.xaxis"
+      [yaxis]="chartOptions.yaxis"
+      [dataLabels]="chartOptions.dataLabels"
+      [plotOptions]="chartOptions.plotOptions"
+      [stroke]="chartOptions.stroke"
+      [fill]="chartOptions.fill"
+      [tooltip]="chartOptions.tooltip"
+      [title]="chartOptions.title"
+      [legend]="chartOptions.legend"
+      [grid]="chartOptions.grid"
+      [colors]="chartOptions.colors">
+    </apx-chart>
   </div>
 
   <div *ngIf="!loading && (!availableYears || availableYears.length === 0)" class="no-data-message">

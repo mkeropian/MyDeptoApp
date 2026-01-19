@@ -80,53 +80,182 @@ export class RecaudacionMensualPageComponent implements OnInit {
       series: [{ name: "Recaudación", data: [] }],
       chart: {
         type: "bar",
-        height: 350,
-        fontFamily: 'Inter, sans-serif',
-        toolbar: { show: false },
-        animations: { enabled: true, speed: 800 }
+        height: 650,
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        toolbar: {
+          show: true,
+          tools: {
+            download: true,
+            selection: false,
+            zoom: false,
+            zoomin: false,
+            zoomout: false,
+            pan: false,
+            reset: false
+          },
+          offsetY: -10
+        },
+        animations: {
+          enabled: true,
+          speed: 1200,
+          animateGradually: {
+            enabled: true,
+            delay: 150
+          },
+          dynamicAnimation: {
+            enabled: true,
+            speed: 350
+          }
+        }
       },
       plotOptions: {
-        bar: { columnWidth: '50%', borderRadius: 4, dataLabels: { position: 'top' } }
+        bar: {
+          horizontal: true,
+          barHeight: '75%',
+          borderRadius: 8,
+          borderRadiusApplication: 'end',
+          dataLabels: {
+            position: 'top'
+          },
+          distributed: true
+        }
       },
       dataLabels: {
         enabled: true,
         formatter: (val: number) => {
           if (val === 0) return "";
-          if (val >= 1000000) return "$" + (val / 1000000).toFixed(1) + "M";
-          if (val >= 1000) return "$" + (val / 1000).toFixed(0) + "k";
-          return "$" + val;
+          return '$' + val.toLocaleString('es-AR', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+          });
         },
-        offsetY: -20,
-        style: { fontSize: '12px', colors: ["#304758"] }
+        offsetX: 8,
+        style: {
+          fontSize: '13px',
+          colors: ["#1a202c"],
+          fontWeight: 700,
+          fontFamily: 'Inter, sans-serif'
+        },
+        background: {
+          enabled: true,
+          foreColor: '#fff',
+          padding: 6,
+          borderRadius: 4,
+          borderWidth: 0,
+          opacity: 0.95,
+          dropShadow: {
+            enabled: true,
+            top: 1,
+            left: 1,
+            blur: 2,
+            color: '#000',
+            opacity: 0.15
+          }
+        }
       },
       xaxis: {
-        categories: this.meses,
-        labels: { rotate: -45, style: { fontSize: '12px' } }
+        labels: {
+          formatter: (val: string) => {
+            const num = Number(val);
+            if (num >= 1000000) return '$' + (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return '$' + (num / 1000).toFixed(0) + 'k';
+            return '$' + num.toLocaleString('es-AR');
+          },
+          style: {
+            fontSize: '12px',
+            fontWeight: 500,
+            colors: '#64748b'
+          }
+        },
+        axisBorder: {
+          show: true,
+          color: '#e2e8f0'
+        },
+        axisTicks: {
+          show: true,
+          color: '#e2e8f0'
+        }
       },
       yaxis: {
-        title: { text: 'Monto ($)' },
-        labels: { formatter: (val: number) => "$" + val.toLocaleString('es-AR') }
+        labels: {
+          style: {
+            fontSize: '13px',
+            fontWeight: 600,
+            colors: '#334155'
+          }
+        }
       },
       fill: {
         type: "gradient",
         gradient: {
           shade: "light",
-          type: "vertical",
-          shadeIntensity: 0.25,
-          inverseColors: true,
-          opacityFrom: 0.85,
+          type: "horizontal",
+          shadeIntensity: 0.4,
+          inverseColors: false,
+          opacityFrom: 1,
           opacityTo: 0.85,
-          stops: [50, 0, 100]
+          stops: [0, 100]
         },
       },
       tooltip: {
-        y: { formatter: (val: number) => "$ " + val.toLocaleString('es-AR') }
+        enabled: true,
+        theme: 'dark',
+        style: {
+          fontSize: '13px',
+          fontFamily: 'Inter, sans-serif'
+        },
+        y: {
+          formatter: (val: number) => '$ ' + val.toLocaleString('es-AR', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+          }),
+          title: {
+            formatter: () => 'Recaudación:'
+          }
+        },
+        marker: {
+          show: true
+        }
       },
-      grid: { row: { colors: ["#fff", "#f2f2f2"] } },
-      stroke: { width: 0 },
+      grid: {
+        borderColor: '#f1f5f9',
+        strokeDashArray: 3,
+        xaxis: {
+          lines: { show: true }
+        },
+        yaxis: {
+          lines: { show: false }
+        },
+        padding: {
+          top: 10,
+          right: 30,
+          bottom: 20, // Aumentado para dar espacio
+          left: 15
+        }
+      },
+      stroke: {
+        show: true,
+        width: 1,
+        colors: ['transparent']
+      },
       title: { text: undefined },
-      legend: { show: false },
-      colors: ['#008FFB']
+      legend: {
+        show: true,
+        position: 'bottom', // Cambiado de 'top' a 'bottom'
+        horizontalAlign: 'center',
+        floating: false,
+        offsetY: 15,
+        offsetX: 0,
+        itemMargin: {
+          horizontal: 15,
+          vertical: 5
+        },
+        customLegendItems: ['Mejor mes', 'Peor mes', 'Resto de meses'],
+        labels: {
+          colors: ['#334155']
+        }
+      },
+      colors: ['#0ea5e9']
     };
   }
 
@@ -159,19 +288,16 @@ export class RecaudacionMensualPageComponent implements OnInit {
 
     const str = String(fecha).trim();
 
-    // Buscamos 4 dígitos (Año)
     const yearMatch = str.match(/\d{4}/);
     if (!yearMatch) return null;
 
     const year = parseInt(yearMatch[0]);
 
-    // Eliminar hora y separar
     const datePart = str.split('T')[0];
     const parts = datePart.split(/[-/]/);
 
     let month = -1;
 
-    // Lógica para detectar el mes
     if (parts.length >= 2) {
       const yearIndex = parts.findIndex(p => p.includes(year.toString()));
 
@@ -182,7 +308,6 @@ export class RecaudacionMensualPageComponent implements OnInit {
       }
     }
 
-    // Validación final
     if (isNaN(year) || isNaN(month) || month < 0 || month > 11) {
        const d = new Date(str);
        if (!isNaN(d.getTime())) {
@@ -208,39 +333,27 @@ export class RecaudacionMensualPageComponent implements OnInit {
     }
   }
 
-  // --- CORRECCIÓN CRÍTICA AQUÍ ---
   public onYearChange(): void {
-    // Forzamos la conversión a Número, porque el HTML select devuelve string
     this.selectedYear = Number(this.selectedYear);
-    console.log('Año cambiado manualmente a:', this.selectedYear, 'Tipo:', typeof this.selectedYear);
     this.updateChartData();
   }
 
   private updateChartData(): void {
     const montosPorMes = new Array(12).fill(0);
-
-    // Aseguramos que selectedYear sea número también aquí por seguridad
     const targetYear = Number(this.selectedYear);
-
-    console.log(`Procesando datos para año: ${targetYear}`);
-    let encontrados = 0;
 
     this.gastos.forEach(gasto => {
       if (gasto.idTipoGasto === 1) {
         const info = this.getFechaInfo(gasto.fecha);
 
-        // Comparación estricta segura
         if (info && info.year === targetYear) {
           if (info.month >= 0 && info.month <= 11) {
              const monto = Number(gasto.monto || 0);
              montosPorMes[info.month] += monto;
-             encontrados++;
           }
         }
       }
     });
-
-    console.log(`Registros encontrados: ${encontrados}`, montosPorMes);
 
     this.totalAnual = montosPorMes.reduce((a, b) => a + b, 0);
 
@@ -249,6 +362,7 @@ export class RecaudacionMensualPageComponent implements OnInit {
     const divisor = isCurrentYear ? (currentDate.getMonth() + 1) : 12;
     this.promedioMensual = this.totalAnual > 0 ? (this.totalAnual / divisor) : 0;
 
+    // Encontrar mejor mes
     let maxMonto = 0;
     let maxIndex = -1;
     montosPorMes.forEach((monto, index) => {
@@ -260,19 +374,48 @@ export class RecaudacionMensualPageComponent implements OnInit {
     this.mejorMesMonto = maxMonto;
     this.mesMayorRecaudacion = maxIndex >= 0 ? this.meses[maxIndex] : '-';
 
-    if (this.chart) {
-      this.chart.updateSeries([{
+    // Encontrar peor mes (excluyendo meses con $0)
+    let minMonto = Infinity;
+    let minIndex = -1;
+    montosPorMes.forEach((monto, index) => {
+      if (monto > 0 && monto < minMonto) {
+        minMonto = monto;
+        minIndex = index;
+      }
+    });
+
+    // Asignar colores según mejor/peor mes
+    const coloresPorMes = montosPorMes.map((monto, index) => {
+      if (index === maxIndex && monto > 0) {
+        return '#10b981'; // Verde para mejor mes
+      } else if (index === minIndex && monto > 0) {
+        return '#ef4444'; // Rojo para peor mes
+      } else {
+        return '#0ea5e9'; // Azul para resto
+      }
+    });
+
+    this.chartOptions = {
+      ...this.chartOptions,
+      series: [{
         name: "Recaudación",
         data: montosPorMes
-      }]);
-    } else {
-      this.chartOptions = {
-        ...this.chartOptions,
-        series: [{
-          name: "Recaudación",
-          data: montosPorMes
-        }]
-      };
+      }],
+      xaxis: {
+        ...this.chartOptions.xaxis,
+        categories: this.meses
+      },
+      colors: coloresPorMes,
+      legend: {
+        ...this.chartOptions.legend,
+        markers: {
+          fillColors: ['#10b981', '#ef4444', '#0ea5e9']
+        }
+      }
+    };
+
+    if (this.chart) {
+      this.chart.updateOptions(this.chartOptions);
     }
 
     this.cdr.detectChanges();
