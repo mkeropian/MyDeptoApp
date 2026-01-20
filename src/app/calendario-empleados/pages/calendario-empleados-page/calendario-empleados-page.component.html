@@ -1,3 +1,5 @@
+<!-- calendario-empleados-page.component.html -->
+
 <div class="calendario-empleados p-6">
 
   <!-- FILTROS -->
@@ -122,7 +124,7 @@
           </div>
         </div>
 
-        <div class="flex-1 relative" [class.cursor-pointer]="!esEmpleado" (click)="!esEmpleado && abrirModalEvento(fechaSeleccionada)">
+        <div class="flex-1 relative">
           <!-- Líneas de fondo -->
           <div class="absolute inset-0 top-12">
             <div *ngFor="let hora of horasDia" class="h-[60px] border-b border-gray-200"></div>
@@ -142,7 +144,7 @@
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-1">
                       <div class="font-semibold text-xs text-gray-900 truncate leading-tight flex-1">{{ evento.nombreCompletoUsuario }}</div>
-                      <!-- ✅ NUEVO - Ícono de ubicación -->
+                      <!-- ✅ Ícono de ubicación -->
                       <i *ngIf="tieneUbicacion(evento)"
                          class="fas fa-map-marker-alt location-icon"
                          (click)="abrirModalMapa(evento, $event)"
@@ -150,12 +152,6 @@
                     </div>
                     <div class="text-[10px] text-gray-600 truncate leading-tight mt-0.5">{{ evento.nombreDepartamento }}</div>
                   </div>
-                  <button type="button" (click)="$event.stopPropagation(); editarEvento(evento)"
-                          *ngIf="!esEmpleado"
-                          class="text-indigo-600 hover:text-indigo-900 flex-shrink-0 -mt-0.5"
-                          aria-label="Editar evento">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                  </button>
                 </div>
                 <div class="text-[10px] font-medium text-indigo-600 leading-tight">
                   {{ formatearHora(evento.horaInicio) }} - {{ formatearHora(evento.horaFin) }}
@@ -190,10 +186,7 @@
         <!-- Grid de eventos -->
         <div class="grid grid-cols-7 gap-px bg-gray-200">
           <div *ngFor="let dia of diasDeLaSemana"
-                class="bg-white min-h-[200px] p-2 transition-colors"
-                [class.cursor-pointer]="!esEmpleado"
-                [class.hover:bg-gray-50]="!esEmpleado"
-                (click)="!esEmpleado && abrirModalEvento(dia)">
+                class="bg-white min-h-[200px] p-2">
             <!-- Eventos del día -->
             <ng-container *ngFor="let evento of obtenerEventosPorFecha(dia)">
               <div class="mb-2 p-2 rounded text-xs cursor-pointer hover:shadow-md hover:bg-indigo-100 transition-all border-l-4 bg-indigo-50"
@@ -201,7 +194,7 @@
                     (click)="$event.stopPropagation(); abrirModalDetalles(evento)">
                 <div class="flex items-start justify-between gap-1">
                   <div class="font-semibold text-gray-900 truncate flex-1">{{ evento.nombreCompletoUsuario }}</div>
-                  <!-- ✅ NUEVO - Ícono de ubicación -->
+                  <!-- ✅ Ícono de ubicación -->
                   <i *ngIf="tieneUbicacion(evento)"
                      class="fas fa-map-marker-alt location-icon"
                      (click)="abrirModalMapa(evento, $event)"
@@ -224,6 +217,7 @@
     </div>
 
     <!-- VISTA MENSUAL -->
+
     <div *ngIf="vistaActual === 'mes'">
 
       <div class="grid grid-cols-7 gap-px border-b border-gray-300 bg-gray-200 text-center text-xs font-semibold leading-6 text-gray-700 lg:flex-none">
@@ -234,15 +228,14 @@
       </div>
       <div class="flex bg-gray-200 text-xs leading-6 text-gray-700 lg:flex-auto">
         <div class="hidden w-full lg:grid lg:grid-cols-7 lg:auto-rows-min lg:gap-px">
+          <!-- ✅ ELIMINAR (click) y cursor-pointer -->
           <div *ngFor="let dia of diasDelMes"
-                [class]="'relative px-2 py-2 min-h-[120px] ' + (esMesActual(dia) ? 'bg-white' : 'bg-gray-50 text-gray-500') + (!esEmpleado ? ' cursor-pointer' : '')"
-                (click)="!esEmpleado && abrirModalEvento(dia)"
-                (mouseleave)="ocultarTooltip()">
+                [class]="'relative px-2 py-2 min-h-[120px] ' + (esMesActual(dia) ? 'bg-white' : 'bg-gray-50 text-gray-500')">
             <time [attr.datetime]="calendarioService.formatearFechaParaBackend(dia)" [class]="esHoy(dia) ? 'flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white' : ''">{{ dia.getDate() }}</time>
             <ol class="mt-2 space-y-1" *ngIf="obtenerEventosPorFecha(dia).length > 0">
               <li *ngFor="let evento of obtenerEventosPorFecha(dia); let i = index" [hidden]="i >= 3">
                 <button type="button"
-                        (click)="$event.stopPropagation(); abrirModalDetalles(evento)"
+                        (click)="abrirModalDetalles(evento)"
                         class="w-full text-left text-xs p-1.5 rounded cursor-pointer hover:shadow-md transition-all border-l-4 bg-indigo-50 hover:bg-indigo-100"
                         [style.border-left-color]="evento.colorTipoEvento">
                   <div class="flex items-start justify-between gap-1">
@@ -251,11 +244,11 @@
                       <div class="truncate text-gray-900 leading-tight font-medium text-[11px]">{{ evento.nombreCompletoUsuario }} - Tarea: {{ evento.descripcionTipoEventoCalendario }}</div>
                       <div class="text-gray-600 truncate leading-tight text-[10px] mt-0.5">{{ evento.nombreDepartamento }}</div>
                     </div>
-                    <!-- ✅ NUEVO - Ícono de ubicación -->
+                    <!-- ✅ Ícono de ubicación -->
                     <i *ngIf="tieneUbicacion(evento)"
-                       class="fas fa-map-marker-alt location-icon flex-shrink-0"
-                       (click)="abrirModalMapa(evento, $event)"
-                       aria-label="Ver ubicación en el mapa"></i>
+                      class="fas fa-map-marker-alt location-icon flex-shrink-0"
+                      (click)="abrirModalMapa(evento, $event)"
+                      aria-label="Ver ubicación en el mapa"></i>
                   </div>
                 </button>
               </li>
@@ -264,35 +257,48 @@
           </div>
         </div>
 
-
+        <!-- Vista Mobile - Cambiar button por div -->
         <div class="isolate grid w-full grid-cols-7 grid-rows-6 gap-px lg:hidden">
-          <button *ngFor="let dia of diasDelMes"
-                  type="button"
-                  [class]="'flex h-14 flex-col px-3 py-2 transition-colors ' + (esMesActual(dia) ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-500') + (esHoy(dia) ? ' font-semibold text-indigo-600' : '') + (!esEmpleado ? ' hover:bg-gray-100' : '')"
-                  (click)="!esEmpleado && abrirModalEvento(dia)"
-                  [attr.aria-label]="'Día ' + dia.getDate() + (obtenerEventosPorFecha(dia).length > 0 ? ', ' + obtenerEventosPorFecha(dia).length + ' eventos programados' : ', sin eventos')">
+          <div *ngFor="let dia of diasDelMes"
+              [class]="'flex h-14 flex-col px-3 py-2 ' + (esMesActual(dia) ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-500') + (esHoy(dia) ? ' font-semibold text-indigo-600' : '')">
             <time [attr.datetime]="calendarioService.formatearFechaParaBackend(dia)" class="ml-auto">{{ dia.getDate() }}</time>
             <span class="sr-only">{{ obtenerEventosPorFecha(dia).length }} eventos programados</span>
             <span *ngIf="obtenerEventosPorFecha(dia).length > 0" class="-mx-0.5 mt-auto flex flex-wrap-reverse">
               <span *ngFor="let _ of obtenerEventosPorFecha(dia); let i = index" [class]="'mx-0.5 mb-1 h-1.5 w-1.5 rounded-full ' + (i < 3 ? 'bg-indigo-400' : 'bg-gray-400')"></span>
             </span>
-          </button>
+          </div>
         </div>
       </div>
     </div>
+
+
+
+
   </div>
 
-  <!-- MODAL CREAR/EDITAR -->
+  <!-- ==================== MODAL CREAR/EDITAR (DINÁMICO) ==================== -->
   <div *ngIf="mostrarModalEvento" class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModal()" aria-label="Cerrar modal" role="button" tabindex="0" (keydown.enter)="cerrarModal()" (keydown.space)="cerrarModal()"></div>
       <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-        <form [formGroup]="eventoForm" (ngSubmit)="guardarEvento()">
+
+        <!-- Loading State del Formulario -->
+        <div *ngIf="cargandoFormulario" class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="flex flex-col items-center justify-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <span class="ml-4 text-gray-600 mt-4">Cargando formulario...</span>
+          </div>
+        </div>
+
+        <!-- Formulario -->
+        <form *ngIf="!cargandoFormulario" [formGroup]="eventoForm" (ngSubmit)="guardarEvento()">
           <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div class="sm:flex sm:items-start">
               <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">{{ eventoEditando ? 'Editar Evento' : 'Nuevo Evento' }}</h3>
                 <div class="space-y-4">
+
+                  <!-- CAMPOS FIJOS: Tipo Calendario y Tipo Evento -->
                   <div>
                     <label for="idTipoCalendario" class="block text-sm font-medium text-gray-700">Tipo de Calendario</label>
                     <select id="idTipoCalendario" formControlName="idTipoCalendario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
@@ -301,51 +307,190 @@
                     </select>
                     <div *ngIf="eventoForm.get('idTipoCalendario')?.invalid && eventoForm.get('idTipoCalendario')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
                   </div>
+
                   <div>
                     <label for="idTipoEventoCalendario" class="block text-sm font-medium text-gray-700">Tipo de Evento</label>
                     <select id="idTipoEventoCalendario" formControlName="idTipoEventoCalendario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                       <option value="">Seleccionar tipo de evento</option>
-                      <option *ngFor="let tipo of tiposEvento" [value]="tipo.id">{{ tipo.descripcion }}</option>
+                      <!-- ✅ CAMBIAR tiposEvento por tiposEventoFiltrados -->
+                      <option *ngFor="let tipo of tiposEventoFiltrados" [value]="tipo.id">{{ tipo.descripcion }}</option>
                     </select>
                     <div *ngIf="eventoForm.get('idTipoEventoCalendario')?.invalid && eventoForm.get('idTipoEventoCalendario')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
                   </div>
-                  <div>
-                    <label for="idUser" class="block text-sm font-medium text-gray-700">Empleado</label>
-                    <select id="idUser" formControlName="idUser" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                      <option value="">Seleccionar empleado</option>
-                      <option *ngFor="let usuario of usuarios" [value]="usuario.id">{{ usuario.nombreCompleto }}</option>
-                    </select>
-                    <div *ngIf="eventoForm.get('idUser')?.invalid && eventoForm.get('idUser')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
-                  </div>
-                  <div>
-                    <label for="idDep" class="block text-sm font-medium text-gray-700">Departamento</label>
-                    <select id="idDep" formControlName="idDep" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                      <option value="">Seleccionar departamento</option>
-                      <option *ngFor="let depto of departamentos" [value]="depto.id">{{ depto.nombre }}</option>
-                    </select>
-                    <div *ngIf="eventoForm.get('idDep')?.invalid && eventoForm.get('idDep')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
-                  </div>
-                  <div>
-                    <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha</label>
-                    <input type="date" id="fecha" formControlName="fecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <div *ngIf="eventoForm.get('fecha')?.invalid && eventoForm.get('fecha')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-4">
-                    <div>
-                      <label for="horaInicio" class="block text-sm font-medium text-gray-700">Hora Inicio</label>
-                      <input type="time" id="horaInicio" formControlName="horaInicio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                      <div *ngIf="eventoForm.get('horaInicio')?.invalid && eventoForm.get('horaInicio')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
-                    </div>
-                    <div>
-                      <label for="horaFin" class="block text-sm font-medium text-gray-700">Hora Fin</label>
-                      <input type="time" id="horaFin" formControlName="horaFin" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                      <div *ngIf="eventoForm.get('horaFin')?.invalid && eventoForm.get('horaFin')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
-                    </div>
-                  </div>
-                  <div>
-                    <label for="observaciones" class="block text-sm font-medium text-gray-700">Observaciones</label>
-                    <textarea id="observaciones" formControlName="observaciones" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Observaciones adicionales"></textarea>
-                  </div>
+
+                  <!-- SEPARADOR -->
+                  <div class="divider my-4" *ngIf="camposFormularioActual.length > 0"></div>
+
+                  <!-- CAMPOS DINÁMICOS -->
+                  <ng-container *ngFor="let campo of camposFormularioActual">
+                    <!-- Saltar los campos que ya mostramos arriba -->
+                    <ng-container *ngIf="campo.nombre_campo !== 'idTipoCalendario' && campo.nombre_campo !== 'idTipoEventoCalendario'">
+
+                      <!-- Campo de Texto -->
+                      <div *ngIf="campo.tipo_campo === 'text'">
+                        <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
+                          {{ campo.label }}
+                          <span *ngIf="campo.requerido" class="text-red-600">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          [id]="campo.nombre_campo"
+                          [formControlName]="campo.nombre_campo"
+                          [placeholder]="campo.placeholder"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
+                      </div>
+
+                      <!-- Campo de Textarea -->
+                      <div *ngIf="campo.tipo_campo === 'textarea'">
+                        <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
+                          {{ campo.label }}
+                          <span *ngIf="campo.requerido" class="text-red-600">*</span>
+                        </label>
+                        <textarea
+                          [id]="campo.nombre_campo"
+                          [formControlName]="campo.nombre_campo"
+                          [placeholder]="campo.placeholder"
+                          rows="3"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </textarea>
+                        <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
+                      </div>
+
+                      <!-- Campo Numérico -->
+                      <div *ngIf="campo.tipo_campo === 'number'">
+                        <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
+                          {{ campo.label }}
+                          <span *ngIf="campo.requerido" class="text-red-600">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          [id]="campo.nombre_campo"
+                          [formControlName]="campo.nombre_campo"
+                          [placeholder]="campo.placeholder"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
+                      </div>
+
+                      <!-- Campo de Fecha -->
+                      <div *ngIf="campo.tipo_campo === 'date'">
+                        <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
+                          {{ campo.label }}
+                          <span *ngIf="campo.requerido" class="text-red-600">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          [id]="campo.nombre_campo"
+                          [formControlName]="campo.nombre_campo"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
+                      </div>
+
+                      <!-- Campo de Email -->
+                      <div *ngIf="campo.tipo_campo === 'email'">
+                        <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
+                          {{ campo.label }}
+                          <span *ngIf="campo.requerido" class="text-red-600">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          [id]="campo.nombre_campo"
+                          [formControlName]="campo.nombre_campo"
+                          [placeholder]="campo.placeholder"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
+                      </div>
+
+                      <!-- Campo de Teléfono -->
+                      <div *ngIf="campo.tipo_campo === 'tel'">
+                        <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
+                          {{ campo.label }}
+                          <span *ngIf="campo.requerido" class="text-red-600">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          [id]="campo.nombre_campo"
+                          [formControlName]="campo.nombre_campo"
+                          [placeholder]="campo.placeholder"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
+                      </div>
+
+                      <!-- Campo de Hora/Time -->
+                      <div *ngIf="campo.tipo_campo === 'time'">
+                        <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
+                          {{ campo.label }}
+                          <span *ngIf="campo.requerido" class="text-red-600">*</span>
+                        </label>
+                        <input
+                          type="time"
+                          [id]="campo.nombre_campo"
+                          [formControlName]="campo.nombre_campo"
+                          [placeholder]="campo.placeholder"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
+                      </div>
+
+                      <!-- Campo Select -->
+                      <div *ngIf="campo.tipo_campo === 'select'">
+                        <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
+                          {{ campo.label }}
+                          <span *ngIf="campo.requerido" class="text-red-600">*</span>
+                        </label>
+                        <select
+                          [id]="campo.nombre_campo"
+                          [formControlName]="campo.nombre_campo"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                          <option value="">{{ campo.placeholder }}</option>
+                          <option
+                            *ngFor="let opcion of obtenerOpcionesSelect(campo.nombre_campo)"
+                            [value]="obtenerValueOpcion(campo.nombre_campo, opcion)">
+                            {{ obtenerLabelOpcion(campo.nombre_campo, opcion) }}
+                          </option>
+                        </select>
+                        <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
+                      </div>
+
+                      <!-- Campo Checkbox -->
+                      <div *ngIf="campo.tipo_campo === 'checkbox'">
+                        <div class="flex items-center">
+                          <input
+                            type="checkbox"
+                            [id]="campo.nombre_campo"
+                            [formControlName]="campo.nombre_campo"
+                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                          <label [for]="campo.nombre_campo" class="ml-2 block text-sm text-gray-900">
+                            {{ campo.label }}
+                            <span *ngIf="campo.requerido" class="text-red-600">*</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <!-- Campo Radio -->
+                      <div *ngIf="campo.tipo_campo === 'radio'">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                          {{ campo.label }}
+                          <span *ngIf="campo.requerido" class="text-red-600">*</span>
+                        </label>
+                        <div class="space-y-2">
+                          <div *ngFor="let opcion of campo.opciones" class="flex items-center">
+                            <input
+                              type="radio"
+                              [id]="campo.nombre_campo + '_' + opcion.value"
+                              [formControlName]="campo.nombre_campo"
+                              [value]="opcion.value"
+                              class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                            <label [for]="campo.nombre_campo + '_' + opcion.value" class="ml-2 block text-sm text-gray-900">
+                              {{ opcion.label }}
+                            </label>
+                          </div>
+                        </div>
+                        <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
+                      </div>
+
+                    </ng-container>
+                  </ng-container>
+
                 </div>
               </div>
             </div>
@@ -385,7 +530,7 @@
                   <div class="text-sm font-medium text-gray-500">Departamento</div>
                   <div class="flex items-center justify-between">
                     <div class="text-base text-gray-900">{{ eventoEditando.nombreDepartamento }}</div>
-                    <!-- ✅ NUEVO - Botón para ver ubicación en el modal de detalles -->
+                    <!-- ✅ Botón para ver ubicación en el modal de detalles -->
                     <button *ngIf="tieneUbicacion(eventoEditando)"
                             type="button"
                             (click)="abrirModalMapa(eventoEditando)"
@@ -417,7 +562,7 @@
     </div>
   </div>
 
-  <!-- ✅ NUEVO - MODAL DE MAPA -->
+  <!-- ✅ MODAL DE MAPA -->
   <div *ngIf="mostrarModalMapa && eventoEditando" class="fixed inset-0 z-[90] overflow-y-auto" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" (click)="cerrarModalMapa()" aria-label="Cerrar mapa" role="button" tabindex="0"></div>
@@ -519,7 +664,11 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL DE EXPORTACIÓN (NUEVO) ==================== -->
+  <!-- Continúa en siguiente mensaje con modal de exportación, tooltip y loading... -->
+
+<!-- ... (continuación del código anterior) ... -->
+
+  <!-- ==================== MODAL DE EXPORTACIÓN ==================== -->
   <div *ngIf="mostrarModalExport" class="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModalExport()"></div>
@@ -548,7 +697,6 @@
           </div>
         </div>
 
-        <!-- BLOQUE CORREGIDO DEL MODAL DE DESCARGA -->
         <!-- Contenido del modal -->
         <div class="bg-white px-6 py-4">
           <!-- Información de eventos -->
@@ -614,7 +762,7 @@
                   </label>
                 </div>
 
-                <!-- Inputs de fecha (solo visibles cuando está seleccionado) -->
+                <!-- Inputs de fecha -->
                 <div *ngIf="rangoExport === 'rangoPersonalizado'" class="mt-3 pl-7 space-y-3">
                   <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -674,7 +822,6 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Tipo de archivo
             </label>
-            <!-- GRID DE 3 BOTONES PRINCIPALES -->
             <div class="grid grid-cols-3 gap-3">
               <!-- Opción Excel -->
               <button type="button"
@@ -715,9 +862,8 @@
                 <span class="text-xs font-medium text-gray-700">Imagen</span>
               </button>
             </div>
-            <!-- FIN GRID DE 3 BOTONES PRINCIPALES -->
 
-            <!-- SELECTOR DE SUBTIPO DE IMAGEN (CENTRADO, FUERA DEL GRID) -->
+            <!-- SELECTOR DE SUBTIPO DE IMAGEN -->
             <div *ngIf="tipoArchivoExport === 'imagen'" class="mt-6">
               <label class="block text-sm font-medium text-gray-700 mb-3 text-center">
                 Estilo de imagen
@@ -765,7 +911,6 @@
 
               </div>
             </div>
-            <!-- FIN SELECTOR DE SUBTIPO DE IMAGEN -->
           </div>
 
           <!-- Campo de email (solo para envío) -->
@@ -780,7 +925,6 @@
               placeholder="correo@ejemplo.com">
           </div>
         </div>
-        <!-- FIN BLOQUE CORREGIDO DEL MODAL DE DESCARGA -->
 
         <!-- Footer del modal -->
         <div class="bg-gray-50 px-6 py-4">

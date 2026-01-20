@@ -32,37 +32,36 @@
     </div>
 
     <!-- Tabs -->
-    <div class="tabs tabs-boxed bg-base-100 shadow-md mb-6 p-2" *ngIf="!loading">
-      <a
-        class="tab gap-2"
+    <div class="tabs tabs-boxed bg-base-200 mb-6">
+      <button
+        class="tab"
         [class.tab-active]="activeTab === 'calendars'"
-        (click)="setActiveTab('calendars')"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-        </svg>
-        Tipos de Calendario
-      </a>
-      <a
-        class="tab gap-2"
+        (click)="setActiveTab('calendars')">
+        <i class="fas fa-calendar-alt mr-2"></i>
+        Calendarios
+      </button>
+      <button
+        class="tab"
         [class.tab-active]="activeTab === 'events'"
-        (click)="setActiveTab('events')"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-        </svg>
-        Tipos de Evento
-      </a>
-      <a
-        class="tab gap-2"
+        (click)="setActiveTab('events')">
+        <i class="fas fa-list mr-2"></i>
+        Eventos
+      </button>
+      <!-- ✅ NUEVA PESTAÑA -->
+      <button
+        class="tab"
+        [class.tab-active]="activeTab === 'forms'"
+        (click)="setActiveTab('forms')">
+        <i class="fas fa-file-alt mr-2"></i>
+        Formularios
+      </button>
+      <button
+        class="tab"
         [class.tab-active]="activeTab === 'permissions'"
-        (click)="setActiveTab('permissions')"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-        </svg>
-        Permisos de Usuario
-      </a>
+        (click)="setActiveTab('permissions')">
+        <i class="fas fa-user-lock mr-2"></i>
+        Permisos
+      </button>
     </div>
 
     <!-- Content Card -->
@@ -234,7 +233,11 @@
           <!-- Formulario Nuevo Evento -->
           <div *ngIf="showEventForm" class="card bg-primary/10 border border-primary/20 mb-6">
             <div class="card-body">
-              <h3 class="card-title text-lg">Nuevo Tipo de Evento</h3>
+
+              <h3 class="card-title text-lg">
+                {{ editingEvent ? 'Editar Tipo de Evento' : 'Nuevo Tipo de Evento' }}
+              </h3>
+
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="form-control w-full">
                   <label class="label">
@@ -242,43 +245,101 @@
                   </label>
                   <input
                     type="text"
-                    [(ngModel)]="newEvent.descripcion"
+                    [(ngModel)]="eventoDescripcion"
                     placeholder="Ej: Reunión, Capacitación..."
                     class="input input-bordered w-full"
                   />
                 </div>
+
                 <div class="form-control w-full">
                   <label class="label">
                     <span class="label-text font-medium">Duración (minutos)</span>
                   </label>
                   <input
                     type="number"
-                    [(ngModel)]="newEvent.duracionMinutos"
+                    [(ngModel)]="eventoDuracion"
                     class="input input-bordered w-full"
                     min="1"
                   />
                 </div>
+
                 <div class="form-control w-full">
                   <label class="label">
                     <span class="label-text font-medium">Color</span>
                   </label>
                   <input
                     type="color"
-                    [(ngModel)]="newEvent.color"
+                    [(ngModel)]="eventoColor"
                     class="input input-bordered w-full h-12"
                   />
                 </div>
+
+                <div class="form-control w-full">
+                  <label class="label">
+                    <span class="label-text font-medium">Formulario Asociado</span>
+                  </label>
+                  <select
+                    class="select select-bordered w-full"
+                    [(ngModel)]="eventoFormulario">
+                    <option [ngValue]="null">(Sin asignar)</option>
+                    <option
+                      *ngFor="let formulario of formularios"
+                      [ngValue]="formulario.id"
+                      [disabled]="!formulario.activo">
+                      {{ formulario.nombre }}
+                      <span *ngIf="!formulario.activo"> (Inactivo)</span>
+                    </option>
+                  </select>
+                  <label class="label">
+                    <span class="label-text-alt text-warning">
+                      <i class="fas fa-info-circle mr-1"></i>
+                      El evento solo estará disponible si tiene un formulario asignado
+                    </span>
+                  </label>
+                </div>
+
+                <!-- ✅ NUEVO: Calendarios donde estará disponible -->
+                <div class="form-control w-full col-span-2">
+                  <label class="label">
+                    <span class="label-text font-medium">Calendarios donde estará disponible</span>
+                  </label>
+                  <div class="border border-base-300 rounded-lg p-4 bg-base-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <label
+                        *ngFor="let calendario of calendarTypes"
+                        class="label cursor-pointer justify-start gap-3 hover:bg-base-300 p-2 rounded"
+                        [class.opacity-50]="!calendario.activo">
+                        <input
+                          type="checkbox"
+                          class="checkbox checkbox-primary checkbox-sm"
+                          [checked]="isCalendarioSeleccionado(calendario.id)"
+                          (change)="toggleCalendario(calendario.id)"
+                          [disabled]="!calendario.activo">
+                        <span class="label-text">
+                          {{ calendario.descripcion }}
+                          <span *ngIf="!calendario.activo" class="text-xs text-gray-500">(Inactivo)</span>
+                        </span>
+                      </label>
+                    </div>
+                    <div *ngIf="calendariosSeleccionados.length === 0" class="text-warning text-sm mt-2">
+                      <i class="fas fa-exclamation-triangle mr-1"></i>
+                      Sin calendarios seleccionados, el evento no estará disponible en ningún lado
+                    </div>
+                  </div>
+                </div>
+
                 <div class="form-control">
                   <label class="label cursor-pointer justify-start gap-3">
                     <input
                       type="checkbox"
-                      [(ngModel)]="newEvent.activo"
+                      [(ngModel)]="eventoActivo"
                       class="checkbox checkbox-primary"
                     />
                     <span class="label-text font-medium">Activo</span>
                   </label>
                 </div>
               </div>
+
               <div class="card-actions justify-end mt-4">
                 <button class="btn btn-ghost" (click)="cancelNewEvent()" type="button">
                   Cancelar
@@ -302,6 +363,8 @@
                   <th>Descripción</th>
                   <th>Duración</th>
                   <th>Color</th>
+                  <th>Formulario</th>
+                  <th>Calendarios</th>
                   <th>Estado</th>
                   <th class="text-right">Acciones</th>
                 </tr>
@@ -333,6 +396,26 @@
                         class="input input-bordered input-sm w-16 h-10"
                       />
                     </td>
+
+                    <td>
+                      <select
+                        class="select select-bordered select-sm w-full"
+                        [(ngModel)]="editingEvent.id_formulario">
+                        <option [ngValue]="null">(Sin asignar)</option>
+                        <option
+                          *ngFor="let formulario of formularios"
+                          [ngValue]="formulario.id"
+                          [disabled]="!formulario.activo">
+                          {{ formulario.nombre }}
+                        </option>
+                      </select>
+                    </td>
+                    <td>
+                      <span class="text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Use el formulario para editar calendarios
+                      </span>
+                    </td>
                     <td>
                       <input
                         type="checkbox"
@@ -340,6 +423,8 @@
                         class="checkbox checkbox-sm checkbox-primary"
                       />
                     </td>
+
+
                     <td>
                       <div class="flex justify-end gap-2">
                         <button
@@ -382,6 +467,35 @@
                         <span class="text-xs opacity-70">{{ event.color }}</span>
                       </div>
                     </td>
+
+                    <td>
+                      <span
+                        *ngIf="event.id_formulario"
+                        class="badge badge-success badge-sm">
+                        {{ getNombreFormulario(event.id_formulario) }}
+                      </span>
+                      <span
+                        *ngIf="!event.id_formulario"
+                        class="badge badge-warning badge-sm">
+                        Sin asignar
+                      </span>
+                    </td>
+
+                    <td>
+                      <div class="flex flex-wrap gap-1">
+                        <span
+                          *ngFor="let calendario of getCalendariosVinculados(event.id)"
+                          class="badge badge-info badge-sm">
+                          {{ calendario.descripcion }}
+                        </span>
+                        <span
+                          *ngIf="getCalendariosVinculados(event.id).length === 0"
+                          class="badge badge-ghost badge-sm">
+                          Sin calendarios
+                        </span>
+                      </div>
+                    </td>
+
                     <td>
                       <div class="badge" [class.badge-success]="event.activo" [class.badge-ghost]="!event.activo">
                         {{ event.activo ? 'Activo' : 'Inactivo' }}
@@ -406,6 +520,323 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- ==================== PESTAÑA FORMULARIOS ==================== -->
+        <div *ngIf="activeTab === 'forms'" class="space-y-6">
+
+          <!-- Header con botón Nuevo -->
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900">Gestión de Formularios</h2>
+              <p class="text-gray-600 mt-1">Crea y gestiona formularios dinámicos para tus eventos</p>
+            </div>
+            <button
+              *ngIf="!showFormularioForm && !showCamposManager"
+              class="btn btn-primary"
+              (click)="showFormularioForm = true">
+              <i class="fas fa-plus mr-2"></i>
+              Nuevo Formulario
+            </button>
+          </div>
+
+          <!-- Formulario de creación/edición -->
+          <div *ngIf="showFormularioForm" class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <h3 class="card-title">
+                <i class="fas fa-file-alt mr-2"></i>
+                {{ editingFormulario ? 'Editar Formulario' : 'Nuevo Formulario' }}
+              </h3>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium">Nombre del Formulario</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej: Formulario de Reservas"
+                  class="input input-bordered"
+                  [(ngModel)]="formularioNombre"
+                >
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium">Descripción</span>
+                </label>
+                <textarea
+                  class="textarea textarea-bordered h-24"
+                  placeholder="Descripción del formulario..."
+                  [(ngModel)]="formularioDescripcion">
+                </textarea>
+              </div>
+
+              <div class="form-control">
+                <label class="label cursor-pointer justify-start gap-3">
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-primary"
+                  [(ngModel)]="formularioActivo"
+                >
+                  <span class="label-text">Formulario activo</span>
+                </label>
+              </div>
+
+              <div class="card-actions justify-end mt-4">
+                <button
+                  class="btn btn-ghost"
+                  (click)="editingFormulario ? cancelEditFormulario() : cancelNewFormulario()">
+                  Cancelar
+                </button>
+                <button
+                  class="btn btn-primary"
+                  (click)="handleSaveFormulario()">
+                  <i class="fas fa-save mr-2"></i>
+                  {{ editingFormulario ? 'Actualizar' : 'Crear' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gestor de Campos (Modal estilo) -->
+          <div *ngIf="showCamposManager" class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="card-title">
+                  <i class="fas fa-edit mr-2"></i>
+                  Campos de: {{ formularioSeleccionado?.nombre }}
+                </h3>
+                <button class="btn btn-ghost btn-sm" (click)="cerrarGestionCampos()">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+
+              <!-- ✅ Grid de campos disponibles de calendar (NUEVO) -->
+              <div *ngIf="!showCampoForm" class="mb-6">
+                <h4 class="font-semibold mb-3 text-gray-700">
+                  <i class="fas fa-hand-pointer mr-2"></i>
+                  Seleccione el campo a agregar:
+                </h4>
+
+                <!-- Grid compacto de cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  <button
+                    *ngFor="let campo of camposCalendarDisponibles"
+                    class="btn btn-outline hover:btn-primary flex-col h-auto py-3 px-2 relative transition-all"
+                    [class.btn-disabled]="isCampoYaAgregado(campo.nombre_columna)"
+                    [class.opacity-50]="isCampoYaAgregado(campo.nombre_columna)"
+                    [disabled]="isCampoYaAgregado(campo.nombre_columna)"
+                    (click)="seleccionarCampoCalendar(campo)"
+                    [title]="campo.descripcion">
+
+                    <!-- Ícono -->
+                    <i class="{{campo.icono}} text-xl mb-1"
+                      [class.text-primary]="!isCampoYaAgregado(campo.nombre_columna)"
+                      [class.text-gray-400]="isCampoYaAgregado(campo.nombre_columna)"></i>
+
+                    <!-- Etiqueta -->
+                    <span class="text-xs font-medium text-center leading-tight">
+                      {{ campo.etiqueta_sugerida }}
+                    </span>
+
+                    <!-- Badge si es obligatorio -->
+                    <span *ngIf="campo.es_obligatorio"
+                          class="badge badge-error badge-xs mt-1">
+                      Req.
+                    </span>
+
+                    <!-- Checkmark si ya está agregado -->
+                    <div *ngIf="isCampoYaAgregado(campo.nombre_columna)"
+                        class="absolute top-1 right-1 bg-success rounded-full w-5 h-5 flex items-center justify-center">
+                      <i class="fas fa-check text-white text-xs"></i>
+                    </div>
+                  </button>
+                </div>
+
+                <!-- Mensaje si no hay campos disponibles -->
+                <div *ngIf="camposCalendarDisponibles.length === 0"
+                    class="text-center py-8 text-gray-500">
+                  <i class="fas fa-info-circle text-3xl mb-2"></i>
+                  <p>No hay campos disponibles para agregar</p>
+                </div>
+              </div>
+
+              <!-- Formulario de campo -->
+              <div *ngIf="showCampoForm" class="bg-base-200 p-4 rounded-lg mb-4">
+                <h4 class="font-semibold mb-3">
+                  {{ editingCampo ? 'Editar' : 'Configurar' }} Campo: {{ newCampo.label || 'Sin nombre' }}
+                </h4>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Campo Técnico</span></label>
+                    <input
+                      type="text"
+                      class="input input-bordered input-sm bg-base-200"
+                      [(ngModel)]="newCampo.nombre_campo"
+                      readonly>
+                    <label class="label">
+                      <span class="label-text-alt text-gray-500">
+                        <i class="fas fa-lock text-xs mr-1"></i>
+                        Este nombre no se puede modificar
+                      </span>
+                    </label>
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Etiqueta</span></label>
+                    <input type="text" class="input input-bordered input-sm" placeholder="ej: Nombre del Cliente" [(ngModel)]="newCampo.label">
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Placeholder</span></label>
+                    <input type="text" class="input input-bordered input-sm" placeholder="Texto de ayuda..." [(ngModel)]="newCampo.placeholder">
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Orden</span></label>
+                    <input type="number" class="input input-bordered input-sm" [(ngModel)]="newCampo.orden">
+                  </div>
+
+                  <div class="form-control col-span-1 md:col-span-2">
+                    <label class="label cursor-pointer justify-start gap-3">
+                      <input type="checkbox" class="checkbox checkbox-sm" [(ngModel)]="newCampo.requerido">
+                      <span class="label-text">Campo requerido</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="flex gap-2 mt-4">
+                  <button class="btn btn-ghost btn-sm" (click)="cancelNewCampo()">Cancelar</button>
+                  <button class="btn btn-primary btn-sm" (click)="handleSaveCampo()">
+                    <i class="fas fa-save mr-1"></i>
+                    {{ editingCampo ? 'Actualizar' : 'Agregar' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Lista de campos del formulario -->
+              <div *ngIf="camposFormulario.length > 0">
+                <h4 class="font-semibold mb-3">Campos actuales ({{ camposFormulario.length }}):</h4>
+                <div class="overflow-x-auto">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Orden</th>
+                        <th>Campo</th>
+                        <th>Tipo</th>
+                        <th>Requerido</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let campo of camposFormulario">
+                        <td>{{ campo.orden }}</td>
+                        <td>
+                          <div class="font-medium">{{ campo.label }}</div>
+                          <div class="text-xs text-gray-500">{{ campo.nombre_campo }}</div>
+                        </td>
+                        <td>
+                          <span class="badge badge-sm">{{ getTipoCampoNombre(campo.tipo_campo) }}</span>
+                        </td>
+                        <td>
+                          <span *ngIf="campo.requerido" class="badge badge-error badge-sm">Sí</span>
+                          <span *ngIf="!campo.requerido" class="badge badge-ghost badge-sm">No</span>
+                        </td>
+                        <td>
+                          <div class="flex gap-1">
+                            <button class="btn btn-ghost btn-xs" (click)="startEditCampo(campo)">
+                              <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-ghost btn-xs text-error" (click)="handleDeleteCampo(campo.id!)">
+                              <i class="fas fa-trash"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de formularios -->
+          <div *ngIf="!showFormularioForm && !showCamposManager" class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <div class="overflow-x-auto">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Nombre</th>
+                      <th>Descripción</th>
+                      <th>Campos</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let formulario of formularios">
+                      <td>
+                        <div class="font-medium">{{ formulario.nombre }}</div>
+                      </td>
+                      <td>
+                        <div class="text-sm text-gray-600">{{ formulario.descripcion }}</div>
+                      </td>
+                      <td>
+                        <span
+                          class="badge"
+                          [class.badge-primary]="(formulario.cantidadCampos || 0) > 0"
+                          [class.badge-warning]="(formulario.cantidadCampos || 0) === 0">
+                          {{ formulario.cantidadCampos || 0 }} campos
+                        </span>
+                      </td>
+                      <td>
+                        <span *ngIf="formulario.activo" class="badge badge-success">Activo</span>
+                        <span *ngIf="!formulario.activo" class="badge badge-ghost">Inactivo</span>
+                      </td>
+                      <td>
+                        <div class="flex gap-2">
+
+                          <button
+                            class="btn btn-ghost btn-sm"
+                            (click)="abrirGestionCampos(formulario)"
+                            title="Gestionar campos">
+                            <i class="fas fa-edit"></i>
+                          </button>
+                          <button
+                            class="btn btn-ghost btn-sm"
+                            (click)="startEditFormulario(formulario)"
+                            title="Editar formulario">
+                            <i class="fas fa-cog"></i>
+                          </button>
+
+                          <!-- Botón Desactivar (si está activo) -->
+                          <button
+                            *ngIf="formulario.activo"
+                            class="btn btn-ghost btn-sm text-error"
+                            (click)="handleDeleteFormulario(formulario.id)"
+                            title="Desactivar">
+                            <i class="fas fa-times-circle"></i>
+                          </button>
+
+                          <!-- Botón Activar (si está inactivo) -->
+                          <button
+                            *ngIf="!formulario.activo"
+                            class="btn btn-ghost btn-sm text-success"
+                            (click)="handleReactivarFormulario(formulario.id)"
+                            title="Activar">
+                            <i class="fas fa-check-circle"></i>
+                          </button>
+
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 

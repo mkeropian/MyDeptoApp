@@ -1,6 +1,8 @@
+// calendario-empleados-page.component.ts
+
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { map, forkJoin, Subject, takeUntil } from 'rxjs';
 import {
@@ -12,7 +14,9 @@ import {
   FiltrosCalendario,
   VistaCalendario,
   TipoEventoCalendario,
-  TipoCalendario
+  TipoCalendario,
+  FormularioCompleto,
+  CampoFormulario
 } from '../../services/calendario.service';
 import { AuthService } from '../../../auth/services/auth.service';
 
@@ -46,8 +50,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
   mostrarModalEvento = false;
   mostrarModalDetalles = false;
-
-  // ✅ NUEVO - Modal para mostrar el mapa
   mostrarModalMapa = false;
   eventoEditando: EventoCalendarioExtendido | null = null;
 
@@ -64,28 +66,31 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   horasDia: string[] = [];
 
   tiposCalendario: TipoCalendario[] = [];
-
   tiposEvento: TipoEventoCalendario[] = [];
+  tiposEventoFiltrados: TipoEventoCalendario[] = [];
 
-  // ✅ NUEVAS PROPIEDADES PARA CONTROL DE PERMISOS
   esEmpleado = false;
   usuarioLogueadoId: number | null = null;
   tiposCalendarioPermitidos: number[] = [];
 
-  // ==================== NUEVAS PROPIEDADES PARA EXPORTACIÓN ====================
   mostrarModalExport = false;
   accionExport: 'descargar' | 'enviar' = 'descargar';
   tipoArchivoExport: 'excel' | 'pdf' | 'imagen' = 'excel';
   subtipoImagen: 'lista' | 'calendario' | 'resumen' = 'lista';
   emailDestinoExport = '';
 
-  // ==================== NUEVAS PROPIEDADES PARA RANGO DE FECHAS ====================
   rangoExport: 'vistaActual' | 'rangoPersonalizado' | 'historial' = 'vistaActual';
   fechaInicioPersonalizada: string = '';
   fechaFinPersonalizada: string = '';
   errorRangoPersonalizado: string = '';
 
   isDownloading = signal<boolean>(false);
+
+  // ==================== NUEVAS PROPIEDADES PARA FORMULARIOS DINÁMICOS ====================
+
+  formularioActual: FormularioCompleto | null = null;
+  camposFormularioActual: CampoFormulario[] = [];
+  cargandoFormulario = false;
 
   constructor(
     private fb: FormBuilder,
@@ -116,9 +121,15 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       this.horasDia.push(`${String(i).padStart(2, '0')}:00`);
     }
 
+    // Listener para cambios en tipo de evento
     this.eventoForm.get('idTipoEventoCalendario')?.valueChanges
       .pipe(takeUntil(this.destroy$))
-      .subscribe(() => this.calcularHoraFin());
+      .subscribe((idTipoEvento) => {
+        if (idTipoEvento) {
+          this.cargarFormularioDinamico(idTipoEvento);
+        }
+        this.calcularHoraFin();
+      });
 
     this.eventoForm.get('horaInicio')?.valueChanges
       .pipe(takeUntil(this.destroy$))
@@ -138,14 +149,11 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ==================== ✅ VERIFICACIÓN DE ROL Y CALENDARIOS ====================
-
   verificarRolUsuario(): void {
     const user = this.authService.user();
 
     if (user) {
       this.usuarioLogueadoId = user.id;
-
       this.esEmpleado = user.roles?.includes('emp') ?? false;
 
       this.calendarioService.obtenerCalendariosPorUsuario(user.id)
@@ -178,9 +186,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         });
     }
   }
-
-
-// ==================== CARGA DE DATOS ====================
 
   cargarDatos(): void {
     this.cargando = true;
@@ -268,7 +273,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         : undefined
     };
 
-    // ✅ CORREGIDO - Pasar eventos y filtros
     this.eventosFiltrados = this.calendarioService.filtrarEventos(this.eventos, filtros);
   }
 
@@ -309,7 +313,214 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ==================== NAVEGACIÓN ====================
+  // ==================== CARGA DINÁMICA DE FORMULARIO ====================
+
+  cargarFormularioDinamico(idTipoEvento: number): void {
+    console.log('🔵 [1] cargarFormularioDinamico llamado con idTipoEvento:', idTipoEvento);
+    this.cargandoFormulario = true;
+
+    // ✅ FORZAR detección de cambios ANTES de cargar
+    this.cdr.detectChanges();
+
+    this.calendarioService.obtenerFormularioPorTipoEvento(idTipoEvento)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (formulario) => {
+          console.log('🟢 [2] Formulario recibido del backend:', formulario);
+          this.formularioActual = formulario;
+
+          if (formulario && formulario.campos) {
+            console.log('🟢 [3] Cantidad de campos:', formulario.campos.length);
+            this.camposFormularioActual = formulario.campos;
+            this.reconstruirFormulario(formulario.campos);
+
+            // ✅ FORZAR detección de cambios DESPUÉS de reconstruir
+            setTimeout(() => {
+              this.cargandoFormulario = false;
+              console.log('🟢 [4] cargandoFormulario = false');
+              this.cdr.detectChanges();
+              console.log('🟢 [4.5] detectChanges() ejecutado');
+            }, 0);
+          } else {
+            console.log('🔴 [3] NO hay campos en el formulario');
+            this.camposFormularioActual = [];
+            this.cargandoFormulario = false;
+            this.cdr.detectChanges();
+          }
+        },
+        error: (error) => {
+          console.error('🔴 [ERROR] Error al cargar formulario:', error);
+          this.cargandoFormulario = false;
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  reconstruirFormulario(campos: CampoFormulario[]): void {
+    console.log('🔵 [5] reconstruirFormulario llamado con', campos.length, 'campos');
+
+    // GUARDAR valores actuales ANTES de recrear el form
+    const idTipoCalendario = this.eventoForm.get('idTipoCalendario')?.value;
+    const idTipoEventoCalendario = this.eventoForm.get('idTipoEventoCalendario')?.value;
+
+    console.log('🟡 [6] Valores guardados - Calendario:', idTipoCalendario, 'Evento:', idTipoEventoCalendario);
+
+    const group: { [key: string]: FormControl } = {};
+
+    // ✅ AGREGAR CONTROLES FIJOS PRIMERO
+    group['idTipoCalendario'] = new FormControl(idTipoCalendario, Validators.required);
+    group['idTipoEventoCalendario'] = new FormControl(idTipoEventoCalendario, Validators.required);
+
+    // Crear controles para cada campo del formulario
+    campos.forEach(campo => {
+      const validators = campo.requerido ? [Validators.required] : [];
+      let valorDefault: any = '';
+
+      if (campo.tipo_campo === 'number') {
+        valorDefault = null;
+      } else if (campo.tipo_campo === 'checkbox') {
+        valorDefault = false;
+      }
+
+      const valorActual = this.eventoForm.get(campo.nombre_campo)?.value;
+      const valorFinal = (valorActual !== undefined && valorActual !== null && valorActual !== '')
+        ? valorActual
+        : valorDefault;
+
+      group[campo.nombre_campo] = new FormControl(valorFinal, validators);
+
+      console.log(`   - Campo "${campo.nombre_campo}": valor = ${valorFinal}`);
+    });
+
+    // Recrear el FormGroup
+    this.eventoForm = this.fb.group(group);
+
+    console.log('🟢 [7] FormGroup recreado con', Object.keys(group).length, 'controles');
+    console.log('🟢 [9] Form actual:', this.eventoForm.value);
+
+    // Si estamos editando, poblar con los datos del evento
+    if (this.eventoEditando) {
+      console.log('🟡 [10] Poblando form para edición');
+      this.poblarFormularioParaEdicion(this.eventoEditando);
+    }
+
+    // ✅ IMPORTANTE: Re-suscribir al cambio de CALENDARIO
+    this.eventoForm.get('idTipoCalendario')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((nuevoIdCalendario) => {
+        console.log('🔄 [RECONSTRUIR] Calendario cambió a:', nuevoIdCalendario);
+
+        if (nuevoIdCalendario && nuevoIdCalendario !== idTipoCalendario) {
+          // Resetear estado
+          this.formularioActual = null;
+          this.camposFormularioActual = [];
+
+          // Recrear formulario básico
+          this.eventoForm = this.fb.group({
+            idTipoCalendario: [nuevoIdCalendario, Validators.required],
+            idTipoEventoCalendario: [{ value: '', disabled: true }, Validators.required]
+          });
+
+          console.log('🔄 Formulario reseteado - cargando eventos para calendario:', nuevoIdCalendario);
+
+          // Cargar eventos del nuevo calendario
+          this.cargarEventosPermitidos(Number(nuevoIdCalendario));
+        }
+      });
+
+    // Re-suscribir al cambio de tipo de evento
+    this.eventoForm.get('idTipoEventoCalendario')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((idTipoEvento) => {
+        if (idTipoEvento && idTipoEvento !== idTipoEventoCalendario) {
+          console.log('🔵 Tipo de evento cambió a:', idTipoEvento);
+          this.cargarFormularioDinamico(idTipoEvento);
+        }
+      });
+
+    // Re-suscribir al cálculo de hora fin
+    this.eventoForm.get('horaInicio')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.calcularHoraFin());
+
+    console.log('🟢 [11] Listeners re-suscritos');
+  }
+
+  poblarFormularioParaEdicion(evento: EventoCalendarioExtendido): void {
+    const valores: any = {
+      idTipoCalendario: evento.idTipoCalendario,
+      idTipoEventoCalendario: evento.idTipoEventoCalendario,
+    };
+
+    this.camposFormularioActual.forEach(campo => {
+      const nombreCampo = campo.nombre_campo;
+
+      if (nombreCampo === 'fecha' || nombreCampo === 'fecha_inicio') {
+        valores[nombreCampo] = evento.fecha.split('T')[0];
+      } else if (nombreCampo === 'fecha_fin' && evento.fechaFin) {
+        valores[nombreCampo] = evento.fechaFin.split('T')[0];
+      } else if (nombreCampo === 'horaInicio') {
+        valores[nombreCampo] = evento.horaInicio.substring(0, 5);
+      } else if (nombreCampo === 'horaFin') {
+        valores[nombreCampo] = evento.horaFin.substring(0, 5);
+      } else if (nombreCampo === 'idUser') {
+        valores[nombreCampo] = evento.idUsuario;
+      } else if (nombreCampo === 'idDep') {
+        valores[nombreCampo] = evento.idDepartamento;
+      } else if (nombreCampo === 'observaciones') {
+        valores[nombreCampo] = evento.observaciones || '';
+      } else if (nombreCampo === 'nombre_huesped') {
+        valores[nombreCampo] = evento.nombreHuesped || '';
+      } else if (nombreCampo === 'telefono_huesped') {
+        valores[nombreCampo] = evento.telefonoHuesped || '';
+      } else if (nombreCampo === 'email_huesped') {
+        valores[nombreCampo] = evento.emailHuesped || '';
+      } else if (nombreCampo === 'cantidad_personas') {
+        valores[nombreCampo] = evento.cantidadPersonas;
+      } else if (nombreCampo === 'monto') {
+        valores[nombreCampo] = evento.monto ? parseFloat(evento.monto) : null;
+      }
+    });
+
+    this.eventoForm.patchValue(valores);
+  }
+
+  // ==================== HELPERS PARA EL TEMPLATE DINÁMICO ====================
+
+  esCampoInvalido(nombreCampo: string): boolean {
+    const control = this.eventoForm.get(nombreCampo);
+    return !!(control && control.invalid && control.touched);
+  }
+
+  obtenerOpcionesSelect(nombreCampo: string): any[] {
+    if (nombreCampo === 'idTipoCalendario') {
+      return this.tiposCalendario.filter(tc => tc.activo);
+    } else if (nombreCampo === 'idTipoEventoCalendario') {
+      return this.tiposEvento.filter(te => te.activo);
+    } else if (nombreCampo === 'idUser') {
+      return this.usuarios;
+    } else if (nombreCampo === 'idDep') {
+      return this.departamentos;
+    }
+    return [];
+  }
+
+  obtenerLabelOpcion(nombreCampo: string, opcion: any): string {
+    if (nombreCampo === 'idTipoCalendario' || nombreCampo === 'idTipoEventoCalendario') {
+      return opcion.descripcion;
+    } else if (nombreCampo === 'idUser') {
+      return opcion.nombreCompleto;
+    } else if (nombreCampo === 'idDep') {
+      return opcion.nombre;
+    }
+    return opcion.toString();
+  }
+
+  obtenerValueOpcion(nombreCampo: string, opcion: any): any {
+    return opcion.id;
+  }
+
+  // ==================== NAVEGACIÓN Y VISTAS (SIN CAMBIOS) ====================
 
   get tituloCalendario(): string {
     if (this.vistaActual === 'dia') {
@@ -390,8 +601,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.vistaActual = vista;
   }
 
-  // ==================== EVENTOS POR FECHA ====================
-
   obtenerEventosPorFecha(fecha: Date): EventoCalendarioExtendido[] {
     const fechaStr = this.calendarioService.formatearFechaParaBackend(fecha);
 
@@ -410,11 +619,9 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     } else {
       const inicioMes = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth(), 1);
       const finMes = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth() + 1, 0);
-        return { inicio: inicioMes, fin: finMes };
+      return { inicio: inicioMes, fin: finMes };
     }
   }
-
-  // ==================== VISTA DIARIA - POSICIONAMIENTO ====================
 
   obtenerPosicionEvento(evento: EventoCalendarioExtendido): { top: number; height: number } {
     const horaInicio = this.convertirHoraAMinutos(evento.horaInicio);
@@ -444,8 +651,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     });
   }
 
-
-// ==================== ✅ CRUD EVENTOS - MODIFICADOS CON RESTRICCIONES ====================
+  // ==================== CRUD EVENTOS (SIN CAMBIOS EXCEPTO GUARDAR) ====================
 
   abrirModalEvento(fecha?: Date): void {
     if (this.esEmpleado) {
@@ -453,20 +659,126 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    console.log('🔵 abrirModalEvento llamado');
+
     this.ocultarTooltip();
     this.eventoEditando = null;
-    this.eventoForm.reset();
+    this.formularioActual = null;
+    this.camposFormularioActual = [];
 
+    // ✅ Resetear lista de eventos filtrados
+    this.tiposEventoFiltrados = [];
+
+    // ✅ Crear form con AMBOS campos desde el inicio (deshabilitado el segundo)
+    this.eventoForm = this.fb.group({
+      idTipoCalendario: ['', Validators.required],
+      idTipoEventoCalendario: [{ value: '', disabled: true }, Validators.required]
+    });
+
+    console.log('🟢 Form básico creado');
+
+    // Listener para cuando cambia el tipo de calendario
+
+    this.eventoForm.get('idTipoCalendario')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((idCalendario) => {
+        console.log('🟡 idTipoCalendario cambió a:', idCalendario);
+
+        if (idCalendario) {
+          // ✅ Resetear campos dinámicos antes de cargar nuevos eventos
+          this.formularioActual = null;
+          this.camposFormularioActual = [];
+
+          // ✅ Recrear el formulario desde cero con solo los 2 campos básicos
+          const idCalendarioActual = this.eventoForm.get('idTipoCalendario')?.value;
+
+          this.eventoForm = this.fb.group({
+            idTipoCalendario: [idCalendarioActual, Validators.required],
+            idTipoEventoCalendario: [{ value: '', disabled: true }, Validators.required]
+          });
+
+          // ✅ Re-suscribir al cambio de calendario (recursivo)
+          this.eventoForm.get('idTipoCalendario')?.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((nuevoIdCalendario) => {
+              if (nuevoIdCalendario && nuevoIdCalendario !== idCalendario) {
+                console.log('🔄 Calendario cambió nuevamente a:', nuevoIdCalendario);
+                // Cargar eventos del nuevo calendario
+                this.cargarEventosPermitidos(Number(nuevoIdCalendario));
+              }
+            });
+
+          console.log('🔄 Formulario reseteado a estado básico');
+
+          // Cargar nuevos eventos permitidos
+          this.cargarEventosPermitidos(Number(idCalendario));
+        } else {
+          // Si se limpia el calendario, resetear todo
+          this.tiposEventoFiltrados = [];
+          this.formularioActual = null;
+          this.camposFormularioActual = [];
+
+          const tipoEventoControl = this.eventoForm.get('idTipoEventoCalendario');
+          if (tipoEventoControl) {
+            tipoEventoControl.disable();
+            tipoEventoControl.reset();
+          }
+        }
+
+        this.cdr.detectChanges();
+      });
+
+
+    // Si hay fecha, guardarla temporalmente
     if (fecha) {
       const fechaStr = this.calendarioService.formatearFechaParaBackend(fecha);
-      this.eventoForm.patchValue({
-        fecha: fechaStr,
-        horaInicio: '09:00',
-        horaFin: '10:00'
-      });
+      this.eventoForm.patchValue({ fecha: fechaStr });
     }
 
     this.mostrarModalEvento = true;
+    console.log('🟢 Modal abierto');
+  }
+
+  cargarEventosPermitidos(idCalendario: number): void {
+    this.calendarioService.obtenerEventosPermitidosPorCalendario(idCalendario).subscribe({
+      next: (eventos) => {
+        // ✅ Filtrar SOLO eventos que tengan formulario asociado
+        this.tiposEventoFiltrados = eventos.filter(evento =>
+          evento.activo && evento.id_formulario !== null && evento.id_formulario !== undefined
+        );
+
+        if (this.tiposEventoFiltrados.length === 0) {
+          this.notificationService.mostrarNotificacion(
+            'No hay eventos disponibles para este calendario. Configure eventos con formularios asociados.',
+            'warning'
+          );
+          this.eventoForm.get('idTipoEventoCalendario')?.disable();
+        } else {
+          this.eventoForm.get('idTipoEventoCalendario')?.enable();
+
+          // Listener para cargar formulario dinámico
+          this.eventoForm.get('idTipoEventoCalendario')?.valueChanges.subscribe(idTipoEvento => {
+            if (idTipoEvento) {
+              this.cargarFormularioDinamico(idTipoEvento);
+            }
+          });
+        }
+
+        // Listener de cambio de calendario
+        this.eventoForm.get('idTipoCalendario')?.valueChanges.subscribe(idCal => {
+          if (idCal && idCal !== idCalendario) {
+            this.formularioActual = null;
+            this.camposFormularioActual = [];
+            this.eventoForm.get('idTipoEventoCalendario')?.reset();
+            this.cargarEventosPermitidos(idCal);
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error al cargar eventos permitidos:', error);
+        this.notificationService.mostrarNotificacion('Error al cargar tipos de evento', 'error');
+      }
+    });
   }
 
   editarEvento(evento: EventoCalendarioExtendido): void {
@@ -478,16 +790,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.ocultarTooltip();
     this.eventoEditando = evento;
 
-    this.eventoForm.patchValue({
-      idTipoCalendario: evento.idTipoCalendario,
-      idTipoEventoCalendario: evento.idTipoEventoCalendario,
-      idDep: evento.idDepartamento,
-      idUser: evento.idUsuario,
-      fecha: evento.fecha,
-      horaInicio: this.calendarioService.formatearHora(evento.horaInicio),
-      horaFin: this.calendarioService.formatearHora(evento.horaFin),
-      observaciones: evento.observaciones
-    });
+    this.cargarFormularioDinamico(evento.idTipoEventoCalendario);
 
     this.mostrarModalDetalles = false;
     this.mostrarModalEvento = true;
@@ -496,17 +799,42 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   guardarEvento(): void {
     if (this.eventoForm.invalid) {
       this.marcarCamposComoTocados();
+      this.notificationService.mostrarNotificacion('Por favor complete todos los campos requeridos', 'error');
       return;
     }
 
-    const eventoData: EventoCalendario = {
-      ...this.eventoForm.value,
-      horaInicio: this.eventoForm.value.horaInicio + ':00',
-      horaFin: this.eventoForm.value.horaFin + ':00'
+    const formValues = this.eventoForm.getRawValue();
+
+    // Asegurar que horaInicio y horaFin tengan formato HH:MM:SS
+    let horaInicio = formValues.horaInicio;
+    let horaFin = formValues.horaFin;
+
+    if (horaInicio && horaInicio.length === 5) {
+      horaInicio = horaInicio + ':00';
+    }
+    if (horaFin && horaFin.length === 5) {
+      horaFin = horaFin + ':00';
+    }
+
+    const evento: EventoCalendario = {
+      idTipoCalendario: formValues.idTipoCalendario,
+      idTipoEventoCalendario: formValues.idTipoEventoCalendario,
+      idDep: formValues.idDep || null,
+      idUser: formValues.idUser || null,
+      fecha_inicio: formValues.fecha || formValues.fecha_inicio,
+      fecha_fin: formValues.fecha_fin || null,
+      horaInicio: horaInicio,
+      horaFin: horaFin,
+      observaciones: formValues.observaciones || null,
+      nombre_huesped: formValues.nombre_huesped || null,
+      telefono_huesped: formValues.telefono_huesped || null,
+      email_huesped: formValues.email_huesped || null,
+      cantidad_personas: formValues.cantidad_personas || null,
+      monto: formValues.monto || null
     };
 
     if (this.eventoEditando) {
-      this.calendarioService.actualizarEvento(this.eventoEditando.id, eventoData)
+      this.calendarioService.actualizarEvento(this.eventoEditando.id, evento)
         .subscribe({
           next: () => {
             this.notificationService.mostrarNotificacion('Evento actualizado correctamente', 'success');
@@ -517,7 +845,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
           }
         });
     } else {
-      this.calendarioService.crearEvento(eventoData)
+      this.calendarioService.crearEvento(evento)
         .subscribe({
           next: () => {
             this.notificationService.mostrarNotificacion('Evento creado correctamente', 'success');
@@ -560,8 +888,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  // ==================== ✅ NUEVO - MODAL DE MAPA ====================
-
   abrirModalMapa(evento: EventoCalendarioExtendido, event?: Event): void {
     if (event) {
       event.stopPropagation();
@@ -578,12 +904,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  /**
-   * Verifica si un evento tiene ubicación válida
-   * NOTA: Como tu interfaz Departamento del calendario no tiene lngLat,
-   * este método siempre retornará true si hay departamento.
-   * Si quieres validación real, necesitas agregar lngLat a tu interface.
-   */
   tieneUbicacion(evento: EventoCalendarioExtendido): boolean {
     return !!evento.idDepartamento && !!evento.nombreDepartamento;
   }
@@ -593,7 +913,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       return null;
     }
 
-    // Buscar en el Map de departamentos con coordenadas
     return this.departamentosConMapa.get(evento.idDepartamento) || null;
   }
 
@@ -604,6 +923,8 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.mostrarModalMapa = false;
     this.eventoEditando = null;
     this.eventoForm.reset();
+    this.formularioActual = null;
+    this.camposFormularioActual = [];
   }
 
   marcarCamposComoTocados(): void {
@@ -611,8 +932,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       this.eventoForm.get(key)?.markAsTouched();
     });
   }
-
-  // ==================== TOOLTIP ====================
 
   mostrarTooltip(evento: EventoCalendarioExtendido, event: MouseEvent): void {
     this.tooltipEvento = evento;
@@ -627,8 +946,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.tooltipVisible = false;
     this.tooltipEvento = null;
   }
-
-  // ==================== UTILIDADES ====================
 
   esMesActual(fecha: Date): boolean {
     return fecha.getMonth() === this.fechaSeleccionada.getMonth() &&
@@ -684,10 +1001,14 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   formatearHora(hora: string): string {
-    return this.calendarioService.formatearHora(hora);
+    // Asegurar formato HH:MM
+    if (hora && hora.length > 5) {
+      return hora.substring(0, 5);
+    }
+    return hora;
   }
 
-  // ==================== EXPORTACIÓN Y ENVÍO ====================
+  // ==================== EXPORTACIÓN (SIN CAMBIOS) ====================
 
   abrirModalDescarga(): void {
     this.accionExport = 'descargar';
@@ -699,7 +1020,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.accionExport = 'enviar';
     this.tipoArchivoExport = 'excel';
 
-    // Obtener email del usuario logueado
     const user = this.authService.user();
     this.emailDestinoExport = user?.email || '';
 
@@ -711,7 +1031,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.tipoArchivoExport = 'excel';
     this.subtipoImagen = 'lista';
     this.emailDestinoExport = '';
-    // Resetear propiedades de rango
     this.rangoExport = 'vistaActual';
     this.fechaInicioPersonalizada = '';
     this.fechaFinPersonalizada = '';
@@ -727,7 +1046,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   private confirmarDescarga(): void {
-    // Validar rango personalizado si está seleccionado
     if (this.rangoExport === 'rangoPersonalizado') {
       if (!this.validarRangoPersonalizado()) {
         this.notificationService.mostrarNotificacion(this.errorRangoPersonalizado, 'warning');
@@ -759,33 +1077,23 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   }
 
   private confirmarEnvio(): void {
-    // console.log('🔵 [1] confirmarEnvio() INICIADO');
-    // console.log('🔵 Email actual:', this.emailDestinoExport);
-
-    // ✅ VALIDAR EMAIL ANTES DE MOSTRAR EL MODAL
     if (!this.emailDestinoExport || this.emailDestinoExport.trim() === '') {
-      console.log('❌ [2] Email vacío');
       this.notificationService.mostrarNotificacion('Debe ingresar un email válido', 'warning');
       return;
     }
 
-    // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.emailDestinoExport)) {
-      console.log('❌ [3] Email con formato inválido');
       this.notificationService.mostrarNotificacion('El formato del email no es válido', 'warning');
       return;
     }
 
-    // Validar rango personalizado si está seleccionado
     if (this.rangoExport === 'rangoPersonalizado') {
       if (!this.validarRangoPersonalizado()) {
         this.notificationService.mostrarNotificacion(this.errorRangoPersonalizado, 'warning');
         return;
       }
     }
-
-    // console.log('✅ [4] Email válido, mostrando SweetAlert');
 
     const cantidadEventos = this.eventosSegunRango;
 
@@ -805,30 +1113,20 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       confirmButtonText: 'Sí, enviar',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
-      // console.log('🔵 [5] SweetAlert resultado:', result);
-
       if (result.isConfirmed) {
-        // console.log('✅ [6] Usuario confirmó - ejecutando envío');
         this.ejecutarEnvio();
-      } else {
-        console.log('❌ [7] Usuario canceló');
       }
     });
   }
 
   private ejecutarDescarga(): void {
     this.cargando = true;
-
-    // ⚠️ NO cerrar el modal todavía - necesitamos tipoArchivoExport
     this.mostrarModalExport = false;
 
     const filtros = this.obtenerFiltrosActuales();
     const user = this.authService.user();
     const userRole = this.esEmpleado ? 'emp' : 'admin';
     const userId = user?.id || 0;
-
-    // console.log('📥 Descargando calendario...');
-    // console.log('Tipo de archivo:', this.tipoArchivoExport);
 
     this.calendarioService.descargarCalendario(
       filtros,
@@ -839,9 +1137,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: (blob) => {
         this.cargando = false;
-        // console.log(`✅ Blob recibido: ${blob.size} bytes, tipo: ${blob.type}`);
 
-        // Determinar extensión según tipo
         let extension = 'xlsx';
         if (this.tipoArchivoExport === 'pdf') {
           extension = 'pdf';
@@ -857,16 +1153,12 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         window.URL.revokeObjectURL(url);
 
         this.notificationService.mostrarNotificacion('Calendario descargado correctamente', 'success');
-
-        // ✅ AHORA SÍ resetear el tipo de archivo
         this.tipoArchivoExport = 'excel';
       },
       error: (error) => {
         this.cargando = false;
-        console.error('❌ Error al descargar calendario:', error);
+        console.error('Error al descargar calendario:', error);
         this.notificationService.mostrarNotificacion('Error al descargar el calendario', 'error');
-
-        // ✅ Resetear también en caso de error
         this.tipoArchivoExport = 'excel';
       }
     });
@@ -879,7 +1171,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     const timestamp = new Date().getTime();
     const fileName = `calendario_${timestamp}.${extension}`;
 
-    // Crear link y forzar descarga
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -889,13 +1180,10 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     link.click();
     document.body.removeChild(link);
 
-    // Liberar memoria
     window.URL.revokeObjectURL(url);
   }
 
   private ejecutarEnvio(): void {
-    // console.log('🟢 [8] ejecutarEnvio() INICIADO');
-
     this.cargando = true;
     this.mostrarModalExport = false;
 
@@ -903,15 +1191,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     const user = this.authService.user();
     const userRole = this.esEmpleado ? 'emp' : 'admin';
     const userId = user?.id || 0;
-
-    // console.log('🟢 [9] Datos preparados:');
-    // console.log('  - Email destino:', this.emailDestinoExport);
-    console.log('  - Tipo archivo:', this.tipoArchivoExport);
-    console.log('  - Filtros:', filtros);
-    console.log('  - Rol:', userRole);
-    console.log('  - User ID:', userId);
-
-    console.log('📧 [10] Llamando al servicio...');
 
     this.calendarioService.enviarCalendarioPorEmail(
       filtros,
@@ -922,15 +1201,11 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       this.tipoArchivoExport === 'imagen' ? this.subtipoImagen : undefined
     ).subscribe({
       next: (response) => {
-        console.log('✅ [11] Respuesta recibida:', response);
-
         this.cargando = false;
         this.notificationService.mostrarNotificacion('Calendario enviado por email correctamente', 'success');
         this.emailDestinoExport = '';
       },
       error: (error) => {
-        console.error('❌ [12] Error recibido:', error);
-
         this.cargando = false;
         this.notificationService.mostrarNotificacion('Error al enviar el calendario por email', 'error');
         this.emailDestinoExport = '';
@@ -961,7 +1236,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         : undefined
     };
 
-    // ==================== AGREGAR FILTROS DE FECHA SEGÚN RANGO SELECCIONADO ====================
     if (this.rangoExport === 'vistaActual') {
       const rango = this.calcularRangoVistaActual();
       filtros.fechaInicio = rango.fechaInicio;
@@ -970,31 +1244,22 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       filtros.fechaInicio = this.fechaInicioPersonalizada;
       filtros.fechaFin = this.fechaFinPersonalizada;
     }
-    // Si rangoExport === 'historial', no agregamos fechaInicio ni fechaFin
 
     return filtros;
   }
 
-  // ==================== FUNCIONES PARA RANGO DE FECHAS ====================
-
-  /**
-   * Calcula el rango de fechas según la vista actual del calendario
-   */
   private calcularRangoVistaActual(): { fechaInicio: string; fechaFin: string } {
     let fechaInicio: Date;
     let fechaFin: Date;
 
     if (this.vistaActual === 'dia') {
-      // Vista diaria: mismo día
       fechaInicio = new Date(this.fechaSeleccionada);
       fechaFin = new Date(this.fechaSeleccionada);
     } else if (this.vistaActual === 'semana') {
-      // Vista semanal: lunes a domingo de la semana visible
       const rango = this.obtenerRangoFechas();
       fechaInicio = rango.inicio;
       fechaFin = rango.fin;
     } else {
-      // Vista mensual: primer día al último día del mes visible
       fechaInicio = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth(), 1);
       fechaFin = new Date(this.fechaSeleccionada.getFullYear(), this.fechaSeleccionada.getMonth() + 1, 0);
     }
@@ -1005,9 +1270,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     };
   }
 
-  /**
-   * Calcula el número de eventos según el rango seleccionado
-   */
   get eventosSegunRango(): number {
     if (this.rangoExport === 'historial') {
       return this.eventosFiltrados.length;
@@ -1036,9 +1298,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     }).length;
   }
 
-  /**
-   * Valida el rango personalizado
-   */
   validarRangoPersonalizado(): boolean {
     this.errorRangoPersonalizado = '';
 
@@ -1055,7 +1314,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    // Calcular diferencia en días
     const diffTime = Math.abs(fechaFin.getTime() - fechaInicio.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -1067,13 +1325,9 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  /**
-   * Maneja el cambio de rango de exportación
-   */
   onRangoExportChange(): void {
     this.errorRangoPersonalizado = '';
 
-    // Si cambia a rango personalizado, inicializar con fechas de la vista actual
     if (this.rangoExport === 'rangoPersonalizado') {
       const rango = this.calcularRangoVistaActual();
       this.fechaInicioPersonalizada = rango.fechaInicio;
@@ -1081,9 +1335,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Maneja cambios en las fechas personalizadas
-   */
   onFechaPersonalizadaChange(): void {
     if (this.fechaInicioPersonalizada && this.fechaFinPersonalizada) {
       this.validarRangoPersonalizado();
