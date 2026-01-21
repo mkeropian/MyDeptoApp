@@ -118,16 +118,16 @@ export class FooterCardComponent implements OnInit {
     twoMonthsAgo: number,
     twoMonthsAgoYear: number
   ) {
-    // Filtrar pagos del mes anterior
+    // Filtrar pagos del mes anterior - USANDO STRING
     const lastMonthPagos = pagos.filter(pago => {
-      const fecha = new Date(pago.fecha);
-      return fecha.getMonth() + 1 === lastMonth && fecha.getFullYear() === lastMonthYear;
+      const [year, month] = pago.fecha.split('-').map(Number);
+      return month === lastMonth && year === lastMonthYear;
     });
 
-    // Filtrar pagos de dos meses atrás
+    // Filtrar pagos de dos meses atrás - USANDO STRING
     const twoMonthsAgoPagos = pagos.filter(pago => {
-      const fecha = new Date(pago.fecha);
-      return fecha.getMonth() + 1 === twoMonthsAgo && fecha.getFullYear() === twoMonthsAgoYear;
+      const [year, month] = pago.fecha.split('-').map(Number);
+      return month === twoMonthsAgo && year === twoMonthsAgoYear;
     });
 
     // Agrupar por departamento y sumar facturación
@@ -172,35 +172,35 @@ export class FooterCardComponent implements OnInit {
   ) {
     // Calcular rendimiento = ingresos - costos para cada departamento
 
-    // Ingresos del mes anterior por departamento
+    // Ingresos del mes anterior por departamento - USANDO STRING
     const lastMonthIngresos = this.groupByDepartment(
       pagos.filter(pago => {
-        const fecha = new Date(pago.fecha);
-        return fecha.getMonth() + 1 === lastMonth && fecha.getFullYear() === lastMonthYear;
+        const [year, month] = pago.fecha.split('-').map(Number);
+        return month === lastMonth && year === lastMonthYear;
       })
     );
 
-    // Costos del mes anterior por departamento
+    // Costos del mes anterior por departamento - USANDO STRING
     const lastMonthCostos = this.groupByDepartmentGastos(
       gastos.filter(gasto => {
-        const fecha = new Date(gasto.fecha);
-        return fecha.getMonth() + 1 === lastMonth && fecha.getFullYear() === lastMonthYear;
+        const [year, month] = gasto.fecha.split('-').map(Number);
+        return month === lastMonth && year === lastMonthYear;
       })
     );
 
-    // Ingresos de dos meses atrás por departamento
+    // Ingresos de dos meses atrás por departamento - USANDO STRING
     const twoMonthsAgoIngresos = this.groupByDepartment(
       pagos.filter(pago => {
-        const fecha = new Date(pago.fecha);
-        return fecha.getMonth() + 1 === twoMonthsAgo && fecha.getFullYear() === twoMonthsAgoYear;
+        const [year, month] = pago.fecha.split('-').map(Number);
+        return month === twoMonthsAgo && year === twoMonthsAgoYear;
       })
     );
 
-    // Costos de dos meses atrás por departamento
+    // Costos de dos meses atrás por departamento - USANDO STRING
     const twoMonthsAgoCostos = this.groupByDepartmentGastos(
       gastos.filter(gasto => {
-        const fecha = new Date(gasto.fecha);
-        return fecha.getMonth() + 1 === twoMonthsAgo && fecha.getFullYear() === twoMonthsAgoYear;
+        const [year, month] = gasto.fecha.split('-').map(Number);
+        return month === twoMonthsAgo && year === twoMonthsAgoYear;
       })
     );
 
@@ -273,16 +273,16 @@ export class FooterCardComponent implements OnInit {
     twoMonthsAgo: number,
     twoMonthsAgoYear: number
   ) {
-    // Filtrar rendimientos del mes anterior
+    // Filtrar rendimientos del mes anterior - USANDO STRING
     const lastMonthRend = rendProp.filter(rend => {
-      const fecha = new Date(rend.fecha);
-      return fecha.getMonth() + 1 === lastMonth && fecha.getFullYear() === lastMonthYear;
+      const [year, month] = rend.fecha.split('-').map(Number);
+      return month === lastMonth && year === lastMonthYear;
     });
 
-    // Filtrar rendimientos de dos meses atrás
+    // Filtrar rendimientos de dos meses atrás - USANDO STRING
     const twoMonthsAgoRend = rendProp.filter(rend => {
-      const fecha = new Date(rend.fecha);
-      return fecha.getMonth() + 1 === twoMonthsAgo && fecha.getFullYear() === twoMonthsAgoYear;
+      const [year, month] = rend.fecha.split('-').map(Number);
+      return month === twoMonthsAgo && year === twoMonthsAgoYear;
     });
 
     // Agrupar por propietario y sumar total_pagos (facturación)
@@ -327,9 +327,10 @@ export class FooterCardComponent implements OnInit {
   }
 
   private calculateTotalMonthlyRevenue(pagos: PagoGrid[], currentMonth: number, currentYear: number) {
+    // Filtrar pagos del mes actual - USANDO STRING para evitar zona horaria
     const currentMonthPagos = pagos.filter(pago => {
-      const fecha = new Date(pago.fecha);
-      return fecha.getMonth() + 1 === currentMonth && fecha.getFullYear() === currentYear;
+      const [year, month] = pago.fecha.split('-').map(Number);
+      return month === currentMonth && year === currentYear;
     });
 
     this.totalMonthlyRevenue = currentMonthPagos.reduce((total, pago) => {
@@ -339,9 +340,10 @@ export class FooterCardComponent implements OnInit {
   }
 
   private calculateMonthlyHonorarios(gastos: GastoGrid[], currentMonth: number, currentYear: number) {
+    // Filtrar honorarios del mes actual - USANDO STRING para evitar zona horaria
     const currentMonthHonorarios = gastos.filter(gasto => {
-      const fecha = new Date(gasto.fecha);
-      const isCurrentMonth = fecha.getMonth() + 1 === currentMonth && fecha.getFullYear() === currentYear;
+      const [year, month] = gasto.fecha.split('-').map(Number);
+      const isCurrentMonth = month === currentMonth && year === currentYear;
       const isHonorarios = gasto.idTipoGasto === 1;
       return isCurrentMonth && isHonorarios;
     });
