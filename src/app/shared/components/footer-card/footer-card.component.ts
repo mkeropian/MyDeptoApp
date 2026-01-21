@@ -385,4 +385,14 @@ export class FooterCardComponent implements OnInit {
       maximumFractionDigits: 0
     }).format(safeValue);
   }
+
+  // Método para ajustar tamaño de fuente según longitud del texto
+  getTextSizeClass(text: string): string {
+    if (!text) return 'text-6xl';
+
+    if (text.length > 20) return 'text-2xl';
+    if (text.length > 14) return 'text-4xl';
+    if (text.length > 8) return 'text-6xl';
+    return 'text-6xl';
+  }
 }

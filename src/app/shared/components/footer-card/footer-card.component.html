@@ -8,7 +8,9 @@
     <!-- 1. Departamento con más Facturación Mensual -->
     <div class="stat">
       <div class="stat-title">Dpto. Top Facturación</div>
-      <div class="stat-value text-primary">{{ topDepartmentByRevenue.name }}</div>
+      <div class="stat-value text-primary" [ngClass]="getTextSizeClass(topDepartmentByRevenue.name)">
+        {{ topDepartmentByRevenue.name }}
+      </div>
       <div class="stat-value text-sm">{{ topDepartmentByRevenue.value | safeCurrency }}</div>
       <div class="stat-desc" [ngClass]="{
         'text-success': topDepartmentByRevenue.trend === '↗︎',
@@ -27,7 +29,9 @@
     <!-- 2. Departamento con mejor Rendimiento Mensual -->
     <div class="stat">
       <div class="stat-title">Dpto. Top Rendimiento</div>
-      <div class="stat-value text-secondary">{{ topDepartmentByPerformance.name }}</div>
+      <div class="stat-value text-secondary" [ngClass]="getTextSizeClass(topDepartmentByPerformance.name)">
+        {{ topDepartmentByPerformance.name }}
+      </div>
       <div class="stat-value text-sm">{{ topDepartmentByPerformance.value | safeCurrency }}</div>
       <div class="stat-desc" [ngClass]="{
         'text-success': topDepartmentByPerformance.trend === '↗︎',
@@ -46,7 +50,9 @@
     <!-- 3. Propietario con Mayor Facturación Mensual -->
     <div class="stat">
       <div class="stat-title">Propietario Top</div>
-      <div class="stat-value text-accent">{{ topOwnerByRevenue.name }}</div>
+      <div class="stat-value text-accent" [ngClass]="getTextSizeClass(topOwnerByRevenue.name)">
+        {{ topOwnerByRevenue.name }}
+      </div>
       <div class="stat-value text-sm">{{ topOwnerByRevenue.value | safeCurrency }}</div>
       <div class="stat-desc" [ngClass]="{
         'text-success': topOwnerByRevenue.trend === '↗︎',
