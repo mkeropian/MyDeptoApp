@@ -56,7 +56,7 @@ export class FormComponent {
 
   constructor(private fb: FormBuilder) {
     this.userForm = this.fb.group({
-      usuario: ['', [Validators.required, Validators.minLength(3)]],
+      usuario: ['', [Validators.required, Validators.minLength(2)]],
       nombreCompleto: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       clave: ['', [Validators.required, Validators.minLength(6)]],

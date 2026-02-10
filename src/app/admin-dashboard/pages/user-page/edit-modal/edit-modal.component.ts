@@ -43,7 +43,7 @@ export class EditModalComponent implements OnInit {
   roles = computed(() => this.rolesResource.value() || []);
 
   editForm = this.fb.group({
-    usuario: ['', [Validators.required, Validators.minLength(3)]],
+    usuario: ['', [Validators.required, Validators.minLength(2)]],
     nombreCompleto: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
     rolId: [0, [Validators.required, Validators.min(1)]],
@@ -202,7 +202,7 @@ export class EditModalComponent implements OnInit {
           <p><strong>Usuario:</strong> ${formValue.usuario}</p>
           <p><strong>Nombre:</strong> ${formValue.nombreCompleto}</p>
           <p><strong>Email:</strong> ${formValue.email}</p>
-          <p><strong>Rol:</strong> ${this.roles().find(r => r.id === formValue.rolId)?.nombre || 'Sin rol'}</p>
+          <p><strong>Rol:</strong> ${this.roles().find(r => r.id === Number(formValue.rolId))?.nombre || 'Sin rol'}</p>
           <p><strong>Tema:</strong> ${formValue.tema}</p>
           ${this.selectedFile() ? '<p class="text-info"><i class="fas fa-image mr-2"></i>Se actualizará el avatar</p>' : ''}
         </div>
@@ -265,10 +265,20 @@ export class EditModalComponent implements OnInit {
    * Actualiza el rol del usuario
    */
   private actualizarRol(usuarioId: number, nuevoRolId: number): void {
-    // Aquí deberías implementar la lógica para actualizar el rol
-    // Por ahora, continuamos con el avatar
-    console.log(`Actualizar rol del usuario ${usuarioId} a rol ${nuevoRolId}`);
-    this.procesarAvatar(usuarioId);
+    // CAMBIO: Llamamos al servicio (asegurate de tener este método en tu UsersService)
+    this.usuariosService.updateRol(usuarioId, nuevoRolId).subscribe({
+      next: () => {
+        console.log('Rol guardado en BD correctamente');
+        // Una vez guardado el rol, seguimos con el avatar
+        this.procesarAvatar(usuarioId);
+      },
+      error: (err) => {
+        console.error('Error al guardar rol:', err);
+        this.notificationService.mostrarNotificacion('Error al actualizar el rol', 'error');
+        // Seguimos igual para no trabar la subida de imagen si el rol falla
+        this.procesarAvatar(usuarioId);
+      }
+    });
   }
 
   /**

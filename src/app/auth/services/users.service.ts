@@ -125,4 +125,8 @@ export class UsuariosService {
     return this.http.post(`${baseUrl}/usuarios/clave/${id}`, claveData);
   }
 
+  updateRol(id: number, rolId: number) {
+    return this.http.post(`${baseUrl}/usuarios/rol/${id}`, { rolId });
+  }
+
 }
