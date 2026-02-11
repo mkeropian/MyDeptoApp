@@ -233,7 +233,6 @@ export class EditModalComponent implements OnInit {
       nombreCompleto: formValue.nombreCompleto!,
       email: formValue.email!,
       tema: formValue.tema || 'light',
-      avatarUrl: usuarioActual.avatarUrl || ''
     };
 
     // Actualizar usuario
