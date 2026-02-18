@@ -1,13 +1,14 @@
-import { Component, computed, EventEmitter, inject, Output, signal } from '@angular/core';
+import { Component, computed, EventEmitter, inject, Output, signal, effect, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GastosService } from '../../../../gastos/services/gastos.service';
 import { DepartamentosService } from '../../../../departamentos/services/departamentos.service';
+import { UsuariosService } from '../../../../auth/services/users.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormErrorLabelComponent } from '../../../../shared/components/form-error-label/form-error-label.component';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { DashboardDataService } from '../../../../shared/services/dashboard-data.service';
 import Swal from 'sweetalert2';
-import { GastoGrid } from '../../../../gastos/interfaces/gasto.interface';
+import { GastoGrid, Empleado } from '../../../../gastos/interfaces/gasto.interface';
 
 @Component({
   selector: 'app-edit-modal',
@@ -17,32 +18,74 @@ import { GastoGrid } from '../../../../gastos/interfaces/gasto.interface';
   ],
   templateUrl: './edit-modal.component.html',
 })
-export class EditModalComponent {
+export class EditModalComponent implements OnInit {
 
   @Output() gastoActualizado = new EventEmitter<void>();
 
   private fb = inject(FormBuilder);
   private gastosService = inject(GastosService);
   private departamentosService = inject(DepartamentosService);
+  private usuariosService = inject(UsuariosService);
   private notificationService = inject(NotificationService);
   private dashboardDataService = inject(DashboardDataService);
 
+  ngOnInit(): void {
+    // Escuchar cambios en idTipoGasto
+    this.editForm.get('idTipoGasto')?.valueChanges.subscribe(idTipoGasto => {
+      this.actualizarRequiereEmpleado(idTipoGasto);
+    });
+  }
+
+  private actualizarRequiereEmpleado(idTipoGasto: number | null) {
+    const tipos = this.tipoGastos();
+
+    if (idTipoGasto && tipos.length > 0) {
+      // CORRECCIÓN: Convertir ambos a número para comparar
+      const tipoSeleccionado = tipos.find(t => Number(t.id) === Number(idTipoGasto));
+      const requiere = tipoSeleccionado?.requiere_empleado === 1;
+
+      this.requiereEmpleado.set(requiere);
+
+      // Actualizar validación del campo idEmpleado
+      const empleadoControl = this.editForm.get('idEmpleado');
+      if (requiere) {
+        empleadoControl?.setValidators([Validators.required, Validators.min(1)]);
+      } else {
+        empleadoControl?.clearValidators();
+      }
+      empleadoControl?.updateValueAndValidity();
+    }
+  }
+
   isOpen = signal(false);
   gastoActual = signal<GastoGrid | null>(null);
+
+  // Signal para controlar si se requiere empleado
+  requiereEmpleado = signal(false);
 
   departamentosResource = rxResource({
     request: () => ({}),
     loader: () => this.departamentosService.getDepartamentosActivos()
   });
 
-  // MODIFICADO: Usar getTipoGastoActivos() en lugar de getTipoGasto()
   tipoGastoResource = rxResource({
     request: () => ({}),
     loader: () => this.gastosService.getTipoGastoActivos()
   });
 
+  // NUEVO: Resource para cargar empleados
+  empleadosResource = rxResource({
+    request: () => ({}),
+    loader: () => this.usuariosService.getEmpleados()
+  });
+
   tipoGastos = computed(() => this.tipoGastoResource.value() || []);
   departamentos = computed(() => this.departamentosResource.value() || []);
+
+  empleados = computed(() => {
+    const value = this.empleadosResource.value();
+    return (Array.isArray(value) ? value : []) as Empleado[];
+  });
 
   editForm = this.fb.group({
     idTipoGasto: [0, Validators.required],
@@ -50,6 +93,7 @@ export class EditModalComponent {
     monto: [0, [Validators.required, Validators.min(0)]],
     fecha: ['', Validators.required],
     observaciones: [''],
+    idEmpleado: [0] // NUEVO: Campo de empleado
   });
 
   open(gasto: GastoGrid) {
@@ -67,7 +111,8 @@ export class EditModalComponent {
       idDep: gasto.idDep,
       monto: gasto.monto,
       fecha: fechaFormateada,
-      observaciones: gasto.observaciones || ''
+      observaciones: gasto.observaciones || '',
+      idEmpleado: gasto.idEmpleado || 0 // NUEVO: Cargar empleado actual
     });
 
     this.isOpen.set(true);
@@ -77,6 +122,8 @@ export class EditModalComponent {
     if (modal) {
       modal.showModal();
     }
+
+    this.actualizarRequiereEmpleado(gasto.idTipoGasto);
   }
 
   close() {
@@ -105,8 +152,15 @@ export class EditModalComponent {
     const formValue = this.editForm.value;
 
     // Obtener nombres para mostrar en el diálogo
-    const tipoGasto = this.tipoGastos().find(t => t.id === formValue.idTipoGasto);
-    const departamento = this.departamentos().find(d => d.id === formValue.idDep);
+    const tipoGasto = this.tipoGastos().find(t => Number(t.id) === Number(formValue.idTipoGasto));
+    const departamento = this.departamentos().find(d => Number(d.id) === Number(formValue.idDep));
+    const empleado = this.empleados().find(e => Number(e.id) === Number(formValue.idEmpleado));
+
+    // Obtener info del empleado si aplica
+    let empleadoInfo = '';
+    if (this.requiereEmpleado() && formValue.idEmpleado) {
+      empleadoInfo = `<p><strong>Empleado:</strong> ${empleado?.nombreCompleto || 'N/A'}</p>`;
+    }
 
     // IMPORTANTE: Cerrar temporalmente el modal de DaisyUI antes de mostrar SweetAlert
     const modal = document.getElementById('edit_gasto_modal') as HTMLDialogElement;
@@ -132,6 +186,7 @@ export class EditModalComponent {
           <p><strong>Depto:</strong> ${departamento?.nombre || 'N/A'}</p>
           <p><strong>Monto:</strong> $${formValue.monto?.toLocaleString()}</p>
           <p><strong>Fecha:</strong> ${this.formatFecha(formValue.fecha!)}</p>
+          ${empleadoInfo}
           ${formValue.observaciones ? `<p><strong>Obs:</strong> ${formValue.observaciones}</p>` : ''}
         </div>
       `,
@@ -160,7 +215,8 @@ export class EditModalComponent {
       idDep: formValue.idDep!,
       monto: formValue.monto!,
       fecha: formValue.fecha!,
-      observaciones: formValue.observaciones || ''
+      observaciones: formValue.observaciones || '',
+      idEmpleado: this.requiereEmpleado() && formValue.idEmpleado ? formValue.idEmpleado : undefined
     };
 
     this.gastosService.updateGasto(gastoActual.id, gastoActualizado).subscribe({
@@ -168,14 +224,18 @@ export class EditModalComponent {
         this.notificationService.mostrarNotificacion('Gasto actualizado exitosamente', 'success');
         this.gastoActualizado.emit();
 
-        // NUEVO: Disparar actualización del dashboard
+        // Disparar actualización del dashboard
         this.dashboardDataService.triggerRefresh();
 
         this.close();
       },
       error: (error) => {
         console.error('Error al actualizar gasto:', error);
-        this.notificationService.mostrarNotificacion('Error al actualizar el gasto', 'error');
+        this.notificationService.mostrarNotificacion(
+          'Error al actualizar el gasto',
+          'error',
+          error.error?.msg || 'Verifique los datos ingresados'
+        );
         // Reabrir el modal en caso de error
         if (modal) {
           modal.showModal();

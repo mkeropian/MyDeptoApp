@@ -3,6 +3,7 @@ import { inject, Injectable } from "@angular/core";
 import { environment } from "../../../environments/environment";
 import { Rol, User, CreateUserRequest } from "../interfaces/user.interface";
 import { Observable, map } from "rxjs";
+import { Empleado } from "../../gastos/interfaces/gasto.interface";
 
 const baseUrl = environment.baseUrl;
 
@@ -127,6 +128,11 @@ export class UsuariosService {
 
   updateRol(id: number, rolId: number) {
     return this.http.post(`${baseUrl}/usuarios/rol/${id}`, { rolId });
+  }
+
+  // NUEVO: Obtener usuarios con rol 'emp' (empleados)
+  getEmpleados(): Observable<Empleado[]> {
+    return this.http.get<Empleado[]>(`${baseUrl}/usuarios/empleados`);
   }
 
 }
