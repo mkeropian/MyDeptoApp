@@ -14,6 +14,7 @@ import { RendimientoMensualPropietariosPageComponent } from "./pages/dashboard-e
 import { IngresosRankingMensualDepartamentosPageComponent } from "./pages/dashboard-estadisticas-page/ingresosRankingMensualDepartamentos-page/ingresosRankingMensualDepartamentos-page.component";
 import { RecaudacionMensualPageComponent } from "./pages/dashboard-estadisticas-page/recaudacionMensual-page/recaudacionMensual-page.component";
 import { DisgregacionGastosPageComponent } from "./pages/dashboard-estadisticas-page/disgregacionGastos-page/disgregacionGastos-page.component";
+import { ReporteEmpleadosPageComponent } from "./pages/dashboard-estadisticas-page/reporteEmpleados-page/reporteEmpleados-page.component";
 
 export const DashboardRoutes: Routes = [
   {
@@ -68,6 +69,10 @@ export const DashboardRoutes: Routes = [
       {
         path:'disgregaGastos',
         component: DisgregacionGastosPageComponent,
+      },
+      {
+        path:'reporteEmpleados',
+        component: ReporteEmpleadosPageComponent,
       },
       {
         path: '**',

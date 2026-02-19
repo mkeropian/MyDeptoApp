@@ -145,6 +145,34 @@
           }
         </div>
 
+        <!-- NUEVO: Campo Empleado (condicional) -->
+        @if (requiereEmpleado()) {
+          <div class="form-control">
+            <label class="label py-1">
+              <span class="label-text text-sm">Empleado <span class="text-error">*</span></span>
+            </label>
+            <select
+              class="select select-bordered select-sm w-full"
+              formControlName="idEmpleado"
+              title="Empleado"
+            >
+              <option [value]="0">Seleccionar empleado...</option>
+              @if (empleadosResource.isLoading()) {
+                <option disabled>Cargando empleados...</option>
+              } @else {
+                @for (empleado of empleados(); track empleado.id) {
+                  <option [value]="empleado.id">
+                    {{ empleado.nombreCompleto }}
+                  </option>
+                }
+              }
+            </select>
+            @if (operacionForm.get('idEmpleado')?.invalid && operacionForm.get('idEmpleado')?.touched) {
+              <span class="text-xs text-error mt-1">Debe seleccionar un empleado</span>
+            }
+          </div>
+        }
+
         <!-- Seleccionar Departamento (readonly) -->
         <div class="form-control">
           <label class="label py-1">

@@ -14,6 +14,8 @@ import { Propietario } from '../../../propietarios/interfaces/propietario.interf
 import { PropietariosService } from '../../../propietarios/services/propietarios.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { DashboardDataService } from '../../../shared/services/dashboard-data.service';
+import { UsuariosService } from '../../../auth/services/users.service';
+import { Empleado } from '../../../gastos/interfaces/gasto.interface';
 
 // Interface para la operación extendida con datos del propietario
 interface DepartamentoConPropietario extends Departamento {
@@ -49,6 +51,7 @@ export class DashboardDepartamentosPageComponent {
   gastosService = inject(GastosService);
   notificationService = inject(NotificationService);
   dashboardDataService = inject(DashboardDataService);
+  usuariosService = inject(UsuariosService);
 
   formBuilder = inject(FormBuilder);
 
@@ -56,6 +59,7 @@ export class DashboardDepartamentosPageComponent {
   showModal = signal(false);
   selectedDepartamento = signal<DepartamentoConPropietario | null>(null);
   tipoOperacion = signal<'ingresos' | 'gastos'>('ingresos');
+  requiereEmpleado = signal(false);
 
   // Formulario reactivo
   operacionForm: FormGroup;
@@ -91,14 +95,62 @@ export class DashboardDepartamentosPageComponent {
     loader: () => this.gastosService.getTipoGastoActivos()
   });
 
+  empleadosResource = rxResource({
+    request: () => ({}),
+    loader: () => this.usuariosService.getEmpleados()
+  });
+
+  empleados = computed(() => {
+    const value = this.empleadosResource.value();
+    return (Array.isArray(value) ? value : []) as Empleado[];
+  });
+
   constructor() {
     // Inicializar el formulario
     this.operacionForm = this.formBuilder.group({
       categoria: ['', [Validators.required]],
       monto: [0, [Validators.required, Validators.min(0.01)]],
       fecha: [this.getCurrentDate(), [Validators.required]],
-      observaciones: [''] // Campo opcional
+      observaciones: [''], // Campo opcional
+      idEmpleado: [0] // NUEVO: Campo de empleado
     });
+
+    // NUEVO: Escuchar cambios en categoría para actualizar si requiere empleado
+    this.operacionForm.get('categoria')?.valueChanges.subscribe(categoriaId => {
+      this.actualizarRequiereEmpleado(categoriaId);
+    });
+  }
+
+  // NUEVO: Método para actualizar si requiere empleado
+  private actualizarRequiereEmpleado(categoriaId: string | null) {
+    if (!categoriaId) {
+      this.requiereEmpleado.set(false);
+      return;
+    }
+
+    let requiere = false;
+
+    if (this.tipoOperacion() === 'ingresos') {
+      const tipoPagoData = this.tipoPagoResource.value() || [];
+      const tipoSeleccionado = tipoPagoData.find(t => Number(t.id) === Number(categoriaId));
+      requiere = tipoSeleccionado?.requiere_empleado === 1;
+    } else {
+      const tipoGastoData = this.tipoGastoResource.value() || [];
+      const tipoSeleccionado = tipoGastoData.find(t => Number(t.id) === Number(categoriaId));
+      requiere = tipoSeleccionado?.requiere_empleado === 1;
+    }
+
+    this.requiereEmpleado.set(requiere);
+
+    // Actualizar validación del campo idEmpleado
+    const empleadoControl = this.operacionForm.get('idEmpleado');
+    if (requiere) {
+      empleadoControl?.setValidators([Validators.required, Validators.min(1)]);
+    } else {
+      empleadoControl?.clearValidators();
+      empleadoControl?.setValue(0);
+    }
+    empleadoControl?.updateValueAndValidity();
   }
 
   departamentos = computed(() => {
@@ -174,7 +226,6 @@ export class DashboardDepartamentosPageComponent {
     return transformedData;
   });
 
-  // Métodos para el modal
   openModal(departamento: DepartamentoConPropietario): void {
     this.selectedDepartamento.set(departamento);
     this.showModal.set(true);
@@ -184,8 +235,11 @@ export class DashboardDepartamentosPageComponent {
       categoria: '',
       monto: 0,
       fecha: this.getCurrentDate(),
-      observaciones: ''
+      observaciones: '',
+      idEmpleado: 0 // NUEVO
     });
+    // Resetear signal de empleado
+    this.requiereEmpleado.set(false);
   }
 
   closeModal(): void {
@@ -207,7 +261,9 @@ export class DashboardDepartamentosPageComponent {
   setTipoOperacion(tipo: 'ingresos' | 'gastos'): void {
     this.tipoOperacion.set(tipo);
     // Reset del campo categoría cuando cambia el tipo
-    this.operacionForm.patchValue({ categoria: '' });
+    this.operacionForm.patchValue({ categoria: '', idEmpleado: 0 });
+    // Resetear signal de empleado
+    this.requiereEmpleado.set(false);
   }
 
   // Métodos para obtener categorías
@@ -264,7 +320,8 @@ export class DashboardDepartamentosPageComponent {
           idDep: this.selectedDepartamento()!.id,
           monto: this.operacionForm.get('monto')?.value,
           fecha: this.operacionForm.get('fecha')?.value,
-          observaciones: this.operacionForm.get('observaciones')?.value || undefined
+          observaciones: this.operacionForm.get('observaciones')?.value || undefined,
+          idEmpleado: this.requiereEmpleado() && this.operacionForm.get('idEmpleado')?.value ? this.operacionForm.get('idEmpleado')?.value : undefined
         }
 
         this.pagosService.createPago(formValue as Pago).subscribe({
@@ -290,7 +347,8 @@ export class DashboardDepartamentosPageComponent {
           idDep: this.selectedDepartamento()!.id,
           monto: this.operacionForm.get('monto')?.value,
           fecha: this.operacionForm.get('fecha')?.value,
-          observaciones: this.operacionForm.get('observaciones')?.value || undefined
+          observaciones: this.operacionForm.get('observaciones')?.value || undefined,
+          idEmpleado: this.requiereEmpleado() && this.operacionForm.get('idEmpleado')?.value ? this.operacionForm.get('idEmpleado')?.value : undefined
         }
 
         this.gastosService.createGasto(formValue as Gasto).subscribe({
@@ -317,4 +375,5 @@ export class DashboardDepartamentosPageComponent {
       this.notificationService.mostrarNotificacion('Complete todos los campos requeridos', 'warning');
     }
   }
+
 }

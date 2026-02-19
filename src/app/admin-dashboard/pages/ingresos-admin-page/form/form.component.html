@@ -34,6 +34,33 @@
             </select>
           </label>
 
+          <!-- NUEVO: Campo Empleado (condicional) -->
+          @if (requiereEmpleado()) {
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text font-semibold">Empleado <span class="text-error">*</span></span>
+              </div>
+              <select
+                class="select select-bordered w-full"
+                [class.select-error]="pagosForm.get('idEmpleado')?.invalid && (pagosForm.get('idEmpleado')?.dirty || pagosForm.get('idEmpleado')?.touched)"
+                title="Seleccionar empleado"
+                formControlName="idEmpleado"
+              >
+                <option [value]="0">Seleccionar empleado</option>
+                @if (empleadosResource.isLoading()) {
+                  <option disabled>Cargando empleados...</option>
+                } @else {
+                  @for (empleado of empleados(); track empleado.id) {
+                    <option [value]="empleado.id">
+                      {{ empleado.nombreCompleto }}
+                    </option>
+                  }
+                }
+              </select>
+              <form-error-label [control]="pagosForm.get('idEmpleado')!" />
+            </label>
+          }
+
           <!-- Departamentos (Selección Múltiple) -->
           <label class="form-control w-full">
             <div class="label">

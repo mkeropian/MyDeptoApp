@@ -35,6 +35,32 @@
           <form-error-label [control]="editForm.get('idTipoPago')!" />
         </label>
 
+        <!-- NUEVO: Campo Empleado (condicional) -->
+        @if (requiereEmpleado()) {
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text font-semibold text-green-900">Empleado <span class="text-error">*</span></span>
+            </div>
+            <select
+              class="select select-bordered w-full bg-white"
+              [class.select-error]="editForm.get('idEmpleado')?.invalid && (editForm.get('idEmpleado')?.dirty || editForm.get('idEmpleado')?.touched)"
+              formControlName="idEmpleado"
+            >
+              <option [value]="0">Seleccionar empleado</option>
+              @if (empleadosResource.isLoading()) {
+                <option disabled>Cargando empleados...</option>
+              } @else {
+                @for (empleado of empleados(); track empleado.id) {
+                  <option [value]="empleado.id">
+                    {{ empleado.nombreCompleto }}
+                  </option>
+                }
+              }
+            </select>
+            <form-error-label [control]="editForm.get('idEmpleado')!" />
+          </label>
+        }
+
         <!-- Departamento -->
         <label class="form-control w-full">
           <div class="label">

@@ -1,12 +1,13 @@
-import { Component, computed, inject, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, computed, inject, OnInit, Output, EventEmitter, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormErrorLabelComponent } from '../../../../shared/components/form-error-label/form-error-label.component';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { DashboardDataService } from '../../../../shared/services/dashboard-data.service';
-import { Pago } from '../../../../incomes/interfaces/incomes.interface';
+import { Pago, Empleado } from '../../../../incomes/interfaces/incomes.interface';
 import { Router } from '@angular/router';
 import { PagosService } from '../../../../incomes/services/incomes.service';
 import { DepartamentosService } from '../../../../departamentos/services/departamentos.service';
+import { UsuariosService } from '../../../../auth/services/users.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 import Swal from 'sweetalert2';
 import { forkJoin } from 'rxjs';
@@ -33,33 +34,79 @@ export class FormComponent implements OnInit {
   fb = inject(FormBuilder);
   pagosService = inject(PagosService);
   departamentosService = inject(DepartamentosService);
+  usuariosService = inject(UsuariosService);
   notificationService = inject(NotificationService);
   dashboardDataService = inject(DashboardDataService);
+
+  // Signal para controlar si se requiere empleado
+  requiereEmpleado = signal(false);
 
   departamentosResource = rxResource({
     request: () => ({}),
     loader: () => this.departamentosService.getDepartamentosActivos()
   });
 
-  // MODIFICADO: Usar getTipoPagoActivos() en lugar de getTipoPago()
   tipoPagoResource = rxResource({
     request: () => ({}),
     loader: () => this.pagosService.getTipoPagoActivos()
   });
 
+  // NUEVO: Resource para cargar empleados
+  empleadosResource = rxResource({
+    request: () => ({}),
+    loader: () => this.usuariosService.getEmpleados()
+  });
+
   tipoPagos = computed(() => this.tipoPagoResource.value() || []);
   departamentos = computed(() => this.departamentosResource.value() || []);
+  empleados = computed(() => {
+    const value = this.empleadosResource.value();
+    return (Array.isArray(value) ? value : []) as Empleado[];
+  });
 
   pagosForm = this.fb.group({
-    idsDep: [[] as number[], Validators.required], // Cambiado a array
-    idTipoPago: [1, Validators.required],
+    idsDep: [[] as number[], Validators.required],
+    idTipoPago: [0, Validators.required],
     monto: [0, Validators.required],
     fecha: [''],
     observaciones: [''],
+    idEmpleado: [0] // NUEVO: Campo de empleado
   });
 
   ngOnInit(): void {
     this.setFormValue(this.pago);
+
+    // Escuchar cambios en idTipoPago
+    this.pagosForm.get('idTipoPago')?.valueChanges.subscribe(idTipoPago => {
+      this.actualizarRequiereEmpleado(idTipoPago);
+    });
+
+    // Inicializar validación del tipo seleccionado por defecto
+    const idTipoPagoInicial = this.pagosForm.get('idTipoPago')?.value;
+    if (idTipoPagoInicial) {
+      this.actualizarRequiereEmpleado(idTipoPagoInicial);
+    }
+  }
+
+  private actualizarRequiereEmpleado(idTipoPago: number | null) {
+    const tipos = this.tipoPagos();
+
+    if (idTipoPago && tipos.length > 0) {
+      const tipoSeleccionado = tipos.find(t => Number(t.id) === Number(idTipoPago));
+      const requiere = tipoSeleccionado?.requiere_empleado === 1;
+
+      this.requiereEmpleado.set(requiere);
+
+      // Actualizar validación del campo idEmpleado
+      const empleadoControl = this.pagosForm.get('idEmpleado');
+      if (requiere) {
+        empleadoControl?.setValidators([Validators.required, Validators.min(1)]);
+      } else {
+        empleadoControl?.clearValidators();
+        empleadoControl?.setValue(0);
+      }
+      empleadoControl?.updateValueAndValidity();
+    }
   }
 
   setFormValue(formLike: Partial<Pago>) {
@@ -69,18 +116,27 @@ export class FormComponent implements OnInit {
   limpiarForm() {
     this.pagosForm.reset({
       idsDep: [],
-      idTipoPago: 1,
-      monto: 0
+      idTipoPago: 0,
+      monto: 0,
+      fecha: '',
+      observaciones: '',
+      idEmpleado: 0
     });
     this.pagosForm.markAsUntouched();
     this.pagosForm.markAsPristine();
+
+    // Resetear el signal
+    this.requiereEmpleado.set(false);
   }
 
   async onSubmit() {
     const isValid = this.pagosForm.valid;
     this.pagosForm.markAllAsTouched();
 
-    if (!isValid) return;
+    if (!isValid) {
+      this.notificationService.mostrarNotificacion('Complete todos los campos requeridos', 'error');
+      return;
+    }
 
     const formValue = this.pagosForm.value;
     const selectedDepartments = formValue.idsDep || [];
@@ -103,6 +159,13 @@ export class FormComponent implements OnInit {
       })
       .join(', ');
 
+    // Obtener nombre del empleado si aplica
+    let empleadoInfo = '';
+    if (this.requiereEmpleado() && formValue.idEmpleado) {
+      const empleado = this.empleados().find(e => Number(e.id) === Number(formValue.idEmpleado));
+      empleadoInfo = `<p class="mb-2"><strong>Empleado:</strong> ${empleado?.nombreCompleto || 'N/A'}</p>`;
+    }
+
     // Mostrar confirmación con SweetAlert2
     const result = await Swal.fire({
       title: '¿Confirmar distribución de pago?',
@@ -111,6 +174,7 @@ export class FormComponent implements OnInit {
           <p class="mb-2"><strong>Monto total:</strong> $${totalMonto.toLocaleString()}</p>
           <p class="mb-2"><strong>Departamentos seleccionados:</strong> ${selectedDepartments.length}</p>
           <p class="mb-2"><strong>Monto por departamento:</strong> $${montoPorDepartamento.toLocaleString()}</p>
+          ${empleadoInfo}
           <p class="mb-2 text-sm text-gray-600"><strong>Departamentos:</strong> ${nombresDeptos}</p>
         </div>
       `,
@@ -132,7 +196,8 @@ export class FormComponent implements OnInit {
         idDep: idDep,
         monto: montoPorDepartamento,
         fecha: formValue.fecha || '',
-        observaciones: formValue.observaciones || ''
+        observaciones: formValue.observaciones || '',
+        idEmpleado: this.requiereEmpleado() && formValue.idEmpleado ? formValue.idEmpleado : undefined
       };
       return this.pagosService.createPago(pagoIndividual);
     });
@@ -143,16 +208,23 @@ export class FormComponent implements OnInit {
         // Resetear el formulario
         this.pagosForm.reset({
           idsDep: [],
-          idTipoPago: 1,
-          monto: 0
+          idTipoPago: 0,
+          monto: 0,
+          fecha: '',
+          observaciones: '',
+          idEmpleado: 0
         });
+
+        // Resetear el signal
+        this.requiereEmpleado.set(false);
+
         this.pagosForm.markAsUntouched();
         this.pagosForm.markAsPristine();
 
         // Emitir evento para refrescar la lista
         this.pagoCreado.emit();
 
-        // NUEVO: Disparar actualización del dashboard
+        // Disparar actualización del dashboard
         this.dashboardDataService.triggerRefresh();
 
         // Mostrar mensaje de éxito
@@ -167,7 +239,7 @@ export class FormComponent implements OnInit {
         this.notificationService.mostrarNotificacion(
           'Error al crear los pagos/ingresos',
           'error',
-          'Algunos registros pueden no haberse guardado'
+          error.error?.msg || 'Algunos registros pueden no haberse guardado'
         );
       }
     });
