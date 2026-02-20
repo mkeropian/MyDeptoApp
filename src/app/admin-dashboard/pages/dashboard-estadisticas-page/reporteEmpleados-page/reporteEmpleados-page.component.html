@@ -241,54 +241,82 @@
 
     </div>
 
-    <!-- ========== GRÁFICOS (GRID 3 COLUMNAS) ========== -->
-    <div class="grid grid-cols-1 lg:grid-cols-10 gap-4 mb-6">
+    <!-- ========== GRÁFICOS (GRID 3 COLUMNAS + 1 FILA COMPLETA) ========== -->
+    <div class="space-y-4 mb-6">
 
-      <!-- Gráfico 1: Donut (30%) -->
-      <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-4">
-        <h3 class="text-lg font-bold text-gray-800 mb-3">Distribución por Empleado</h3>
-        <apx-chart
-          *ngIf="chartDonutOptions.series && chartDonutOptions.series.length > 0"
-          [series]="chartDonutOptions.series!"
-          [chart]="chartDonutOptions.chart!"
-          [labels]="chartDonutOptions.labels!"
-          [colors]="chartDonutOptions.colors!"
-          [legend]="chartDonutOptions.legend!"
-          [dataLabels]="chartDonutOptions.dataLabels!"
-        ></apx-chart>
-        <p *ngIf="!chartDonutOptions.series || chartDonutOptions.series.length === 0" class="text-center text-gray-500 py-8">
-          Sin datos para mostrar
-        </p>
+      <!-- Primera Fila: 3 Gráficos -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+
+        <!-- Gráfico 1: Cantidad de Operaciones (25%) -->
+        <div class="lg:col-span-1 bg-white rounded-lg shadow-lg p-4">
+          <h3 class="text-lg font-bold text-gray-800 mb-3">Cantidad de Operaciones</h3>
+          <apx-chart
+            *ngIf="chartCantidadOptions.series && chartCantidadOptions.series.length > 0"
+            [series]="chartCantidadOptions.series!"
+            [chart]="chartCantidadOptions.chart!"
+            [plotOptions]="chartCantidadOptions.plotOptions!"
+            [xaxis]="chartCantidadOptions.xaxis!"
+            [yaxis]="chartCantidadOptions.yaxis!"
+            [colors]="chartCantidadOptions.colors!"
+            [legend]="chartCantidadOptions.legend!"
+            [dataLabels]="chartCantidadOptions.dataLabels!"
+          ></apx-chart>
+          <p *ngIf="!chartCantidadOptions.series || chartCantidadOptions.series.length === 0" class="text-center text-gray-500 py-8">
+            Sin datos para mostrar
+          </p>
+        </div>
+
+        <!-- Gráfico 2: Gastos vs Pagos (25%) -->
+        <div class="lg:col-span-1 bg-white rounded-lg shadow-lg p-4">
+          <h3 class="text-lg font-bold text-gray-800 mb-3">Gastos vs Pagos (Montos)</h3>
+          <apx-chart
+            *ngIf="chartBarrasOptions.series && chartBarrasOptions.series.length > 0"
+            [series]="chartBarrasOptions.series!"
+            [chart]="chartBarrasOptions.chart!"
+            [plotOptions]="chartBarrasOptions.plotOptions!"
+            [xaxis]="chartBarrasOptions.xaxis!"
+            [yaxis]="chartBarrasOptions.yaxis!"
+          ></apx-chart>
+          <p *ngIf="!chartBarrasOptions.series || chartBarrasOptions.series.length === 0" class="text-center text-gray-500 py-8">
+            Sin datos para mostrar
+          </p>
+        </div>
+
+        <!-- Gráfico 3: Volumen en el Tiempo (50%) -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-4">
+          <h3 class="text-lg font-bold text-gray-800 mb-3">Volumen en el Tiempo</h3>
+          <apx-chart
+            *ngIf="chartVolumenAreaOptions.series && chartVolumenAreaOptions.series.length > 0"
+            [series]="chartVolumenAreaOptions.series!"
+            [chart]="chartVolumenAreaOptions.chart!"
+            [xaxis]="chartVolumenAreaOptions.xaxis!"
+            [yaxis]="chartVolumenAreaOptions.yaxis!"
+            [stroke]="chartVolumenAreaOptions.stroke!"
+            [fill]="chartVolumenAreaOptions.fill!"
+            [dataLabels]="chartVolumenAreaOptions.dataLabels!"
+            [legend]="chartVolumenAreaOptions.legend!"
+          ></apx-chart>
+          <p *ngIf="!chartVolumenAreaOptions.series || chartVolumenAreaOptions.series.length === 0" class="text-center text-gray-500 py-8">
+            Sin datos para mostrar
+          </p>
+        </div>
+
       </div>
 
-      <!-- Gráfico 2: Barras (30%) -->
-      <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-4">
-        <h3 class="text-lg font-bold text-gray-800 mb-3">Gastos vs Pagos</h3>
+      <!-- Segunda Fila: Gráfico 4 (100% ancho) -->
+      <div class="bg-white rounded-lg shadow-lg p-4">
+        <h3 class="text-lg font-bold text-gray-800 mb-3">Cantidad de Operaciones en el Tiempo</h3>
         <apx-chart
-          *ngIf="chartBarrasOptions.series && chartBarrasOptions.series.length > 0"
-          [series]="chartBarrasOptions.series!"
-          [chart]="chartBarrasOptions.chart!"
-          [plotOptions]="chartBarrasOptions.plotOptions!"
-          [xaxis]="chartBarrasOptions.xaxis!"
-          [yaxis]="chartBarrasOptions.yaxis!"
+          *ngIf="chartCantidadLineaOptions.series && chartCantidadLineaOptions.series.length > 0"
+          [series]="chartCantidadLineaOptions.series!"
+          [chart]="chartCantidadLineaOptions.chart!"
+          [xaxis]="chartCantidadLineaOptions.xaxis!"
+          [yaxis]="chartCantidadLineaOptions.yaxis!"
+          [stroke]="chartCantidadLineaOptions.stroke!"
+          [markers]="chartCantidadLineaOptions.markers!"
+          [legend]="chartCantidadLineaOptions.legend!"
         ></apx-chart>
-        <p *ngIf="!chartBarrasOptions.series || chartBarrasOptions.series.length === 0" class="text-center text-gray-500 py-8">
-          Sin datos para mostrar
-        </p>
-      </div>
-
-      <!-- Gráfico 3: Línea (40%) -->
-      <div class="lg:col-span-4 bg-white rounded-lg shadow-lg p-4">
-        <h3 class="text-lg font-bold text-gray-800 mb-3">Evolución Temporal</h3>
-        <apx-chart
-          *ngIf="chartLineaOptions.series && chartLineaOptions.series.length > 0"
-          [series]="chartLineaOptions.series!"
-          [chart]="chartLineaOptions.chart!"
-          [xaxis]="chartLineaOptions.xaxis!"
-          [yaxis]="chartLineaOptions.yaxis!"
-          [stroke]="chartLineaOptions.stroke!"
-        ></apx-chart>
-        <p *ngIf="!chartLineaOptions.series || chartLineaOptions.series.length === 0" class="text-center text-gray-500 py-8">
+        <p *ngIf="!chartCantidadLineaOptions.series || chartCantidadLineaOptions.series.length === 0" class="text-center text-gray-500 py-8">
           Sin datos para mostrar
         </p>
       </div>
@@ -448,39 +476,122 @@
 <!-- ========== MODAL EMAIL ========== -->
 @if (mostrarModalEmail()) {
   <div class="modal modal-open">
-    <div class="modal-box">
-      <h3 class="font-bold text-lg mb-4">Enviar Reporte por Email</h3>
+    <div class="modal-box max-w-2xl">
+      <h3 class="font-bold text-lg mb-4">
+        <i class="fas fa-envelope text-primary mr-2"></i>
+        Enviar Liquidación por Email
+      </h3>
 
+      <!-- Destinatario -->
       <div class="form-control mb-4">
         <label class="label">
-          <span class="label-text">Destinatarios (separados por coma)</span>
+          <span class="label-text font-semibold">Destinatario</span>
         </label>
-        <input type="text" placeholder="email1@example.com, email2@example.com" class="input input-bordered" #emailsInput>
+        <input
+          type="email"
+          placeholder="email@ejemplo.com"
+          class="input input-bordered"
+          [(ngModel)]="emailDestinatario"
+          [class.input-error]="emailError()">
+        @if (emailError()) {
+          <label class="label">
+            <span class="label-text-alt text-error">{{ emailError() }}</span>
+          </label>
+        }
       </div>
 
+      <!-- Formato -->
       <div class="form-control mb-4">
         <label class="label">
-          <span class="label-text">Formato</span>
+          <span class="label-text font-semibold">Formato del archivo</span>
         </label>
-        <select class="select select-bordered" #formatoSelect>
-          <option value="excel">Excel</option>
-          <option value="pdf">PDF</option>
-          <option value="ambos">Ambos</option>
-        </select>
+        <div class="flex gap-4">
+          <label class="label cursor-pointer">
+            <input
+              type="radio"
+              name="formato"
+              class="radio radio-primary mr-2"
+              value="excel"
+              [(ngModel)]="formatoEmail"
+              checked>
+            <span class="label-text">
+              <i class="fas fa-file-excel text-green-600 mr-1"></i>
+              Excel (.xlsx)
+            </span>
+          </label>
+
+          <label class="label cursor-pointer">
+            <input
+              type="radio"
+              name="formato"
+              class="radio radio-primary mr-2"
+              value="pdf"
+              [(ngModel)]="formatoEmail">
+            <span class="label-text">
+              <i class="fas fa-file-pdf text-red-600 mr-1"></i>
+              PDF (.pdf)
+            </span>
+          </label>
+        </div>
       </div>
 
+      <!-- Mensaje opcional -->
       <div class="form-control mb-4">
         <label class="label">
-          <span class="label-text">Mensaje (opcional)</span>
+          <span class="label-text font-semibold">Mensaje (opcional)</span>
         </label>
-        <textarea class="textarea textarea-bordered" rows="3" placeholder="Agregar mensaje personalizado..." #mensajeTextarea></textarea>
+        <textarea
+          class="textarea textarea-bordered h-24"
+          placeholder="Agregar mensaje personalizado..."
+          [(ngModel)]="mensajeEmail"
+          maxlength="500"></textarea>
+        <label class="label">
+          <span class="label-text-alt">{{ mensajeEmail().length }}/500 caracteres</span>
+        </label>
       </div>
 
+      <!-- Resumen del período -->
+      <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <div class="font-semibold">Período a enviar:</div>
+          <div class="text-sm">{{ filtros().fechaDesde }} al {{ filtros().fechaHasta }}</div>
+          @if (filtros().idEmpleado) {
+            <div class="text-sm mt-1">
+              <i class="fas fa-user mr-1"></i>
+              Empleado específico
+            </div>
+          } @else {
+            <div class="text-sm mt-1">
+              <i class="fas fa-users mr-1"></i>
+              Todos los empleados
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Loading -->
+      @if (enviandoEmail()) {
+        <div class="flex justify-center items-center py-4">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+          <span class="ml-3">Enviando email...</span>
+        </div>
+      }
+
+      <!-- Botones -->
       <div class="modal-action">
-        <button class="btn btn-ghost" (click)="cerrarModalEmail()">Cancelar</button>
-        <button class="btn btn-primary"
-                (click)="enviarEmailHandler(emailsInput.value, formatoSelect.value, mensajeTextarea.value)">
-          Enviar
+        <button
+          class="btn btn-ghost"
+          (click)="cerrarModalEmail()"
+          [disabled]="enviandoEmail()">
+          Cancelar
+        </button>
+        <button
+          class="btn btn-primary"
+          (click)="confirmarEnvioEmail()"
+          [disabled]="enviandoEmail() || !emailDestinatario">
+          <i class="fas fa-paper-plane mr-2"></i>
+          Enviar Email
         </button>
       </div>
     </div>

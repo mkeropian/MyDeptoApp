@@ -16,6 +16,7 @@ import {
 } from '../../../../estadisticasReportes/interfaces/reporte-empleado.interface';
 import { Empleado } from '../../../../gastos/interfaces/gasto.interface';
 import { rxResource } from '@angular/core/rxjs-interop';
+import Swal from 'sweetalert2';
 import {
   ApexChart,
   ApexNonAxisChartSeries,
@@ -52,6 +53,13 @@ export class ReporteEmpleadosPageComponent implements OnInit {
   isLoading = signal(false);
   empleadoExpandido = signal<number | null>(null);
   mostrarModalEmail = signal(false);
+
+  // Estados del modal de email
+  emailDestinatario = signal('');
+  formatoEmail = signal<'excel' | 'pdf'>('excel');
+  mensajeEmail = signal('');
+  enviandoEmail = signal(false);
+  emailError = signal('');
 
   // Datos
   resumenEmpleados = signal<ResumenEmpleado[]>([]);
@@ -109,11 +117,13 @@ export class ReporteEmpleadosPageComponent implements OnInit {
     return [...this.tiposGasto(), ...this.tiposPago()];
   });
 
-// Opciones de gráficos
-  chartDonutOptions: {
-    series?: ApexNonAxisChartSeries;
+ // Opciones de gráficos
+  chartCantidadOptions: {
+    series?: ApexAxisChartSeries;
     chart?: ApexChart;
-    labels?: string[];
+    plotOptions?: ApexPlotOptions;
+    xaxis?: ApexXAxis;
+    yaxis?: ApexYAxis;
     colors?: string[];
     legend?: ApexLegend;
     dataLabels?: ApexDataLabels;
@@ -127,12 +137,25 @@ export class ReporteEmpleadosPageComponent implements OnInit {
     yaxis?: ApexYAxis;
   } = {};
 
-  chartLineaOptions: {
+  chartVolumenAreaOptions: {
     series?: ApexAxisChartSeries;
     chart?: ApexChart;
     xaxis?: ApexXAxis;
     yaxis?: ApexYAxis;
     stroke?: ApexStroke;
+    fill?: any;
+    dataLabels?: ApexDataLabels;
+    legend?: ApexLegend;
+  } = {};
+
+  chartCantidadLineaOptions: {
+    series?: ApexAxisChartSeries;
+    chart?: ApexChart;
+    xaxis?: ApexXAxis;
+    yaxis?: ApexYAxis;
+    stroke?: ApexStroke;
+    markers?: any;
+    legend?: ApexLegend;
   } = {};
 
   ngOnInit(): void {
@@ -187,32 +210,71 @@ export class ReporteEmpleadosPageComponent implements OnInit {
   private actualizarGraficos(): void {
     const data = this.resumenEmpleados();
 
-    // Gráfico Donut
-    this.chartDonutOptions = {
-      series: data.map(emp => emp.totalGastos + emp.totalPagos),
+    if (data.length === 0) {
+      this.chartCantidadOptions = {};
+      this.chartBarrasOptions = {};
+      this.chartVolumenAreaOptions = {};
+      this.chartCantidadLineaOptions = {};
+      return;
+    }
+
+    // ==================== GRÁFICO 1: CANTIDAD DE OPERACIONES (BARRAS APILADAS) ====================
+    this.chartCantidadOptions = {
+      series: [
+        {
+          name: 'Gastos',
+          data: data.map(emp => emp.cantidadGastos)
+        },
+        {
+          name: 'Pagos',
+          data: data.map(emp => emp.cantidadPagos)
+        }
+      ],
       chart: {
-        type: 'donut',
-        height: 350
+        type: 'bar',
+        height: 350,
+        stacked: true,
+        toolbar: {
+          show: true
+        }
       },
-      labels: data.map(emp => emp.nombreEmpleado),
-      colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          columnWidth: '60%',
+          borderRadius: 8
+        }
+      },
+      xaxis: {
+        categories: data.map(emp => emp.nombreEmpleado),
+        labels: {
+          style: {
+            fontSize: '12px'
+          }
+        }
+      },
+      yaxis: {
+        title: {
+          text: 'Cantidad de Operaciones'
+        },
+        labels: {
+          formatter: function(val: number) {
+            return Math.round(val).toString();
+          }
+        }
+      },
+      colors: ['#f59e0b', '#3b82f6'],
       legend: {
-        position: 'bottom',
+        position: 'top',
+        horizontalAlign: 'center',
         fontSize: '14px'
       },
       dataLabels: {
-        enabled: true,
-        formatter: function(val: number) {
-          return val.toFixed(1) + '%';
-        },
-        style: {
-          fontSize: '14px',
-          fontWeight: 'bold'
-        }
+        enabled: false
       }
     };
 
-    // Gráfico Barras
+    // ==================== GRÁFICO 2: GASTOS VS PAGOS (BARRAS AGRUPADAS - MONTOS) ====================
     this.chartBarrasOptions = {
       series: [
         {
@@ -226,18 +288,30 @@ export class ReporteEmpleadosPageComponent implements OnInit {
       ],
       chart: {
         type: 'bar',
-        height: 350
+        height: 350,
+        toolbar: {
+          show: true
+        }
       },
       plotOptions: {
         bar: {
           horizontal: false,
-          columnWidth: '55%'
+          columnWidth: '55%',
+          borderRadius: 8
         }
       },
       xaxis: {
-        categories: data.map(emp => emp.nombreEmpleado)
+        categories: data.map(emp => emp.nombreEmpleado),
+        labels: {
+          style: {
+            fontSize: '12px'
+          }
+        }
       },
       yaxis: {
+        title: {
+          text: 'Monto ($)'
+        },
         labels: {
           formatter: function(val: number) {
             return '$' + val.toLocaleString('es-AR');
@@ -246,20 +320,42 @@ export class ReporteEmpleadosPageComponent implements OnInit {
       }
     };
 
-    // Gráfico Línea
-    this.chartLineaOptions = {
+    // ==================== GRÁFICO 3: VOLUMEN EN EL TIEMPO (ÁREA APILADA) ====================
+    // Agrupar movimientos por fecha
+    const movimientosPorFecha = this.agruparMovimientosPorFecha(data);
+
+    this.chartVolumenAreaOptions = {
       series: data.map(emp => ({
         name: emp.nombreEmpleado,
-        data: [emp.totalGastos, emp.totalPagos]
+        data: movimientosPorFecha.fechas.map(fecha => {
+          const movs = emp.movimientos.filter(m => {
+            const fechaMov = new Date(m.fecha).toISOString().split('T')[0];
+            return fechaMov === fecha;
+          });
+          return movs.reduce((sum, m) => sum + Number(m.monto), 0);
+        })
       })),
       chart: {
-        type: 'line',
-        height: 350
+        type: 'area',
+        height: 350,
+        stacked: true,
+        toolbar: {
+          show: true
+        }
       },
       xaxis: {
-        categories: ['Gastos', 'Pagos']
+        categories: movimientosPorFecha.fechas.map(f => this.formatearFechaCorta(f)),
+        labels: {
+          rotate: -45,
+          style: {
+            fontSize: '10px'
+          }
+        }
       },
       yaxis: {
+        title: {
+          text: 'Volumen ($)'
+        },
         labels: {
           formatter: function(val: number) {
             return '$' + val.toLocaleString('es-AR');
@@ -269,8 +365,104 @@ export class ReporteEmpleadosPageComponent implements OnInit {
       stroke: {
         curve: 'smooth',
         width: 2
+      },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          opacityFrom: 0.6,
+          opacityTo: 0.2
+        }
+      },
+      dataLabels: {
+        enabled: false
+      },
+      legend: {
+        position: 'top',
+        horizontalAlign: 'center'
       }
     };
+
+    // ==================== GRÁFICO 4: CANTIDAD EN EL TIEMPO (LÍNEA) ====================
+    this.chartCantidadLineaOptions = {
+      series: data.map(emp => ({
+        name: emp.nombreEmpleado,
+        data: movimientosPorFecha.fechas.map(fecha => {
+          const movs = emp.movimientos.filter(m => {
+            const fechaMov = new Date(m.fecha).toISOString().split('T')[0];
+            return fechaMov === fecha;
+          });
+          return movs.length; // Cantidad de movimientos
+        })
+      })),
+      chart: {
+        type: 'line',
+        height: 350,
+        toolbar: {
+          show: true
+        }
+      },
+      xaxis: {
+        categories: movimientosPorFecha.fechas.map(f => this.formatearFechaCorta(f)),
+        labels: {
+          rotate: -45,
+          style: {
+            fontSize: '10px'
+          }
+        }
+      },
+      yaxis: {
+        title: {
+          text: 'Cantidad de Operaciones'
+        },
+        labels: {
+          formatter: function(val: number) {
+            return Math.round(val).toString();
+          }
+        }
+      },
+      stroke: {
+        curve: 'smooth',
+        width: 3
+      },
+      markers: {
+        size: 5,
+        hover: {
+          size: 7
+        }
+      },
+      legend: {
+        position: 'top',
+        horizontalAlign: 'center'
+      }
+    };
+  }
+
+  /**
+   * Agrupar movimientos por fecha para los gráficos temporales
+   */
+  private agruparMovimientosPorFecha(data: ResumenEmpleado[]): { fechas: string[] } {
+    const fechasSet = new Set<string>();
+
+    // Recolectar todas las fechas únicas de todos los empleados
+    data.forEach(emp => {
+      emp.movimientos.forEach(mov => {
+        const fecha = new Date(mov.fecha).toISOString().split('T')[0];
+        fechasSet.add(fecha);
+      });
+    });
+
+    // Ordenar fechas
+    const fechas = Array.from(fechasSet).sort();
+
+    return { fechas };
+  }
+
+  /**
+   * Formatear fecha corta para eje X
+   */
+  private formatearFechaCorta(fecha: string): string {
+    const date = new Date(fecha + 'T00:00:00');
+    return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
   }
 
   // ========== MÉTODOS DE FILTROS ==========
@@ -344,58 +536,151 @@ export class ReporteEmpleadosPageComponent implements OnInit {
 
   exportarExcel(): void {
     console.log('Exportando a Excel...');
-    // TODO: Implementar cuando esté el backend
-    // this.reportesService.exportarExcel(this.filtros()).subscribe({
-    //   next: (blob) => {
-    //     const url = window.URL.createObjectURL(blob);
-    //     const a = document.createElement('a');
-    //     a.href = url;
-    //     a.download = `reporte-empleados-${new Date().toISOString().split('T')[0]}.xlsx`;
-    //     a.click();
-    //   }
-    // });
+
+    this.reportesService.exportarExcel(this.filtros()).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Nombre del archivo con fecha
+        const fecha = new Date();
+        const mes = fecha.toLocaleString('es-AR', { month: 'long', year: 'numeric' }).replace(/ /g, '_');
+        a.download = `liquidacion_empleados_${mes}.xlsx`;
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        console.log('✅ Excel descargado correctamente');
+      },
+      error: (err) => {
+        console.error('❌ Error al exportar Excel:', err);
+        alert('Error al exportar el archivo Excel. Por favor, intente nuevamente.');
+      }
+    });
   }
 
   exportarPDF(): void {
     console.log('Exportando a PDF...');
-    // TODO: Implementar cuando esté el backend
+
+    this.reportesService.exportarPDF(this.filtros()).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Nombre del archivo con fechas (igual que Excel pero .pdf)
+        const fechaDesde = this.filtros().fechaDesde.replace(/-/g, '');
+        const fechaHasta = this.filtros().fechaHasta.replace(/-/g, '');
+        a.download = `liquidacion_empleados_${fechaDesde}_${fechaHasta}.pdf`;
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        console.log('✅ PDF descargado correctamente');
+      },
+      error: (err) => {
+        console.error('❌ Error al exportar PDF:', err);
+        alert('Error al exportar el archivo PDF. Por favor, intente nuevamente.');
+      }
+    });
   }
 
   abrirModalEmail(): void {
+    // Pre-cargar email si hay empleado seleccionado
+    const idEmpleado = this.filtros().idEmpleado;
+
+    if (idEmpleado) {
+      const empleado = this.empleados().find(emp => Number(emp.id) === Number(idEmpleado));
+      if (empleado && empleado.email) {
+        this.emailDestinatario.set(empleado.email);
+      } else {
+        this.emailDestinatario.set('');
+      }
+    } else {
+      this.emailDestinatario.set('');
+    }
+
+    // Reset otros campos
+    this.formatoEmail.set('excel');
+    this.mensajeEmail.set('');
+    this.emailError.set('');
+    this.enviandoEmail.set(false);
+
     this.mostrarModalEmail.set(true);
   }
 
   cerrarModalEmail(): void {
+    if (this.enviandoEmail()) {
+      return; // No permitir cerrar mientras se envía
+    }
     this.mostrarModalEmail.set(false);
   }
 
-  enviarEmailHandler(emailsStr: string, formato: string, mensaje: string): void {
-    const emails = emailsStr.split(',').map(e => e.trim()).filter(e => e.length > 0);
+  confirmarEnvioEmail(): void {
+    // Validar email
+    const email = this.emailDestinatario().trim();
 
-    if (emails.length === 0) {
-      console.error('Debe ingresar al menos un email');
+    if (!email) {
+      this.emailError.set('El email es requerido');
       return;
     }
 
-    console.log('Enviando email...', { emails, formato, mensaje });
+    // Validar formato básico de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      this.emailError.set('Email inválido');
+      return;
+    }
 
-    // TODO: Implementar cuando esté el backend
-    // this.reportesService.enviarEmail(
-    //   this.filtros(),
-    //   emails,
-    //   formato as 'excel' | 'pdf' | 'ambos',
-    //   mensaje
-    // ).subscribe({
-    //   next: () => {
-    //     console.log('Email enviado correctamente');
-    //     this.cerrarModalEmail();
-    //   },
-    //   error: (err) => {
-    //     console.error('Error al enviar email:', err);
-    //   }
-    // });
+    this.emailError.set('');
+    this.enviandoEmail.set(true);
 
-    this.cerrarModalEmail();
+    // Preparar datos para el backend
+    const payload = {
+      filtros: this.filtros(),
+      emails: [email],
+      formato: this.formatoEmail(),
+      mensaje: this.mensajeEmail().trim() || undefined
+    };
+
+    this.reportesService.enviarEmail(
+      payload.filtros,
+      payload.emails,
+      payload.formato,
+      payload.mensaje
+    ).subscribe({
+      next: (response) => {
+        this.enviandoEmail.set(false);
+        this.cerrarModalEmail();
+
+        // Mostrar SweetAlert de éxito
+        Swal.fire({
+          icon: 'success',
+          title: '¡Email enviado!',
+          text: `La liquidación fue enviada correctamente a ${email}`,
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#10b981'
+        });
+      },
+      error: (err) => {
+        this.enviandoEmail.set(false);
+        console.error('Error al enviar email:', err);
+
+        // Mostrar SweetAlert de error
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al enviar email',
+          text: err.error?.msg || 'No se pudo enviar el email. Por favor, intente nuevamente.',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#ef4444'
+        });
+      }
+    });
   }
 
   // ========== UTILIDADES DE FECHAS ==========

@@ -29,7 +29,7 @@ export class ReportesService {
     });
   }
 
-  enviarEmail(filtros: FiltrosReporteEmpleados, emails: string[], formato: 'excel' | 'pdf' | 'ambos', mensaje?: string): Observable<any> {
+  enviarEmail(filtros: FiltrosReporteEmpleados, emails: string[], formato: 'excel' | 'pdf' , mensaje?: string): Observable<any> {
     return this.http.post(`${baseUrl}/estadisticasReportes/empleados/enviar-email`, {
       filtros,
       emails,
