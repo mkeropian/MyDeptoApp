@@ -1,13 +1,9 @@
-<!-- calendario-empleados-page.component.html -->
-
 <div class="calendario-empleados p-6">
 
-  <!-- FILTROS -->
   <div class="bg-white shadow-sm rounded-lg px-4 py-2 mb-3">
     <form [formGroup]="filtrosForm">
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2">
-          <!-- Selector de Tipo de Calendario -->
           <div class="w-56">
             <select id="filtroTipoCalendario" formControlName="idTipoCalendario"
                     class="block w-full rounded-md border-gray-300 text-sm py-1 focus:border-indigo-500 focus:ring-indigo-500">
@@ -16,7 +12,6 @@
             </select>
           </div>
 
-          <!-- Selector de Empleado -->
           <div class="w-64">
             <select id="filtroUsuario" formControlName="idUsuario"
                     [class.opacity-60]="esEmpleado"
@@ -27,7 +22,6 @@
             </select>
           </div>
 
-          <!-- Selector de Departamento -->
           <div class="w-64">
             <select id="filtroDepartamento" formControlName="idDepartamento"
                     class="block w-full rounded-md border-gray-300 text-sm py-1 focus:border-indigo-500 focus:ring-indigo-500">
@@ -36,16 +30,13 @@
             </select>
           </div>
 
-          <!-- Botón Limpiar -->
           <button type="button" (click)="limpiarFiltros()"
                   class="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 whitespace-nowrap">
             Limpiar
           </button>
         </div>
 
-        <!-- Contador de eventos y botones de acción -->
         <div class="flex items-center gap-2">
-          <!-- Contador de eventos -->
           <div class="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-md border border-indigo-200">
             <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -56,9 +47,7 @@
             </div>
           </div>
 
-          <!-- Botones de acción apilados -->
           <div class="flex flex-col gap-2">
-            <!-- Botón Descargar -->
             <button type="button"
                     (click)="abrirModalDescarga()"
                     class="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm transition-colors whitespace-nowrap min-w-[160px]"
@@ -69,7 +58,6 @@
               <span>Descargar</span>
             </button>
 
-            <!-- Botón Enviar Email -->
             <button type="button"
                     (click)="abrirModalEnvio()"
                     class="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm transition-colors whitespace-nowrap min-w-[160px]"
@@ -87,7 +75,6 @@
     </form>
   </div>
 
-  <!-- ENCABEZADO -->
   <div class="lg:flex lg:h-full lg:flex-col">
     <header class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 lg:flex-none rounded-t-lg">
       <h1 class="text-xl font-bold leading-6 text-gray-900">{{ tituloCalendario }}</h1>
@@ -113,10 +100,8 @@
       </div>
     </header>
 
-    <!-- VISTA DIARIA -->
     <div *ngIf="vistaActual === 'dia'" class="p-6">
       <div class="flex gap-4">
-        <!-- Columna de horas -->
         <div class="w-20 flex-shrink-0">
           <div class="h-12"></div>
           <div *ngFor="let hora of horasDia" class="h-[60px] border-b border-gray-200 text-right pr-2 text-xs text-gray-500 font-medium flex items-start pt-0">
@@ -125,12 +110,10 @@
         </div>
 
         <div class="flex-1 relative">
-          <!-- Líneas de fondo -->
           <div class="absolute inset-0 top-12">
             <div *ngFor="let hora of horasDia" class="h-[60px] border-b border-gray-200"></div>
           </div>
 
-          <!-- Contenedor de eventos -->
           <div class="relative" style="height: 1452px; padding-top: 48px;">
           <div *ngFor="let evento of obtenerEventosPorFecha(fechaSeleccionada)"
                   class="absolute left-0 right-0 mx-1 bg-white border-l-4 p-2 rounded-r shadow-sm hover:shadow-md hover:z-10 transition-all cursor-pointer overflow-hidden"
@@ -144,7 +127,6 @@
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-1">
                       <div class="font-semibold text-xs text-gray-900 truncate leading-tight flex-1">{{ evento.nombreCompletoUsuario }}</div>
-                      <!-- ✅ Ícono de ubicación -->
                       <i *ngIf="tieneUbicacion(evento)"
                          class="fas fa-map-marker-alt location-icon"
                          (click)="abrirModalMapa(evento, $event)"
@@ -160,7 +142,6 @@
             </div>
           </div>
 
-          <!-- Mensaje sin eventos -->
           <div *ngIf="obtenerEventosPorFecha(fechaSeleccionada).length === 0" class="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div class="text-center text-gray-500">
               <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -172,10 +153,8 @@
       </div>
     </div>
 
-    <!-- VISTA SEMANAL -->
     <div *ngIf="vistaActual === 'semana'" class="overflow-x-auto p-4">
       <div class="min-w-full">
-        <!-- Encabezado de días -->
         <div class="grid grid-cols-7 gap-px bg-gray-200 border-b border-gray-300">
           <div *ngFor="let dia of diasDeLaSemana" class="bg-white py-3 text-center">
             <div class="text-sm font-semibold text-gray-900">{{ diasSemana[dia.getDay() === 0 ? 6 : dia.getDay() - 1] }}</div>
@@ -183,18 +162,15 @@
           </div>
         </div>
 
-        <!-- Grid de eventos -->
         <div class="grid grid-cols-7 gap-px bg-gray-200">
           <div *ngFor="let dia of diasDeLaSemana"
                 class="bg-white min-h-[200px] p-2">
-            <!-- Eventos del día -->
             <ng-container *ngFor="let evento of obtenerEventosPorFecha(dia)">
               <div class="mb-2 p-2 rounded text-xs cursor-pointer hover:shadow-md hover:bg-indigo-100 transition-all border-l-4 bg-indigo-50"
                 [style.border-left-color]="evento.colorTipoEvento"
                     (click)="$event.stopPropagation(); abrirModalDetalles(evento)">
                 <div class="flex items-start justify-between gap-1">
                   <div class="font-semibold text-gray-900 truncate flex-1">{{ evento.nombreCompletoUsuario }}</div>
-                  <!-- ✅ Ícono de ubicación -->
                   <i *ngIf="tieneUbicacion(evento)"
                      class="fas fa-map-marker-alt location-icon"
                      (click)="abrirModalMapa(evento, $event)"
@@ -206,7 +182,6 @@
               </div>
             </ng-container>
 
-            <!-- Mensaje si no hay eventos -->
             <div *ngIf="obtenerEventosPorFecha(dia).length === 0" class="text-gray-400 text-xs text-center mt-4 pointer-events-none">
               <div class="text-gray-500 mb-2">{{ dia.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) }}</div>
               <div>Sin eventos</div>
@@ -215,8 +190,6 @@
         </div>
       </div>
     </div>
-
-    <!-- VISTA MENSUAL -->
 
     <div *ngIf="vistaActual === 'mes'">
 
@@ -228,7 +201,6 @@
       </div>
       <div class="flex bg-gray-200 text-xs leading-6 text-gray-700 lg:flex-auto">
         <div class="hidden w-full lg:grid lg:grid-cols-7 lg:auto-rows-min lg:gap-px">
-          <!-- ✅ ELIMINAR (click) y cursor-pointer -->
           <div *ngFor="let dia of diasDelMes"
                 [class]="'relative px-2 py-2 min-h-[120px] ' + (esMesActual(dia) ? 'bg-white' : 'bg-gray-50 text-gray-500')">
             <time [attr.datetime]="calendarioService.formatearFechaParaBackend(dia)" [class]="esHoy(dia) ? 'flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white' : ''">{{ dia.getDate() }}</time>
@@ -244,7 +216,6 @@
                       <div class="truncate text-gray-900 leading-tight font-medium text-[11px]">{{ evento.nombreCompletoUsuario }} - Tarea: {{ evento.descripcionTipoEventoCalendario }}</div>
                       <div class="text-gray-600 truncate leading-tight text-[10px] mt-0.5">{{ evento.nombreDepartamento }}</div>
                     </div>
-                    <!-- ✅ Ícono de ubicación -->
                     <i *ngIf="tieneUbicacion(evento)"
                       class="fas fa-map-marker-alt location-icon flex-shrink-0"
                       (click)="abrirModalMapa(evento, $event)"
@@ -257,7 +228,6 @@
           </div>
         </div>
 
-        <!-- Vista Mobile - Cambiar button por div -->
         <div class="isolate grid w-full grid-cols-7 grid-rows-6 gap-px lg:hidden">
           <div *ngFor="let dia of diasDelMes"
               [class]="'flex h-14 flex-col px-3 py-2 ' + (esMesActual(dia) ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-500') + (esHoy(dia) ? ' font-semibold text-indigo-600' : '')">
@@ -276,13 +246,11 @@
 
   </div>
 
-  <!-- ==================== MODAL CREAR/EDITAR (DINÁMICO) ==================== -->
   <div *ngIf="mostrarModalEvento" class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModal()" aria-label="Cerrar modal" role="button" tabindex="0" (keydown.enter)="cerrarModal()" (keydown.space)="cerrarModal()"></div>
       <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
 
-        <!-- Loading State del Formulario -->
         <div *ngIf="cargandoFormulario" class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
           <div class="flex flex-col items-center justify-center py-12">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -290,7 +258,6 @@
           </div>
         </div>
 
-        <!-- Formulario -->
         <form *ngIf="!cargandoFormulario" [formGroup]="eventoForm" (ngSubmit)="guardarEvento()">
           <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div class="sm:flex sm:items-start">
@@ -298,7 +265,6 @@
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">{{ eventoEditando ? 'Editar Evento' : 'Nuevo Evento' }}</h3>
                 <div class="space-y-4">
 
-                  <!-- CAMPOS FIJOS: Tipo Calendario y Tipo Evento -->
                   <div>
                     <label for="idTipoCalendario" class="block text-sm font-medium text-gray-700">Tipo de Calendario</label>
                     <select id="idTipoCalendario" formControlName="idTipoCalendario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
@@ -312,21 +278,16 @@
                     <label for="idTipoEventoCalendario" class="block text-sm font-medium text-gray-700">Tipo de Evento</label>
                     <select id="idTipoEventoCalendario" formControlName="idTipoEventoCalendario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                       <option value="">Seleccionar tipo de evento</option>
-                      <!-- ✅ CAMBIAR tiposEvento por tiposEventoFiltrados -->
                       <option *ngFor="let tipo of tiposEventoFiltrados" [value]="tipo.id">{{ tipo.descripcion }}</option>
                     </select>
                     <div *ngIf="eventoForm.get('idTipoEventoCalendario')?.invalid && eventoForm.get('idTipoEventoCalendario')?.touched" class="text-red-600 text-sm mt-1">Requerido</div>
                   </div>
 
-                  <!-- SEPARADOR -->
                   <div class="divider my-4" *ngIf="camposFormularioActual.length > 0"></div>
 
-                  <!-- CAMPOS DINÁMICOS -->
                   <ng-container *ngFor="let campo of camposFormularioActual">
-                    <!-- Saltar los campos que ya mostramos arriba -->
                     <ng-container *ngIf="campo.nombre_campo !== 'idTipoCalendario' && campo.nombre_campo !== 'idTipoEventoCalendario'">
 
-                      <!-- Campo de Texto -->
                       <div *ngIf="campo.tipo_campo === 'text'">
                         <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
                           {{ campo.label }}
@@ -341,7 +302,6 @@
                         <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
                       </div>
 
-                      <!-- Campo de Textarea -->
                       <div *ngIf="campo.tipo_campo === 'textarea'">
                         <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
                           {{ campo.label }}
@@ -357,7 +317,6 @@
                         <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
                       </div>
 
-                      <!-- Campo Numérico -->
                       <div *ngIf="campo.tipo_campo === 'number'">
                         <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
                           {{ campo.label }}
@@ -372,7 +331,6 @@
                         <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
                       </div>
 
-                      <!-- Campo de Fecha -->
                       <div *ngIf="campo.tipo_campo === 'date'">
                         <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
                           {{ campo.label }}
@@ -386,7 +344,6 @@
                         <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
                       </div>
 
-                      <!-- Campo de Email -->
                       <div *ngIf="campo.tipo_campo === 'email'">
                         <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
                           {{ campo.label }}
@@ -401,7 +358,6 @@
                         <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
                       </div>
 
-                      <!-- Campo de Teléfono -->
                       <div *ngIf="campo.tipo_campo === 'tel'">
                         <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
                           {{ campo.label }}
@@ -416,7 +372,6 @@
                         <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
                       </div>
 
-                      <!-- Campo de Hora/Time -->
                       <div *ngIf="campo.tipo_campo === 'time'">
                         <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
                           {{ campo.label }}
@@ -431,7 +386,6 @@
                         <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
                       </div>
 
-                      <!-- Campo Select -->
                       <div *ngIf="campo.tipo_campo === 'select'">
                         <label [for]="campo.nombre_campo" class="block text-sm font-medium text-gray-700">
                           {{ campo.label }}
@@ -451,7 +405,6 @@
                         <div *ngIf="esCampoInvalido(campo.nombre_campo)" class="text-red-600 text-sm mt-1">Este campo es requerido</div>
                       </div>
 
-                      <!-- Campo Checkbox -->
                       <div *ngIf="campo.tipo_campo === 'checkbox'">
                         <div class="flex items-center">
                           <input
@@ -466,7 +419,6 @@
                         </div>
                       </div>
 
-                      <!-- Campo Radio -->
                       <div *ngIf="campo.tipo_campo === 'radio'">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                           {{ campo.label }}
@@ -496,7 +448,16 @@
             </div>
           </div>
           <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button type="submit" [disabled]="eventoForm.invalid" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-400 disabled:cursor-not-allowed" [attr.aria-label]="eventoEditando ? 'Actualizar evento' : 'Guardar nuevo evento'">{{ eventoEditando ? 'Actualizar' : 'Guardar' }}</button>
+            <button type="submit" [disabled]="eventoForm.invalid || guardandoEvento" class="w-full inline-flex justify-center items-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-400 disabled:cursor-not-allowed" [attr.aria-label]="eventoEditando ? 'Actualizar evento' : 'Guardar nuevo evento'">
+
+              <svg *ngIf="guardandoEvento" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+
+              <span *ngIf="!guardandoEvento">{{ eventoEditando ? 'Actualizar' : 'Guardar' }}</span>
+              <span *ngIf="guardandoEvento">{{ eventoEditando ? 'Actualizando...' : 'Guardando...' }}</span>
+            </button>
             <button type="button" (click)="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Cancelar y cerrar modal">Cancelar</button>
           </div>
         </form>
@@ -504,7 +465,6 @@
     </div>
   </div>
 
-  <!-- MODAL DETALLES -->
   <div *ngIf="mostrarModalDetalles && eventoEditando" class="fixed inset-0 z-[80] overflow-y-auto" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModal()" aria-label="Cerrar detalles del evento" role="button" tabindex="0" (keydown.enter)="cerrarModal()" (keydown.space)="cerrarModal()"></div>
@@ -530,7 +490,6 @@
                   <div class="text-sm font-medium text-gray-500">Departamento</div>
                   <div class="flex items-center justify-between">
                     <div class="text-base text-gray-900">{{ eventoEditando.nombreDepartamento }}</div>
-                    <!-- ✅ Botón para ver ubicación en el modal de detalles -->
                     <button *ngIf="tieneUbicacion(eventoEditando)"
                             type="button"
                             (click)="abrirModalMapa(eventoEditando)"
@@ -562,13 +521,11 @@
     </div>
   </div>
 
-  <!-- ✅ MODAL DE MAPA -->
   <div *ngIf="mostrarModalMapa && eventoEditando" class="fixed inset-0 z-[90] overflow-y-auto" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" (click)="cerrarModalMapa()" aria-label="Cerrar mapa" role="button" tabindex="0"></div>
 
       <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-        <!-- Header del modal -->
         <div class="bg-indigo-600 px-6 py-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -586,9 +543,7 @@
           </div>
         </div>
 
-        <!-- Contenido del modal -->
         <div class="bg-white px-6 py-4">
-          <!-- Información del evento -->
           <div class="mb-4 grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -606,13 +561,11 @@
             </div>
           </div>
 
-          <!-- Contenedor del mapa -->
           <div class="mt-4">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               <i class="fas fa-map text-indigo-600 mr-2"></i>Mapa de Ubicación
             </label>
 
-            <!-- ✅ INTEGRACIÓN CON MINI-MAP COMPONENT -->
             <ng-container *ngIf="obtenerCoordenadasDepartamento(eventoEditando) as coordenadas; else noCoords">
               <mini-map
                 [lngLat]="coordenadas"
@@ -622,7 +575,6 @@
                 class="rounded-lg shadow-lg"
               />
 
-              <!-- Botón para abrir en Google Maps -->
               <div class="mt-3 flex justify-end">
                 <a [href]="'https://www.google.com/maps/search/?api=1&query=' + coordenadas.lat + ',' + coordenadas.lng"
                    target="_blank"
@@ -634,7 +586,6 @@
             </ng-container>
 
             <ng-template #noCoords>
-              <!-- Fallback cuando no hay coordenadas -->
               <div class="bg-gray-100 rounded-lg h-96 flex items-center justify-center">
                 <div class="text-center p-6">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -649,7 +600,6 @@
           </div>
         </div>
 
-        <!-- Footer del modal -->
         <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2">
           <button (click)="cerrarModalMapa()"
                   class="px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors border border-gray-300">
@@ -664,17 +614,12 @@
     </div>
   </div>
 
-  <!-- Continúa en siguiente mensaje con modal de exportación, tooltip y loading... -->
 
-<!-- ... (continuación del código anterior) ... -->
-
-  <!-- ==================== MODAL DE EXPORTACIÓN ==================== -->
   <div *ngIf="mostrarModalExport" class="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModalExport()"></div>
 
       <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-        <!-- Header del modal -->
         <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -697,9 +642,7 @@
           </div>
         </div>
 
-        <!-- Contenido del modal -->
         <div class="bg-white px-6 py-4">
-          <!-- Información de eventos -->
           <div class="mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
             <div class="flex items-center gap-2 text-sm">
               <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -712,13 +655,11 @@
             </div>
           </div>
 
-          <!-- ==================== SELECTOR DE RANGO DE FECHAS ==================== -->
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-3">
               Rango de fechas
             </label>
 
-            <!-- Opción 1: Vista Actual -->
             <div class="mb-3 border-2 rounded-lg transition-all cursor-pointer"
                  [class.border-indigo-500]="rangoExport === 'vistaActual'"
                  [class.bg-indigo-50]="rangoExport === 'vistaActual'"
@@ -741,7 +682,6 @@
               </div>
             </div>
 
-            <!-- Opción 2: Rango Personalizado -->
             <div class="mb-3 border-2 rounded-lg transition-all cursor-pointer"
                  [class.border-indigo-500]="rangoExport === 'rangoPersonalizado'"
                  [class.bg-indigo-50]="rangoExport === 'rangoPersonalizado'"
@@ -762,7 +702,6 @@
                   </label>
                 </div>
 
-                <!-- Inputs de fecha -->
                 <div *ngIf="rangoExport === 'rangoPersonalizado'" class="mt-3 pl-7 space-y-3">
                   <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -781,7 +720,6 @@
                     </div>
                   </div>
 
-                  <!-- Mensaje de error -->
                   <div *ngIf="errorRangoPersonalizado" class="flex items-center gap-2 text-xs text-red-600 bg-red-50 px-3 py-2 rounded-md">
                     <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -792,7 +730,6 @@
               </div>
             </div>
 
-            <!-- Opción 3: Historial Completo -->
             <div class="border-2 rounded-lg transition-all cursor-pointer"
                  [class.border-indigo-500]="rangoExport === 'historial'"
                  [class.bg-indigo-50]="rangoExport === 'historial'"
@@ -815,62 +752,67 @@
               </div>
             </div>
           </div>
-          <!-- ==================== FIN SELECTOR DE RANGO DE FECHAS ==================== -->
-
-          <!-- Selector de tipo de archivo -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Tipo de archivo
             </label>
-            <div class="grid grid-cols-3 gap-3">
-              <!-- Opción Excel -->
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <button type="button"
                       (click)="tipoArchivoExport = 'excel'"
                       [class.ring-2]="tipoArchivoExport === 'excel'"
                       [class.ring-indigo-500]="tipoArchivoExport === 'excel'"
                       [class.bg-indigo-50]="tipoArchivoExport === 'excel'"
-                      class="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer">
-                <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                      class="flex flex-col items-center justify-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer text-center h-full">
+                <svg class="w-8 h-8 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12.9,14.5L15.8,19H14L12,15.6L10,19H8.2L11.1,14.5L8.2,10H10L12,13.4L14,10H15.8L12.9,14.5Z" />
                 </svg>
-                <span class="text-xs font-medium text-gray-700">Excel</span>
+                <span class="text-xs font-medium text-gray-700 leading-tight">Excel<br>(Lista)</span>
               </button>
 
-              <!-- Opción PDF -->
+              <button type="button"
+                      (click)="tipoArchivoExport = 'excel_timeline'"
+                      [class.ring-2]="tipoArchivoExport === 'excel_timeline'"
+                      [class.ring-indigo-500]="tipoArchivoExport === 'excel_timeline'"
+                      [class.bg-indigo-50]="tipoArchivoExport === 'excel_timeline'"
+                      class="flex flex-col items-center justify-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer text-center h-full">
+                <svg class="w-8 h-8 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span class="text-xs font-medium text-gray-700 leading-tight">Excel<br>(Matriz)</span>
+              </button>
+
               <button type="button"
                       (click)="tipoArchivoExport = 'pdf'"
                       [class.ring-2]="tipoArchivoExport === 'pdf'"
                       [class.ring-indigo-500]="tipoArchivoExport === 'pdf'"
                       [class.bg-indigo-50]="tipoArchivoExport === 'pdf'"
-                      class="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer">
-                <svg class="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                      class="flex flex-col items-center justify-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer text-center h-full">
+                <svg class="w-8 h-8 text-red-600 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M10.5,11.5C10.5,11.5 11.5,11.5 12,11.5C13,11.5 13.5,12 13.5,13C13.5,14 13,14.5 12,14.5H10.5V11.5M10.5,15.5H12C13,15.5 13.5,16 13.5,17C13.5,18 13,18.5 12,18.5C11.5,18.5 10.5,18.5 10.5,18.5V15.5M9.5,10.5V19.5H12C13.5,19.5 14.5,18.5 14.5,17C14.5,16.5 14.5,16 14,15.5C14.5,15 14.5,14 14.5,13C14.5,11.5 13.5,10.5 12,10.5H9.5Z" />
                 </svg>
-                <span class="text-xs font-medium text-gray-700">PDF</span>
+                <span class="text-xs font-medium text-gray-700 leading-tight">PDF<br>(Lista)</span>
               </button>
 
-              <!-- Opción Imagen -->
               <button type="button"
                       (click)="tipoArchivoExport = 'imagen'"
                       [class.ring-2]="tipoArchivoExport === 'imagen'"
                       [class.ring-indigo-500]="tipoArchivoExport === 'imagen'"
                       [class.bg-indigo-50]="tipoArchivoExport === 'imagen'"
-                      class="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer">
-                <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                      class="flex flex-col items-center justify-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer text-center h-full">
+                <svg class="w-8 h-8 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z" />
                 </svg>
-                <span class="text-xs font-medium text-gray-700">Imagen</span>
+                <span class="text-xs font-medium text-gray-700 leading-tight">Imagen<br>(Captura)</span>
               </button>
             </div>
 
-            <!-- SELECTOR DE SUBTIPO DE IMAGEN -->
             <div *ngIf="tipoArchivoExport === 'imagen'" class="mt-6">
               <label class="block text-sm font-medium text-gray-700 mb-3 text-center">
                 Estilo de imagen
               </label>
               <div class="flex justify-center gap-4">
 
-                <!-- Lista/Timeline -->
                 <button type="button"
                         (click)="subtipoImagen = 'lista'"
                         [class.ring-2]="subtipoImagen === 'lista'"
@@ -883,7 +825,6 @@
                   <span class="text-xs font-medium text-gray-700">Lista</span>
                 </button>
 
-                <!-- Vista Calendario -->
                 <button type="button"
                         (click)="subtipoImagen = 'calendario'"
                         [class.ring-2]="subtipoImagen === 'calendario'"
@@ -896,7 +837,6 @@
                   <span class="text-xs font-medium text-gray-700 text-center leading-tight">Calendario</span>
                 </button>
 
-                <!-- Resumen Visual / Gráficos -->
                 <button type="button"
                         (click)="subtipoImagen = 'resumen'"
                         [class.ring-2]="subtipoImagen === 'resumen'"
@@ -913,7 +853,6 @@
             </div>
           </div>
 
-          <!-- Campo de email (solo para envío) -->
           <div *ngIf="accionExport === 'enviar'" class="mb-4">
             <label for="emailDestino" class="block text-sm font-medium text-gray-700 mb-2">
               Email destinatario
@@ -926,9 +865,7 @@
           </div>
         </div>
 
-        <!-- Footer del modal -->
         <div class="bg-gray-50 px-6 py-4">
-          <!-- Mensaje de advertencia cuando no hay eventos -->
           <div *ngIf="eventosSegunRango === 0" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
             <div class="flex items-center gap-2">
               <svg class="w-5 h-5 text-yellow-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -946,7 +883,6 @@
             </div>
           </div>
 
-          <!-- Botones -->
           <div class="flex justify-end gap-3">
             <button (click)="cerrarModalExport()"
                     class="px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors border border-gray-300">
@@ -970,7 +906,6 @@
     </div>
   </div>
 
-  <!-- TOOLTIP -->
   <div *ngIf="tooltipVisible && tooltipEvento"
        class="fixed z-50 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg max-w-xs"
        style="pointer-events: none;"
@@ -984,7 +919,6 @@
     <div *ngIf="tooltipEvento.observaciones" class="text-gray-300 text-xs">{{ tooltipEvento.observaciones }}</div>
   </div>
 
-  <!-- LOADING -->
   <div *ngIf="cargando" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-500 bg-opacity-75" role="status">
     <div class="bg-white rounded-lg p-6 flex flex-col items-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>

@@ -540,7 +540,7 @@ export class CalendarioService {
 
   descargarCalendario(
     filtros: FiltrosCalendario,
-    tipoArchivo: 'excel' | 'pdf' | 'imagen',
+    tipoArchivo: 'excel' | 'excel_timeline' | 'pdf' | 'imagen',
     userRole: string,
     userId: number,
     subtipoImagen?: 'lista' | 'calendario' | 'resumen'
@@ -612,7 +612,7 @@ export class CalendarioService {
 
   enviarCalendarioPorEmail(
     filtros: FiltrosCalendario,
-    tipoArchivo: 'excel' | 'pdf' | 'imagen',
+    tipoArchivo: 'excel' | 'excel_timeline' | 'pdf' | 'imagen',
     emailDestino: string,
     userRole: string,
     userId: number,

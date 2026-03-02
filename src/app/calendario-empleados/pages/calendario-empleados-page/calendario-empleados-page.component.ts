@@ -75,7 +75,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
   mostrarModalExport = false;
   accionExport: 'descargar' | 'enviar' = 'descargar';
-  tipoArchivoExport: 'excel' | 'pdf' | 'imagen' = 'excel';
+  tipoArchivoExport: 'excel' | 'excel_timeline' | 'pdf' | 'imagen' = 'excel';
   subtipoImagen: 'lista' | 'calendario' | 'resumen' = 'lista';
   emailDestinoExport = '';
 
@@ -91,6 +91,9 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
   formularioActual: FormularioCompleto | null = null;
   camposFormularioActual: CampoFormulario[] = [];
   cargandoFormulario = false;
+
+  // CANDADO PARA EVITAR DOBLE CLIC AL GUARDAR
+  guardandoEvento = false;
 
   constructor(
     private fb: FormBuilder,
@@ -651,7 +654,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ==================== CRUD EVENTOS (SIN CAMBIOS EXCEPTO GUARDAR) ====================
+  // ==================== CRUD EVENTOS ====================
 
   abrirModalEvento(fecha?: Date): void {
     if (this.esEmpleado) {
@@ -665,6 +668,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.eventoEditando = null;
     this.formularioActual = null;
     this.camposFormularioActual = [];
+    this.guardandoEvento = false; // Resetear el candado
 
     // ✅ Resetear lista de eventos filtrados
     this.tiposEventoFiltrados = [];
@@ -678,7 +682,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     console.log('🟢 Form básico creado');
 
     // Listener para cuando cambia el tipo de calendario
-
     this.eventoForm.get('idTipoCalendario')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe((idCalendario) => {
@@ -727,7 +730,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
         this.cdr.detectChanges();
       });
-
 
     // Si hay fecha, guardarla temporalmente
     if (fecha) {
@@ -789,6 +791,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
 
     this.ocultarTooltip();
     this.eventoEditando = evento;
+    this.guardandoEvento = false;
 
     this.cargarFormularioDinamico(evento.idTipoEventoCalendario);
 
@@ -802,6 +805,12 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       this.notificationService.mostrarNotificacion('Por favor complete todos los campos requeridos', 'error');
       return;
     }
+
+    // <-- NUEVO: Evitar que siga si ya se está guardando
+    if (this.guardandoEvento) return;
+
+    // <-- NUEVO: Activar el candado
+    this.guardandoEvento = true;
 
     const formValues = this.eventoForm.getRawValue();
 
@@ -837,10 +846,12 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       this.calendarioService.actualizarEvento(this.eventoEditando.id, evento)
         .subscribe({
           next: () => {
+            this.guardandoEvento = false; // <-- NUEVO: Quitar candado
             this.notificationService.mostrarNotificacion('Evento actualizado correctamente', 'success');
             this.cerrarModal();
           },
           error: (error) => {
+            this.guardandoEvento = false; // <-- NUEVO: Quitar candado si hay error
             this.notificationService.mostrarNotificacion('Error al actualizar el evento', 'error');
           }
         });
@@ -848,10 +859,12 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
       this.calendarioService.crearEvento(evento)
         .subscribe({
           next: () => {
+            this.guardandoEvento = false; // <-- NUEVO: Quitar candado
             this.notificationService.mostrarNotificacion('Evento creado correctamente', 'success');
             this.cerrarModal();
           },
           error: (error) => {
+            this.guardandoEvento = false; // <-- NUEVO: Quitar candado si hay error
             this.notificationService.mostrarNotificacion('Error al crear el evento', 'error');
           }
         });
@@ -925,6 +938,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     this.eventoForm.reset();
     this.formularioActual = null;
     this.camposFormularioActual = [];
+    this.guardandoEvento = false; // <-- NUEVO: Reiniciar candado al cerrar
   }
 
   marcarCamposComoTocados(): void {
@@ -1008,7 +1022,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     return hora;
   }
 
-  // ==================== EXPORTACIÓN (SIN CAMBIOS) ====================
+  // ==================== EXPORTACIÓN ====================
 
   abrirModalDescarga(): void {
     this.accionExport = 'descargar';
@@ -1054,11 +1068,12 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     }
 
     const cantidadEventos = this.eventosSegunRango;
+    const nombreFormato = this.tipoArchivoExport === 'excel_timeline' ? 'CRONOGRAMA (EXCEL)' : this.tipoArchivoExport.toUpperCase();
 
     Swal.fire({
       title: '¿Descargar calendario?',
       html: `
-        <p>Se descargará el calendario en formato <strong>${this.tipoArchivoExport.toUpperCase()}</strong></p>
+        <p>Se descargará el calendario en formato <strong>${nombreFormato}</strong></p>
         <p class="text-sm text-gray-600 mt-2">
           Eventos a exportar: <strong>${cantidadEventos}</strong>
         </p>
@@ -1096,11 +1111,12 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
     }
 
     const cantidadEventos = this.eventosSegunRango;
+    const nombreFormato = this.tipoArchivoExport === 'excel_timeline' ? 'CRONOGRAMA (EXCEL)' : this.tipoArchivoExport.toUpperCase();
 
     Swal.fire({
       title: '¿Enviar calendario por email?',
       html: `
-        <p>Se enviará el calendario en formato <strong>${this.tipoArchivoExport.toUpperCase()}</strong> a:</p>
+        <p>Se enviará el calendario en formato <strong>${nombreFormato}</strong> a:</p>
         <p class="text-indigo-600 font-semibold mt-2">${this.emailDestinoExport}</p>
         <p class="text-sm text-gray-600 mt-2">
           Eventos a enviar: <strong>${cantidadEventos}</strong>
@@ -1139,16 +1155,21 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         this.cargando = false;
 
         let extension = 'xlsx';
+        let prefijo = 'calendario';
+
         if (this.tipoArchivoExport === 'pdf') {
           extension = 'pdf';
         } else if (this.tipoArchivoExport === 'imagen') {
           extension = 'png';
+        } else if (this.tipoArchivoExport === 'excel_timeline') {
+          prefijo = 'cronograma'; // <-- Nombre distinto para la matriz
         }
 
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `calendario_${Date.now()}.${extension}`;
+
+        link.download = `${prefijo}_${Date.now()}.${extension}`;
         link.click();
         window.URL.revokeObjectURL(url);
 
@@ -1162,25 +1183,6 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
         this.tipoArchivoExport = 'excel';
       }
     });
-  }
-
-  private descargarArchivo(blob: Blob, filtros: FiltrosCalendario): void {
-    const extension = this.tipoArchivoExport === 'excel' ? 'xlsx' :
-                     this.tipoArchivoExport === 'pdf' ? 'pdf' : 'png';
-
-    const timestamp = new Date().getTime();
-    const fileName = `calendario_${timestamp}.${extension}`;
-
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    window.URL.revokeObjectURL(url);
   }
 
   private ejecutarEnvio(): void {
