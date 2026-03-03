@@ -66,9 +66,15 @@ export class SmartGridComponent {
   formatDate(dateString: string): string {
     if (!dateString) return '';
 
-    const date = new Date(dateString);
+    // Tratar la fecha como string local sin conversión UTC
+    // Formato esperado del backend: 'YYYY-MM-DD'
+    const [year, month, day] = dateString.split('-').map(Number);
 
-    // Formato personalizado: "05 Ago 2025" o "05/08/2025"
+    if (!year || !month || !day) return dateString;
+
+    // Crear fecha local sin offset de timezone
+    const date = new Date(year, month - 1, day);
+
     const options: Intl.DateTimeFormatOptions = {
       day: '2-digit',
       month: 'short',
