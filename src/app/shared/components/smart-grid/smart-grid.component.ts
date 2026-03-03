@@ -66,9 +66,10 @@ export class SmartGridComponent {
   formatDate(dateString: string): string {
     if (!dateString) return '';
 
-    // Tratar la fecha como string local sin conversión UTC
-    // Formato esperado del backend: 'YYYY-MM-DD'
-    const [year, month, day] = dateString.split('-').map(Number);
+    // Extraer solo la parte de la fecha (YYYY-MM-DD) del string ISO
+    // Maneja tanto "2026-02-25" como "2026-02-25T00:00:00.000Z"
+    const datePart = dateString.split('T')[0];
+    const [year, month, day] = datePart.split('-').map(Number);
 
     if (!year || !month || !day) return dateString;
 
