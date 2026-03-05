@@ -4,6 +4,8 @@ export interface TableColumn {
   sortable?: boolean;
   width?: string;
   type?: 'text' | 'badge' | 'avatar' | 'date' | 'actions' | 'html';
+  truncate?: boolean; // NUEVO: para activar tooltip y truncate
+  align?: 'left' | 'center' | 'right'; // NUEVO: alineación de texto
 }
 
 export interface TableAction {

@@ -22,7 +22,6 @@ export class GastosAdminPageComponent {
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   refreshTrigger = signal(0);
-  selectedGastos = signal<Gasto[]>([]);
 
   gastosResource = rxResource({
     request: () => ({ refresh: this.refreshTrigger() }),
@@ -57,15 +56,17 @@ export class GastosAdminPageComponent {
       key: 'id',
       label: 'Id',
       sortable: true,
-      width: '20px',
-      type: 'text'
+      width: '50px',
+      type: 'text',
+      align: 'center'
     },
     {
       key: 'idTipoGasto',
       label: 'Cod.',
       sortable: true,
-      width: '20px',
-      type: 'text'
+      width: '60px',
+      type: 'text',
+      align: 'center'
     },
     {
       key: 'descripcion',
@@ -92,22 +93,25 @@ export class GastosAdminPageComponent {
       key: 'monto',
       label: 'Monto',
       sortable: true,
-      width: '150px',
-      type: 'text'
+      width: '50px',
+      type: 'text',
+      align: 'right'
     },
     {
       key: 'fecha',
       label: 'Fecha',
       sortable: true,
-      width: '250px',
-      type: 'date'
+      width: '200px',
+      type: 'date',
+      align: 'center'
     },
     {
       key: 'observaciones',
       label: 'Observaciones',
       sortable: true,
       width: '250px',
-      type: 'text'
+      type: 'text',
+      truncate: true // NUEVO: activa tooltip
     }
   ];
 
@@ -147,7 +151,4 @@ export class GastosAdminPageComponent {
   isLoading = computed(() => this.gastosResource.isLoading());
   error = computed(() => this.gastosResource.error());
 
-  onSelectionChange(selectedItems: any[]) {
-    console.log('Gastos seleccionados:', selectedItems.length);
-  }
 }

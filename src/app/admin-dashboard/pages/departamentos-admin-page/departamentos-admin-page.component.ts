@@ -39,7 +39,6 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   refreshTrigger = signal(0);
-  selectedDepartamentos = signal<Departamento[]>([]);
 
   // MODIFICADO: Ahora el resource depende del refreshTrigger
   departamentosResource = rxResource({
@@ -135,8 +134,9 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
       key: 'idProp',
       label: 'idProp',
       sortable: true,
-      width: '130px',
-      type: 'text'
+      width: '80px',
+      type: 'text',
+      align: 'center'
     },
     {
       key: 'nombre',
@@ -149,7 +149,8 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
       key: 'descripcion',
       label: 'Descripción',
       sortable: true,
-      type: 'text'
+      type: 'text',
+      truncate: true
     },
     {
       key: 'calle',
@@ -179,19 +180,22 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
       key: 'codigoPostal',
       label: 'Código Postal',
       sortable: true,
-      type: 'text'
+      type: 'text',
+      align: 'center',
+      width: '80px',
     },
     {
       key: 'observaciones',
       label: 'Observaciones',
       sortable: true,
-      type: 'text'
+      type: 'text',
+      truncate: true
     },
     {
       key: 'activoTexto',
       label: 'Estado',
       sortable: true,
-      width: '100px',
+      width: '40px',
       type: 'badge'
     }
   ];
@@ -404,10 +408,6 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
 
   isLoading = computed(() => this.departamentosResource.isLoading());
   error = computed(() => this.departamentosResource.error());
-
-  onSelectionChange(selectedItems: any[]) {
-    console.log('Departamentos seleccionados:', selectedItems.length);
-  }
 
   async ngAfterViewInit(){
     if ( !this.divElement()?.nativeElement ) return;

@@ -1,131 +1,112 @@
+<div class="overflow-x-auto">
+  <table class="table table-sm">
+    <!-- Header -->
+    <thead>
+      <tr>
+        <!-- Columnas dinámicas -->
+        <th *ngFor="let column of columns"
+          [style.width]="column.width"
+          [class.cursor-pointer]="column.sortable"
+          [class.text-center]="column.align === 'center'"
+          (click)="onSort(column)">
+          {{ column.label }}
+          <span *ngIf="column.sortable && sortColumn === column.key" class="ml-1">
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
+        </th>
 
-    <div class="overflow-x-auto">
-      <table class="table">
-        <!-- Header -->
-        <thead>
-          <tr>
-            <!-- Checkbox de selección si está habilitado -->
-            <th *ngIf="selectable">
-              <label>
-                <input
-                  type="checkbox"
-                  class="checkbox"
-                  [checked]="allSelected"
-                  (change)="onSelectAll($event)" />
-              </label>
-            </th>
+        <!-- Columna de acciones -->
+        <th *ngIf="actions.length > 0"></th>
+      </tr>
+    </thead>
 
-            <!-- Columnas dinámicas -->
-            <th *ngFor="let column of columns"
-                [style.width]="column.width"
-                [class.cursor-pointer]="column.sortable"
-                (click)="onSort(column)">
-              {{ column.label }}
-              <span *ngIf="column.sortable && sortColumn === column.key" class="ml-1">
-                {{ sortDirection === 'asc' ? '↑' : '↓' }}
-              </span>
-            </th>
+    <!-- Body -->
+    <tbody>
+      <tr *ngFor="let item of data; let i = index" class="hover">
 
-            <!-- Columna de acciones -->
-            <th *ngIf="actions.length > 0"></th>
-          </tr>
-        </thead>
+        <!-- Celdas dinámicas -->
+        <td *ngFor="let column of columns"
+            [class.text-center]="column.align === 'center'">
 
-        <!-- Body -->
-        <tbody>
-          <tr *ngFor="let item of data; let i = index"
-              class="hover"
-              [class.bg-primary]="selectedItems.has(item)">
-
-            <!-- Checkbox de selección -->
-            <th *ngIf="selectable">
-              <label>
-                <input
-                  type="checkbox"
-                  class="checkbox"
-                  [checked]="selectedItems.has(item)"
-                  (change)="onSelectItem(item, $event)" />
-              </label>
-            </th>
-
-            <!-- Celdas dinámicas -->
-            <td *ngFor="let column of columns">
-
-              <!-- Avatar con información -->
-              <div *ngIf="column.type === 'avatar'; else normalCell"
-                class="flex items-center gap-3">
-                <div class="avatar">
-                  <div class="mask mask-squircle h-12 w-12">
-                      <img
-                        [src]="getAvatarSrc(item)"
-                        alt="Imagen de usuario"
-                        (error)="onImageError($event)"
-                      />
-                  </div>
-                </div>
-                <div>
-                  <div class="font-bold">{{ getValue(item, column.key + '.name') }}</div>
-                  <div class="text-sm opacity-50">{{ getValue(item, column.key + '.subtitle') }}</div>
-                </div>
+          <!-- Avatar con información -->
+          <div *ngIf="column.type === 'avatar'; else normalCell"
+            class="flex items-center gap-2">
+            <div class="avatar">
+              <div class="mask mask-squircle h-10 w-10">
+                  <img
+                    [src]="getAvatarSrc(item)"
+                    alt="Imagen de usuario"
+                    (error)="onImageError($event)"
+                  />
               </div>
-
-              <!-- Celda normal -->
-              <ng-template #normalCell>
-                <!-- HTML renderizado (NUEVO) -->
-                <span *ngIf="column.type === 'html'"
-                      [innerHTML]="getValue(item, column.key)">
-                </span>
-
-                <!-- Badge -->
-                <span *ngIf="column.type === 'badge'"
-                      class="badge badge-ghost badge-sm">
-                  {{ getValue(item, column.key) }}
-                </span>
-
-                <!-- Texto normal -->
-                <span *ngIf="!column.type || column.type === 'text'">
-                  {{ getValue(item, column.key) }}
-                </span>
-
-                <!-- Fecha como badge con fondo primario -->
-                <span *ngIf="column.type === 'date'">
-                  <span class="badge bg-gray-500 text-white gap-2 font-bold">
-                    <i class="fas fa-calendar-alt"></i>
-                    {{ formatDate(getValue(item, column.key)) }}
-                  </span>
-                </span>
-              </ng-template>
-
-            </td>
-
-          <!-- Acciones -->
-          <th *ngIf="actions.length > 0">
-            <div class="flex gap-1">
-              <button
-                *ngFor="let action of actions"
-                [class]="'btn ' + (action.getClass ? action.getClass(item) : (action.class || 'btn-ghost btn-xs'))"
-                (click)="action.action(item)">
-                <i [ngClass]="action.getIcon ? action.getIcon(item) : action.icon"></i>
-                {{ action.getLabel ? action.getLabel(item) : action.label }}
-              </button>
             </div>
-          </th>
+            <div>
+              <div class="font-bold text-sm">{{ getValue(item, column.key + '.name') }}</div>
+              <div class="text-xs opacity-50">{{ getValue(item, column.key + '.subtitle') }}</div>
+            </div>
+          </div>
 
-          <!-- Fila vacía -->
-          <tr *ngIf="data.length === 0">
-            <td [attr.colspan]="getColspan()" class="text-center text-gray-500 py-8">
-              {{ emptyMessage }}
-            </td>
-          </tr>
-        </tbody>
+          <!-- Celda normal -->
+          <ng-template #normalCell>
+            <!-- HTML renderizado -->
+            <span *ngIf="column.type === 'html'"
+                  [innerHTML]="getValue(item, column.key)">
+            </span>
 
-        <!-- Footer opcional -->
-        <tfoot *ngIf="showFooter">
-          <tr>
-            <th *ngIf="selectable"></th>
-            <th *ngFor="let column of columns">{{ column.label }}</th>
-            <th *ngIf="actions.length > 0"></th>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+            <!-- Badge -->
+            <span *ngIf="column.type === 'badge'"
+                  class="badge badge-ghost badge-sm">
+              {{ getValue(item, column.key) }}
+            </span>
+
+            <!-- Texto normal con truncate opcional -->
+            <span *ngIf="!column.type || column.type === 'text'"
+                  [class.truncate]="column.truncate"
+                  [class.max-w-xs]="column.truncate"
+                  [class.block]="column.truncate"
+                  [title]="column.truncate ? getValue(item, column.key) : ''">
+              {{ getValue(item, column.key) }}
+            </span>
+
+            <!-- Fecha como badge con fondo primario y texto más pequeño -->
+            <span *ngIf="column.type === 'date'">
+              <span class="badge bg-gray-500 text-white gap-1 font-bold text-xs whitespace-nowrap">
+                <i class="fas fa-calendar-alt text-xs"></i>
+                {{ formatDate(getValue(item, column.key)) }}
+              </span>
+            </span>
+          </ng-template>
+
+        </td>
+
+        <!-- Acciones -->
+        <th *ngIf="actions.length > 0">
+          <div class="flex gap-1">
+            <button
+              *ngFor="let action of actions"
+              [class]="'btn btn-xs ' + (action.getClass ? action.getClass(item) : (action.class || 'btn-ghost'))"
+              (click)="action.action(item)">
+              <i [ngClass]="action.getIcon ? action.getIcon(item) : action.icon" class="text-xs"></i>
+              {{ action.getLabel ? action.getLabel(item) : action.label }}
+            </button>
+          </div>
+        </th>
+      </tr>
+
+      <!-- Fila vacía -->
+      <tr *ngIf="data.length === 0">
+        <td [attr.colspan]="getColspan()" class="text-center text-gray-500 py-8">
+          {{ emptyMessage }}
+        </td>
+      </tr>
+    </tbody>
+
+    <!-- Footer opcional -->
+    <tfoot *ngIf="showFooter">
+      <tr>
+        <th *ngFor="let column of columns">{{ column.label }}</th>
+        <th *ngIf="actions.length > 0" ></th>
+      </tr>
+    </tfoot>
+  </table>
+</div>

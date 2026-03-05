@@ -22,7 +22,6 @@ export class IngresosAdminPageComponent {
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   refreshTrigger = signal(0);
-  selectedPagos = signal<Pago[]>([]);
 
   pagosResource = rxResource({
     request: () => ({ refresh: this.refreshTrigger() }),
@@ -57,15 +56,17 @@ export class IngresosAdminPageComponent {
       key: 'id',
       label: 'Id',
       sortable: true,
-      width: '20px',
-      type: 'text'
+      width: '50px',
+      type: 'text',
+      align: 'center'
     },
     {
       key: 'idTipoPago',
       label: 'Cod.',
       sortable: true,
-      width: '20px',
-      type: 'text'
+      width: '60px',
+      type: 'text',
+      align: 'center'
     },
     {
       key: 'descripcion',
@@ -99,7 +100,7 @@ export class IngresosAdminPageComponent {
       key: 'fecha',
       label: 'Fecha',
       sortable: true,
-      width: '250px',
+      width: '180px',
       type: 'date'
     },
     {
@@ -107,7 +108,8 @@ export class IngresosAdminPageComponent {
       label: 'Observaciones',
       sortable: true,
       width: '250px',
-      type: 'text'
+      type: 'text',
+      truncate: true
     }
   ];
 
@@ -147,7 +149,4 @@ export class IngresosAdminPageComponent {
   isLoading = computed(() => this.pagosResource.isLoading());
   error = computed(() => this.pagosResource.error());
 
-  onSelectionChange(selectedItems: any[]) {
-    console.log('Pagos seleccionados:', selectedItems.length);
-  }
 }

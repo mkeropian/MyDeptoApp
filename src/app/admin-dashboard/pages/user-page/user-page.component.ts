@@ -37,7 +37,6 @@ export class UserPageComponent {
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   refreshTrigger = signal(0);
-  selectedUsuarios = signal<User[]>([]);
 
   usersResource = rxResource({
     request: () => ({ refresh: this.refreshTrigger() }),
@@ -82,26 +81,29 @@ export class UserPageComponent {
       key: 'avatarUrl',
       label: 'Avatar',
       sortable: false,
+      width: '80px',
       type: 'avatar'
     },
     {
       key: 'usuario',
       label: 'Usuario',
       sortable: true,
+      width: '120px',
       type: 'text'
     },
     {
       key: 'nombreCompleto',
       label: 'Nombre Completo',
       sortable: true,
-      width: '130px',
+      width: '180px',
       type: 'text'
     },
     {
       key: 'email',
       label: 'Email',
       sortable: true,
-      type: 'text'
+      type: 'text',
+      truncate: true
     },
     {
       key: 'rolBadge',
@@ -114,7 +116,7 @@ export class UserPageComponent {
       key: 'propietarioNombre',
       label: 'Propietario',
       sortable: true,
-      width: '150px',
+      width: '200px',
       type: 'badge'
     },
     {
@@ -229,7 +231,4 @@ export class UserPageComponent {
   isLoading = computed(() => this.usersResource.isLoading());
   error = computed(() => this.usersResource.error());
 
-  onSelectionChange(selectedItems: any[]) {
-    console.log('Usuarios seleccionados:', selectedItems.length);
-  }
 }

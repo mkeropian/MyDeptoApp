@@ -27,3 +27,24 @@
 .swal-compact .swal2-actions {
   margin: 0.5em auto 0 !important;
 }
+
+/* Compactar tabla smart-grid - FORZAR reducción de espaciado */
+smart-grid .table thead th,
+smart-grid .table tbody td {
+  padding: 0.5rem 0.25rem !important;
+}
+
+/* Mantener padding normal en columna de acciones */
+smart-grid .table tbody th {
+  padding: 0.5rem 0.75rem !important;
+}
+
+/* Para table-sm específicamente */
+smart-grid .table-sm thead th,
+smart-grid .table-sm tbody td {
+  padding: 0.5rem 0.25rem !important;
+}
+
+smart-grid .table-sm tbody th {
+  padding: 0.5rem 0.75rem !important;
+}

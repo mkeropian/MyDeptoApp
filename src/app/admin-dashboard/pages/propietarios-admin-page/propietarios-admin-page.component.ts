@@ -27,7 +27,6 @@ export class PropietariosAdminPageComponent {
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   refreshTrigger = signal(0);
-  selectedPropietarios = signal<Propietario[]>([]);
 
   // MODIFICADO: Ahora el resource depende del refreshTrigger
   propietariosResource = rxResource({
@@ -72,14 +71,16 @@ export class PropietariosAdminPageComponent {
       key: 'nombreApellido',
       label: 'Nombre',
       sortable: true,
-      width: '130px',
+      width: '180px',
       type: 'text'
     },
     {
       key: 'dni',
       label: 'DNI',
       sortable: true,
-      type: 'text'
+      width: '100px',
+      type: 'text',
+      align: 'center'
     },
     {
       key: 'email',
@@ -91,13 +92,15 @@ export class PropietariosAdminPageComponent {
       key: 'telefono',
       label: 'Teléfono',
       sortable: true,
+      width: '120px',
       type: 'text'
     },
     {
       key: 'direccion',
       label: 'Dirección',
       sortable: true,
-      type: 'text'
+      type: 'text',
+      truncate: true
     },
     {
       key: 'ciudad',
@@ -115,21 +118,22 @@ export class PropietariosAdminPageComponent {
       key: 'codigoPostal',
       label: 'Código Postal',
       sortable: true,
-      type: 'text'
+      width: '80px',
+      type: 'text',
+      align: 'center'
     },
-    // MODIFICADO: Mostrar código + nombre
     {
       key: 'usuarioDisplay',
       label: 'Usuario',
       sortable: true,
-      width: '180px',
+      width: '140px',
       type: 'badge'
     },
     {
       key: 'activoTexto',
       label: 'Estado',
       sortable: true,
-      width: '100px',
+      width: '40px',
       type: 'badge'
     }
   ];
@@ -230,10 +234,6 @@ export class PropietariosAdminPageComponent {
 
   isLoading = computed(() => this.propietariosResource.isLoading());
   error = computed(() => this.propietariosResource.error());
-
-  onSelectionChange(selectedItems: any[]) {
-    console.log('Propietarios seleccionados:', selectedItems.length);
-  }
 
   // NUEVO: Vincular usuario
   vincularUsuario(propietario: any) {
