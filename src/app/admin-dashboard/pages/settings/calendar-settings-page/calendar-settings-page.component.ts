@@ -37,7 +37,7 @@ export class CalendarSettingsPageComponent implements OnInit {
   // Estados para tipos de calendario
   calendarTypes: TipoCalendario[] = [];
   editingCalendar: TipoCalendario | null = null;
-  newCalendar: Partial<TipoCalendario> = { descripcion: '', activo: true };
+  newCalendar: Partial<TipoCalendario> = { descripcion: '', activo: 1 };
   showCalendarForm = false;
 
   // Estados para tipos de evento
@@ -212,9 +212,9 @@ export class CalendarSettingsPageComponent implements OnInit {
           this.calendarTypes.push({
             id: response.id,
             descripcion: this.newCalendar.descripcion!,
-            activo: this.newCalendar.activo ?? true
+            activo: this.newCalendar.activo ?? 1
           });
-          this.newCalendar = { descripcion: '', activo: true };
+          this.newCalendar = { descripcion: '', activo: 1 };
           this.showCalendarForm = false;
           this.showSuccess('Tipo de calendario creado correctamente');
         },
@@ -236,7 +236,7 @@ export class CalendarSettingsPageComponent implements OnInit {
         // Actualizar el estado local a inactivo en lugar de eliminarlo del array
         const index = this.calendarTypes.findIndex(c => c.id === id);
         if (index !== -1) {
-          this.calendarTypes[index].activo = false;
+          this.calendarTypes[index].activo = 0;
         }
         this.showSuccess('Tipo de calendario desactivado correctamente');
       },
@@ -253,7 +253,7 @@ export class CalendarSettingsPageComponent implements OnInit {
 
   cancelNewCalendar(): void {
     this.showCalendarForm = false;
-    this.newCalendar = { descripcion: '', activo: true };
+    this.newCalendar = { descripcion: '', activo: 1 };
   }
 
   // ==================== TIPOS DE EVENTO ====================

@@ -168,7 +168,7 @@ export class CalendarioEmpleadosPageComponent implements OnInit, OnDestroy {
             this.tiposCalendario = calendarios.map(cal => ({
               id: cal.idCalendar,
               descripcion: cal.descCalendar,
-              activo: true
+              activo: 1
             }));
 
             if (this.esEmpleado && this.usuarioLogueadoId !== null) {

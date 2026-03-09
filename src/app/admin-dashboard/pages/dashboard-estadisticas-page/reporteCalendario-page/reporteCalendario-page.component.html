@@ -7,45 +7,46 @@
 <!-- Filtros Section -->
 <section class="container mb-6">
   <div class="card bg-base-100 shadow-xl">
-    <div class="card-body">
+    <div class="card-body p-6">
       <h3 class="card-title text-xl mb-4">🔍 Filtros de Búsqueda</h3>
 
-      <form [formGroup]="filtrosForm" class="space-y-4">
+      <form [formGroup]="filtrosForm">
 
-        <!-- Fila 1: Fechas -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Fila 1: Fechas y Selects -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-4">
+
+          <!-- Fecha Inicio -->
           <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Fecha Inicio *</span>
+            <label class="label py-1">
+              <span class="label-text font-semibold text-sm">Fecha Inicio *</span>
             </label>
             <input
               type="date"
               formControlName="fechaInicio"
-              class="input input-bordered"
+              class="input input-bordered input-sm h-10"
               [class.input-error]="filtrosForm.get('fechaInicio')?.invalid && filtrosForm.get('fechaInicio')?.touched"
             />
           </div>
 
+          <!-- Fecha Fin -->
           <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Fecha Fin *</span>
+            <label class="label py-1">
+              <span class="label-text font-semibold text-sm">Fecha Fin *</span>
             </label>
             <input
               type="date"
               formControlName="fechaFin"
-              class="input input-bordered"
+              class="input input-bordered input-sm h-10"
               [class.input-error]="filtrosForm.get('fechaFin')?.invalid && filtrosForm.get('fechaFin')?.touched"
             />
           </div>
-        </div>
 
-        <!-- Fila 2: Empleado y Departamento -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Empleado -->
           <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Empleado (Opcional)</span>
+            <label class="label py-1">
+              <span class="label-text font-semibold text-sm">Empleado</span>
             </label>
-            <select formControlName="idUsuario" class="select select-bordered">
+            <select formControlName="idUsuario" class="select select-bordered select-sm h-10">
               <option [value]="null">Todos los empleados</option>
               @for (usuario of usuarios(); track usuario.id) {
                 <option [value]="usuario.id">{{ usuario.nombreCompleto }}</option>
@@ -53,11 +54,12 @@
             </select>
           </div>
 
+          <!-- Departamento -->
           <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Departamento (Opcional)</span>
+            <label class="label py-1">
+              <span class="label-text font-semibold text-sm">Departamento</span>
             </label>
-            <select formControlName="idDepartamento" class="select select-bordered">
+            <select formControlName="idDepartamento" class="select select-bordered select-sm h-10">
               <option [value]="null">Todos los departamentos</option>
               @for (depto of departamentos(); track depto.id) {
                 <option [value]="depto.id">{{ depto.nombre }}</option>
@@ -66,42 +68,45 @@
           </div>
         </div>
 
-        <!-- Fila 3: Tipos de Calendario (Checkboxes) -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Tipos de Calendario (Opcional)</span>
-          </label>
-          <div class="flex flex-wrap gap-4">
-            @for (tipo of tiposCalendario(); track tipo.id) {
-              <label class="label cursor-pointer gap-2">
-                <input
-                  type="checkbox"
-                  class="checkbox checkbox-primary"
-                  (change)="onTipoCalendarioChange($event, tipo.id)"
-                />
-                <span class="label-text">{{ tipo.descripcion }}</span>
-              </label>
-            }
+        <!-- Fila 2: Tipos de Calendario (solo si existen) -->
+        @if (tiposCalendario().length > 0) {
+          <div class="mb-4">
+            <label class="label py-1">
+              <span class="label-text font-semibold text-sm">Tipos de Calendario</span>
+            </label>
+            <div class="flex flex-wrap gap-3">
+              @for (tipo of tiposCalendario(); track tipo.id) {
+                <label class="label cursor-pointer gap-2 p-0">
+                  <input
+                    #tipoCheckbox
+                    type="checkbox"
+                    class="checkbox checkbox-primary checkbox-sm"
+                    (change)="onTipoCalendarioChange($event, tipo.id)"
+                  />
+                  <span class="label-text text-sm">{{ tipo.descripcion }}</span>
+                </label>
+              }
+            </div>
           </div>
-        </div>
+        }
 
         <!-- Botones de acción -->
-        <div class="flex gap-2 justify-end">
+        <div class="flex gap-2 justify-end pt-2">
           <button
             type="button"
-            class="btn btn-outline"
+            class="btn btn-outline btn-sm"
             (click)="limpiarFiltros()"
           >
             🔄 Limpiar
           </button>
           <button
             type="button"
-            class="btn btn-primary"
+            class="btn btn-primary btn-sm"
             (click)="cargarReporte()"
             [disabled]="filtrosForm.invalid || cargando()"
           >
             @if (cargando()) {
-              <span class="loading loading-spinner"></span>
+              <span class="loading loading-spinner loading-xs"></span>
             }
             📊 Generar Reporte
           </button>

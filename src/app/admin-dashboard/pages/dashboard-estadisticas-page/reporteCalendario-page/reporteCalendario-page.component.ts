@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -22,7 +22,11 @@ import {
   ApexFill,
   ApexStroke
 } from 'ng-apexcharts';
-import { CalendarioService } from '../../../../calendario-empleados/services/calendario.service';
+import { CalendarioService, TipoCalendario } from '../../../../calendario-empleados/services/calendario.service';
+import { UsuariosService } from '../../../../auth/services/users.service';
+import { DepartamentosService } from '../../../../departamentos/services/departamentos.service';
+import { Empleado } from '../../../../gastos/interfaces/gasto.interface';
+import { Departamento } from '../../../../departamentos/interfaces/departamento.interface';
 
 
 // Interfaces
@@ -46,22 +50,6 @@ interface ReporteCalendarioData {
   };
 }
 
-interface TipoCalendario {
-  id: number;
-  descripcion: string;
-  activo: boolean;  // ← Cambiar de number a boolean
-}
-
-interface Usuario {
-  id: number;
-  nombreCompleto: string;
-}
-
-interface Departamento {
-  id: number;
-  nombre: string;
-}
-
 @Component({
   selector: 'app-reporte-calendario-page',
   standalone: true,
@@ -72,15 +60,21 @@ interface Departamento {
 export class ReporteCalendarioPageComponent {
 
   private calendarioService = inject(CalendarioService);
+  private usuariosService = inject(UsuariosService);
+  private departamentosService = inject(DepartamentosService);
   private fb = inject(FormBuilder);
   private http = inject(HttpClient);
+
+  // ==================== VIEW CHILDREN ====================
+
+  @ViewChildren('tipoCheckbox') tipoCheckboxes!: QueryList<ElementRef<HTMLInputElement>>;
 
   // ==================== SIGNALS ====================
 
   public cargando = signal(false);
   public reporteData = signal<ReporteCalendarioData | null>(null);
   public tiposCalendario = signal<TipoCalendario[]>([]);
-  public usuarios = signal<Usuario[]>([]);
+  public usuarios = signal<Empleado[]>([]);
   public departamentos = signal<Departamento[]>([]);
   public mostrarGraficos = signal(false);
 
@@ -300,7 +294,7 @@ export class ReporteCalendarioPageComponent {
   private cargarTiposCalendario(): void {
     this.calendarioService.obtenerTiposCalendario().subscribe({
       next: (tipos) => {
-        this.tiposCalendario.set(tipos.filter((t) => t.activo === true));  // ← Cambiar de 1 a true
+        this.tiposCalendario.set(tipos.filter((t) => t.activo === 1));
       },
       error: (error) => {
         console.error('Error al cargar tipos de calendario:', error);
@@ -309,18 +303,18 @@ export class ReporteCalendarioPageComponent {
   }
 
   private cargarUsuarios(): void {
-    this.http.get<Usuario[]>(`${environment.baseUrl}/usuarios`).subscribe({
-      next: (usuarios) => {
-        this.usuarios.set(usuarios);
+    this.usuariosService.getEmpleados().subscribe({
+      next: (empleados) => {
+        this.usuarios.set(empleados);
       },
       error: (error) => {
-        console.error('Error al cargar usuarios:', error);
+        console.error('Error al cargar empleados:', error);
       }
     });
   }
 
   private cargarDepartamentos(): void {
-    this.http.get<Departamento[]>(`${environment.baseUrl}/departamentos`).subscribe({
+    this.departamentosService.getDepartamentosActivos().subscribe({
       next: (deptos) => {
         this.departamentos.set(deptos);
       },
@@ -376,5 +370,10 @@ export class ReporteCalendarioPageComponent {
     this.establecerFechasPorDefecto();
     this.mostrarGraficos.set(false);
     this.reporteData.set(null);
+
+    // Deseleccionar todos los checkboxes de tipos de calendario
+    this.tipoCheckboxes?.forEach((checkbox) => {
+      checkbox.nativeElement.checked = false;
+    });
   }
 }

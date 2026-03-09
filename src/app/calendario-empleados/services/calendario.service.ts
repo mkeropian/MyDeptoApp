@@ -56,7 +56,7 @@ export interface EventoCalendarioExtendido {
 export interface TipoCalendario {
   id: number;
   descripcion: string;
-  activo: boolean;
+  activo: number;
 }
 
 export interface TipoEventoCalendario {

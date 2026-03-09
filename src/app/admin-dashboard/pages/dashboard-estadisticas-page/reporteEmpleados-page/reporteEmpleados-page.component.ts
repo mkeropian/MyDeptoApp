@@ -114,7 +114,12 @@ export class ReporteEmpleadosPageComponent implements OnInit {
     const tipo = this.filtros().tipoOperacion;
     if (tipo === 'gastos') return this.tiposGasto();
     if (tipo === 'pagos') return this.tiposPago();
-    return [...this.tiposGasto(), ...this.tiposPago()];
+
+    // Cuando es "todos", agregar un prefijo único a cada categoría para evitar duplicados
+    return [
+      ...this.tiposGasto().map(g => ({ ...g, id: `gasto-${g.id}` })),
+      ...this.tiposPago().map(p => ({ ...p, id: `pago-${p.id}` }))
+    ];
   });
 
  // Opciones de gráficos
@@ -167,8 +172,8 @@ export class ReporteEmpleadosPageComponent implements OnInit {
   private cargarDatos(): void {
     this.isLoading.set(true);
 
-    // Llamar al servicio real
-    this.reportesService.getReporteEmpleados(this.filtros()).subscribe({
+    // Llamar al servicio real con filtros procesados
+    this.reportesService.getReporteEmpleados(this.prepararFiltrosParaBackend()).subscribe({
       next: (data) => {
         console.log('✅ Datos recibidos del backend:', data);
         this.resumenEmpleados.set(data);
@@ -205,6 +210,27 @@ export class ReporteEmpleadosPageComponent implements OnInit {
       totalPagos,
       balance
     });
+  }
+
+  /**
+   * Prepara los filtros para enviar al backend, limpiando el prefijo de idCategoria
+   */
+  private prepararFiltrosParaBackend(): FiltrosReporteEmpleados {
+    const filtros = this.filtros();
+
+    // Si hay idCategoria y tiene prefijo 'gasto-' o 'pago-', removerlo
+    if (filtros.idCategoria) {
+      const idCategoriaStr = String(filtros.idCategoria);
+
+      if (idCategoriaStr.includes('gasto-') || idCategoriaStr.includes('pago-')) {
+        return {
+          ...filtros,
+          idCategoria: Number(idCategoriaStr.replace(/^(gasto|pago)-/, '')) as any
+        };
+      }
+    }
+
+    return filtros;
   }
 
   private actualizarGraficos(): void {
@@ -326,7 +352,7 @@ export class ReporteEmpleadosPageComponent implements OnInit {
 
     this.chartVolumenAreaOptions = {
       series: data.map(emp => ({
-        name: emp.nombreEmpleado,
+        name: `${emp.idEmpleado}-${emp.nombreEmpleado}`, // ✅ FIX: Clave única
         data: movimientosPorFecha.fechas.map(fecha => {
           const movs = emp.movimientos.filter(m => {
             const fechaMov = new Date(m.fecha).toISOString().split('T')[0];
@@ -378,14 +404,18 @@ export class ReporteEmpleadosPageComponent implements OnInit {
       },
       legend: {
         position: 'top',
-        horizontalAlign: 'center'
+        horizontalAlign: 'center',
+        formatter: function(seriesName: string) {
+          // ✅ Mostrar solo el nombre en la leyenda (sin el ID)
+          return seriesName.split('-').slice(1).join('-');
+        }
       }
     };
 
     // ==================== GRÁFICO 4: CANTIDAD EN EL TIEMPO (LÍNEA) ====================
     this.chartCantidadLineaOptions = {
       series: data.map(emp => ({
-        name: emp.nombreEmpleado,
+        name: `${emp.idEmpleado}-${emp.nombreEmpleado}`, // ✅ FIX: Clave única
         data: movimientosPorFecha.fechas.map(fecha => {
           const movs = emp.movimientos.filter(m => {
             const fechaMov = new Date(m.fecha).toISOString().split('T')[0];
@@ -432,7 +462,11 @@ export class ReporteEmpleadosPageComponent implements OnInit {
       },
       legend: {
         position: 'top',
-        horizontalAlign: 'center'
+        horizontalAlign: 'center',
+        formatter: function(seriesName: string) {
+          // ✅ Mostrar solo el nombre en la leyenda (sin el ID)
+          return seriesName.split('-').slice(1).join('-');
+        }
       }
     };
   }
@@ -537,7 +571,7 @@ export class ReporteEmpleadosPageComponent implements OnInit {
   exportarExcel(): void {
     console.log('Exportando a Excel...');
 
-    this.reportesService.exportarExcel(this.filtros()).subscribe({
+    this.reportesService.exportarExcel(this.prepararFiltrosParaBackend()).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -565,7 +599,7 @@ export class ReporteEmpleadosPageComponent implements OnInit {
   exportarPDF(): void {
     console.log('Exportando a PDF...');
 
-    this.reportesService.exportarPDF(this.filtros()).subscribe({
+    this.reportesService.exportarPDF(this.prepararFiltrosParaBackend()).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -642,14 +676,13 @@ export class ReporteEmpleadosPageComponent implements OnInit {
 
     // Preparar datos para el backend
     const payload = {
-      filtros: this.filtros(),
       emails: [email],
       formato: this.formatoEmail(),
       mensaje: this.mensajeEmail().trim() || undefined
     };
 
     this.reportesService.enviarEmail(
-      payload.filtros,
+      this.prepararFiltrosParaBackend(),
       payload.emails,
       payload.formato,
       payload.mensaje
