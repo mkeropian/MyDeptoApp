@@ -1,8 +1,6 @@
 import { AfterViewInit, Component, ElementRef, input, viewChild } from '@angular/core';
-import mapboxgl from 'mapbox-gl';
+import maplibregl from 'maplibre-gl';
 import { environment } from '../../../../environments/environment';
-
-mapboxgl.accessToken = environment.MAPBOX_KEY;
 
 @Component({
   selector: 'mini-map',
@@ -60,14 +58,13 @@ export class MiniMapComponent implements AfterViewInit {
 
     const element = this.divElement()!.nativeElement;
     // console.log('MiniMapComponent - Elemento del DOM:', element);
-    // console.log('MiniMapComponent - Mapbox access token:', mapboxgl.accessToken ? 'Configurado' : 'NO CONFIGURADO');
 
     try {
       // console.log('MiniMapComponent - Creando mapa con coordenadas:', [coordinates.lng, coordinates.lat]);
 
-      const map = new mapboxgl.Map({
+      const map = new maplibregl.Map({
         container: element,
-        style: 'mapbox://styles/mapbox/streets-v12',
+        style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${environment.MAPTILER_KEY}`,
         center: [coordinates.lng, coordinates.lat],
         zoom: this.mapZoom(),
         interactive: false,
@@ -79,7 +76,7 @@ export class MiniMapComponent implements AfterViewInit {
       // Solo agregar marcador si showMarker es true
       if (this.showMarker()) {
         // console.log('MiniMapComponent - Agregando marker...');
-        new mapboxgl.Marker()
+        new maplibregl.Marker()
           .setLngLat([coordinates.lng, coordinates.lat])
           .addTo(map);
         // console.log('MiniMapComponent - Marker agregado exitosamente');

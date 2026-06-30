@@ -9,14 +9,15 @@ import { TableAction, TableColumn } from '../../../shared/components/smart-grid/
 import { SmartGridComponent } from "../../../shared/components/smart-grid/smart-grid.component";
 import { EditModalComponent } from './edit-modal/edit-modal.component';
 import { NotificationService } from '../../../shared/services/notification.service';
-import mapboxgl from 'mapbox-gl';
+import maplibregl from 'maplibre-gl';
+import { environment } from '../../../../environments/environment';
 import { last } from 'rxjs';
 import Swal from 'sweetalert2';
 
 interface Marker {
   id: number;
   nombre: string;
-  mapboxMarker: mapboxgl.Marker;
+  mapMarker: maplibregl.Marker;
 }
 
 @Component({
@@ -51,11 +52,11 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
 
   divElement = viewChild<ElementRef>('map');
   formComponent = viewChild<FormComponent>('formComponent');
-  map = signal<mapboxgl.Map | null>(null);
+  map = signal<maplibregl.Map | null>(null);
   markers = signal<Marker[]>([]);
 
   // 🔥 NUEVA FUNCIONALIDAD: Marcador para el nuevo departamento (temporal)
-  newDepartmentMarker = signal<mapboxgl.Marker | null>(null);
+  newDepartmentMarker = signal<maplibregl.Marker | null>(null);
 
   departamentos = computed(() => {
     const data = this.departamentosResource.value() || [];
@@ -243,8 +244,8 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
     }
 
     // Crear nuevo marcador
-    const newMarker = new mapboxgl.Marker({
-      color: '#ff6b6b', // Color distintivo para el nuevo departamento
+    const newMarker = new maplibregl.Marker({
+      color: '#ff6b6b',
       draggable: false
     })
     .setLngLat([coordinates.lng, coordinates.lat])
@@ -416,9 +417,9 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
 
     const element = this.divElement()!.nativeElement;
 
-    const map = new mapboxgl.Map({
+    const map = new maplibregl.Map({
       container: element,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${environment.MAPTILER_KEY}`,
       center: [this.buenosAiresCoords().lng, this.buenosAiresCoords().lat],
       zoom: 10.3,
       dragPan: false,
@@ -433,12 +434,12 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
     this.mapListeners(map);
   }
 
-  mapListeners( map: mapboxgl.Map ) {
+  mapListeners( map: maplibregl.Map ) {
     map.on('click', (event) => this.mapClick(event));
     this.map.set(map);
   }
 
-  mapClick(event: mapboxgl.MapMouseEvent) {
+  mapClick(event: maplibregl.MapMouseEvent) {
     if ( !this.map() ) return;
 
     const map = this.map()!;
@@ -447,7 +448,7 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
       ((Math.random() * 16) | 0).toString(16)
     );
 
-    const mapboxMarker = new mapboxgl.Marker({
+    const mapMarker = new maplibregl.Marker({
       color: color,
       draggable: false
     })
@@ -457,7 +458,7 @@ export class DepartamentosAdminPageComponent implements AfterViewInit {
     const newMarker: Marker = {
       id: 1,
       nombre: UUIDv4().slice(0,8),
-      mapboxMarker: mapboxMarker
+      mapMarker: mapMarker
     }
 
     this.markers.set([ newMarker, ...this.markers()]);

@@ -8,13 +8,13 @@
 
     @for (marker of markers(); track marker.id){
       <div class="bg-slate-50 rounded border border-slate-200 px-3 py-2 cursor-pointer hover:bg-slate-100 transition-colors duration-150"
-        (click)="flyToMarker(marker.mapboxMarker.getLngLat())"
+        (click)="flyToMarker(marker.mapMarker.getLngLat())"
       >
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2.5 flex-1">
             <div
               class="w-3.5 h-3.5 rounded-full border border-white shadow-sm"
-              [style.backgroundColor]="marker.mapboxMarker._color"
+              [style.backgroundColor]="marker.mapMarker._color"
             ></div>
             <span class="text-slate-800 text-xs font-medium">
               {{ marker.nombre }}
@@ -24,7 +24,7 @@
             type="radio"
             name="radio-10"
             class="radio radio-xs"
-            [style.backgroundColor]="marker.mapboxMarker._color"
+            [style.backgroundColor]="marker.mapMarker._color"
             title="Centrar en {{ marker.nombre }}"
           />
         </div>

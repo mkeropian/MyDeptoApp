@@ -1,17 +1,15 @@
 import { AfterViewInit, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
-import mapboxgl, { LngLatLike } from 'mapbox-gl';
+import maplibregl, { LngLatLike } from 'maplibre-gl';
 import { environment } from '../../../../../environments/environment';
 import { DecimalPipe, JsonPipe } from '@angular/common';
 import { DepartamentosService } from '../../../../departamentos/services/departamentos.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Departamento, DepartamentoBackend } from '../../../../departamentos/interfaces/departamento.interface';
 
-mapboxgl.accessToken = environment.MAPBOX_KEY;
-
 interface Marker {
   id: number;
   nombre: string;
-  mapboxMarker: mapboxgl.Marker;
+  mapMarker: maplibregl.Marker;
 }
 
 @Component({
@@ -137,7 +135,7 @@ export class FullscreenMapPageComponent implements AfterViewInit{
   });
 
   divElement = viewChild<ElementRef>('map');
-  map = signal<mapboxgl.Map | null>(null);
+  map = signal<maplibregl.Map | null>(null);
   markers = signal<Marker[]>([]);
   zoom = signal (11.5);
 
@@ -162,17 +160,17 @@ export class FullscreenMapPageComponent implements AfterViewInit{
 
     const { lat, lng } = this.coordinates();
 
-    const map = new mapboxgl.Map({
-      container: element, // container ID
-      style: 'mapbox://styles/mapbox/streets-v12', // style URL
-      center: [ lng, lat ], // starting position [lng, lat]
-      zoom: this.zoom(), // starting zoom
+    const map = new maplibregl.Map({
+      container: element,
+      style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${environment.MAPTILER_KEY}`,
+      center: [ lng, lat ],
+      zoom: this.zoom(),
     });
 
     this.mapListeners(map);
   }
 
-  mapListeners( map: mapboxgl.Map ) {
+  mapListeners( map: maplibregl.Map ) {
 
     map.on('zoomend', (event) => {
       const newZoom = event.target.getZoom();
@@ -194,9 +192,9 @@ export class FullscreenMapPageComponent implements AfterViewInit{
       this.createMarkersFromDepartamentos();
     }, 100);
 
-    map.addControl(new mapboxgl.FullscreenControl());
-    map.addControl(new mapboxgl.NavigationControl());
-    map.addControl(new mapboxgl.ScaleControl());
+    map.addControl(new maplibregl.FullscreenControl());
+    map.addControl(new maplibregl.NavigationControl());
+    map.addControl(new maplibregl.ScaleControl());
 
     this.map.set(map);
   }
@@ -215,7 +213,7 @@ export class FullscreenMapPageComponent implements AfterViewInit{
     const currentMarkers = this.markers();
 
     currentMarkers.forEach(marker => {
-      marker.mapboxMarker.remove();
+      marker.mapMarker.remove();
     });
 
     this.markers.set([]);
@@ -243,7 +241,7 @@ export class FullscreenMapPageComponent implements AfterViewInit{
     // Limpiar markers existentes sin actualizar el signal aún
     const currentMarkers = this.markers();
     currentMarkers.forEach(marker => {
-      marker.mapboxMarker.remove();
+      marker.mapMarker.remove();
     });
 
     const newMarkers: Marker[] = [];
@@ -252,15 +250,14 @@ export class FullscreenMapPageComponent implements AfterViewInit{
       try {
         const { lng, lat } = departamento.lngLat;
 
-        // Crear el marker de Mapbox
-        const mapboxMarker = new mapboxgl.Marker({
+        const mapMarker = new maplibregl.Marker({
           color: departamento.activo ? this.getMarkerColor() : '#000000',
           draggable: false,
           scale: 0.8
         })
           .setLngLat([lng, lat])
           .setPopup(
-            new mapboxgl.Popup({ offset: 25 })
+            new maplibregl.Popup({ offset: 25 })
               .setHTML(`
                 <div style="font-family: Arial, sans-serif;">
                   <h4 style="margin: 0 0 8px 0; color: #2563eb;">${departamento.nombre}</h4>
@@ -281,14 +278,14 @@ export class FullscreenMapPageComponent implements AfterViewInit{
           .addTo(map);
 
         // Agregar event listener para el click
-        mapboxMarker.getElement().addEventListener('click', () => {
+        mapMarker.getElement().addEventListener('click', () => {
           console.log('Clicked departamento:', departamento);
         });
 
         const marker: Marker = {
           id: departamento.id,
           nombre: departamento.nombre,
-          mapboxMarker: mapboxMarker
+          mapMarker: mapMarker
         };
 
         newMarkers.push(marker);

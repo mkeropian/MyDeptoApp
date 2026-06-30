@@ -23,7 +23,7 @@
             "allowedCommonJsDependencies": [
               "apexcharts",
               "sweetalert2",
-              "mapbox-gl"
+              "maplibre-gl"
           ],
             "assets": [
               {
