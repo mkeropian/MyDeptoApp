@@ -1,0 +1,19 @@
+Necesito un cambio simple: setear el sort inicial por defecto en fecha desc, 
+en las dos admin-pages, sin tocar smart-grid (el mecanismo de sort ya existe, 
+solo cambia el valor inicial de los signals).
+
+Archivos a modificar:
+1. src/app/.../gastos-admin-page/gastos-admin-page.component.ts
+2. src/app/.../ingresos-admin-page/ingresos-admin-page.component.ts (ubicá el path exacto)
+
+Cambio en AMBOS archivos:
+- El signal sortColumn, que hoy arranca en signal<string>(''), debe arrancar en 
+  signal<string>('fecha')
+- El signal sortDirection, que hoy arranca en signal<'asc' | 'desc'>('asc'), debe 
+  arrancar en signal<'asc' | 'desc'>('desc')
+
+NO modificar nada más: ni el computed() de sort, ni el método onSort(), ni 
+smart-grid.component.ts/html. El mecanismo de ordenamiento ya funciona correctamente, 
+esto solo cambia el estado inicial.
+
+Mostrame el diff de ambos archivos antes de aplicar los cambios.

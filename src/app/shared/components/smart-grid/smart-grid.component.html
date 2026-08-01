@@ -22,7 +22,7 @@
 
     <!-- Body -->
     <tbody>
-      <tr *ngFor="let item of data; let i = index" class="hover">
+      <tr *ngFor="let item of visibleData(); let i = index" class="hover">
 
         <!-- Celdas dinámicas -->
         <td *ngFor="let column of columns"
@@ -109,4 +109,31 @@
       </tr>
     </tfoot>
   </table>
+</div>
+
+<!-- Controles de Paginación -->
+<div *ngIf="showPaginationControls()" class="flex flex-col sm:flex-row items-center justify-between gap-2 mt-3 px-2">
+  <!-- Texto de rango de registros -->
+  <span class="text-sm opacity-70">
+    Mostrando {{ rangeStart() }}-{{ rangeEnd() }} de {{ data.length }}
+  </span>
+
+  <!-- Botones anterior / siguiente + indicador de página -->
+  <div class="join">
+    <button
+      class="join-item btn btn-sm"
+      [disabled]="currentPage() === 1"
+      (click)="previousPage()">
+      «
+    </button>
+    <button class="join-item btn btn-sm btn-disabled">
+      Página {{ currentPage() }} de {{ totalPages() }}
+    </button>
+    <button
+      class="join-item btn btn-sm"
+      [disabled]="currentPage() === totalPages()"
+      (click)="nextPage()">
+      »
+    </button>
+  </div>
 </div>

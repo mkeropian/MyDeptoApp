@@ -19,8 +19,8 @@ export class IngresosAdminPageComponent {
 
   @ViewChild(EditModalComponent) editModal!: EditModalComponent;
 
-  sortColumn = signal<string>('');
-  sortDirection = signal<'asc' | 'desc'>('asc');
+  sortColumn = signal<string>('fecha');
+  sortDirection = signal<'asc' | 'desc'>('desc');
   refreshTrigger = signal(0);
 
   pagosResource = rxResource({

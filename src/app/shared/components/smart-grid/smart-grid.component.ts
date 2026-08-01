@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TableAction, TableColumn } from './smart-grid.interface';
 
@@ -8,17 +8,80 @@ import { TableAction, TableColumn } from './smart-grid.interface';
   templateUrl: './smart-grid.component.html',
 })
 
-export class SmartGridComponent {
+export class SmartGridComponent implements OnChanges {
   @Input() data: any[] = [];
   @Input() columns: TableColumn[] = [];
   @Input() actions: TableAction[] = [];
   @Input() emptyMessage = 'No hay datos disponibles';
   @Input() showFooter = false;
+  @Input() pageSize: number = 25;
+  @Input() paginated: boolean = true;
 
   @Output() sort = new EventEmitter<{column: string, direction: 'asc' | 'desc'}>();
 
   sortColumn = '';
   sortDirection: 'asc' | 'desc' = 'asc';
+
+  // Señales internas de paginación (espejan los @Input para que los computed() reaccionen)
+  private dataSignal = signal<any[]>([]);
+  private pageSizeSignal = signal<number>(25);
+  private paginatedSignal = signal<boolean>(true);
+  currentPage = signal(1);
+
+  totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.dataSignal().length / this.pageSizeSignal()))
+  );
+
+  // Slice de `data` correspondiente a la página actual (no reordena nada)
+  paginatedData = computed(() => {
+    const all = this.dataSignal();
+    const size = this.pageSizeSignal();
+    const start = (this.currentPage() - 1) * size;
+    return all.slice(start, start + size);
+  });
+
+  // Datos a renderizar en la tabla, según paginated esté activo o no
+  visibleData = computed(() =>
+    this.paginatedSignal() ? this.paginatedData() : this.dataSignal()
+  );
+
+  showPaginationControls = computed(() =>
+    this.paginatedSignal() && this.dataSignal().length > this.pageSizeSignal()
+  );
+
+  rangeStart = computed(() =>
+    this.dataSignal().length === 0 ? 0 : (this.currentPage() - 1) * this.pageSizeSignal() + 1
+  );
+
+  rangeEnd = computed(() =>
+    Math.min(this.currentPage() * this.pageSizeSignal(), this.dataSignal().length)
+  );
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['data']) {
+      this.dataSignal.set(this.data ?? []);
+      this.currentPage.set(1); // Reset de página cuando cambia el array completo
+    }
+    if (changes['pageSize']) {
+      this.pageSizeSignal.set(this.pageSize);
+    }
+    if (changes['paginated']) {
+      this.paginatedSignal.set(this.paginated);
+    }
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+  }
+
+  previousPage(): void {
+    this.goToPage(this.currentPage() - 1);
+  }
+
+  nextPage(): void {
+    this.goToPage(this.currentPage() + 1);
+  }
 
   onSort(column: TableColumn) {
     if (!column.sortable) return;
